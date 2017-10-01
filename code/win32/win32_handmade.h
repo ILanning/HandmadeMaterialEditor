@@ -85,5 +85,12 @@ struct win32_state
     char *OnePastLastEXEFileNameSlash;
 };
 
+// TODO(casey): This is a global for now.
+global_variable bool32 GlobalRunning;
+global_variable bool32 GlobalPause;
+global_variable win32_offscreen_buffer GlobalBackbuffer;
+global_variable LPDIRECTSOUNDBUFFER GlobalSecondaryBuffer;
+global_variable int64 GlobalPerfCountFrequency;
+
 #define WIN32_HANDMADE_H
 #endif
