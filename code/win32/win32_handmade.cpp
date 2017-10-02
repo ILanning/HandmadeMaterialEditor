@@ -34,6 +34,8 @@
 #include <malloc.h>
 #include <xinput.h>
 #include <dsound.h>
+#include "..\libraries\glew.h"
+#include "..\libraries\wglew.h"
 
 #include "win32_handmade.h"
 #include "win32_utility.cpp"
@@ -125,20 +127,6 @@ DEBUG_PLATFORM_WRITE_ENTIRE_FILE(DEBUGPlatformWriteEntireFile)
     return(Result);
 }
 
-inline FILETIME
-Win32GetLastWriteTime(char *Filename)
-{
-    FILETIME LastWriteTime = {};
-
-    WIN32_FILE_ATTRIBUTE_DATA Data;
-    if(GetFileAttributesEx(Filename, GetFileExInfoStandard, &Data))
-    {
-        LastWriteTime = Data.ftLastWriteTime;
-    }
-
-    return(LastWriteTime);
-}
-
 internal win32_game_code
 Win32LoadGameCode(char *SourceDLLName, char *TempDLLName)
 {
@@ -197,6 +185,12 @@ Win32MainWindowCallback(HWND Window,
 
     switch(Message)
     {
+		case WM_DESTROY:
+		{
+			// TODO(casey): Handle this as an error - recreate window?
+			GlobalRunning = false;
+		} break;
+
         case WM_CLOSE:
         {
             // TODO(casey): Handle this with a message to the user?
@@ -215,12 +209,6 @@ Win32MainWindowCallback(HWND Window,
                 SetLayeredWindowAttributes(Window, RGB(0, 0, 0), 64, LWA_ALPHA);
             }
 #endif
-        } break;
-
-        case WM_DESTROY:
-        {
-            // TODO(casey): Handle this as an error - recreate window?
-            GlobalRunning = false;
         } break;
 
         case WM_SYSKEYDOWN:
@@ -408,7 +396,7 @@ WinMain(HINSTANCE Instance,
 
     Win32ResizeDIBSection(&GlobalBackbuffer, 1280, 720);
     
-    WindowClass.style = CS_HREDRAW|CS_VREDRAW;
+    WindowClass.style = CS_HREDRAW|CS_VREDRAW|CS_OWNDC;
     WindowClass.lpfnWndProc = Win32MainWindowCallback;
     WindowClass.hInstance = Instance;
 //    WindowClass.hIcon;
@@ -434,11 +422,11 @@ WinMain(HINSTANCE Instance,
         {
             win32_sound_output SoundOutput = {};
 
+			GlobalDeviceContext = GetDC(Window);
+
             // TODO(casey): How do we reliably query on this on Windows?
             int MonitorRefreshHz = 60;
-            HDC RefreshDC = GetDC(Window);
-            int Win32RefreshRate = GetDeviceCaps(RefreshDC, VREFRESH);
-            ReleaseDC(Window, RefreshDC);
+            int Win32RefreshRate = GetDeviceCaps(GlobalDeviceContext, VREFRESH);
             if(Win32RefreshRate > 1)
             {
                 MonitorRefreshHz = Win32RefreshRate;
@@ -538,6 +526,58 @@ WinMain(HINSTANCE Instance,
                     // TODO(casey): Diagnostic
                 }
             }
+
+
+			//NOTE(Ian): OpenGL Context Creation
+			PIXELFORMATDESCRIPTOR pfd =
+			{
+				sizeof(PIXELFORMATDESCRIPTOR),
+				1,
+				PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
+				PFD_TYPE_RGBA,            //The kind of framebuffer. RGBA or palette.
+				32,                        //Colordepth of the framebuffer.
+				0, 0, 0, 0, 0, 0,
+				0,
+				0,
+				0,
+				0, 0, 0, 0,
+				24,                        //Number of bits for the depthbuffer
+				8,                        //Number of bits for the stencilbuffer
+				0,                        //Number of Aux buffers in the framebuffer.
+				PFD_MAIN_PLANE,
+				0,
+				0, 0, 0
+			};
+			int32 pixelFormatNumber = ChoosePixelFormat(GlobalDeviceContext, &pfd);
+			if (!pixelFormatNumber)
+			{
+				//TODO(Ian): Diagnostic
+				exit(1);
+			}
+			SetPixelFormat(GlobalDeviceContext, pixelFormatNumber, &pfd);
+			HGLRC dummyContext = wglCreateContext(GlobalDeviceContext);
+			wglMakeCurrent(GlobalDeviceContext, dummyContext);
+
+			if (GLEW_OK != glewInit())
+			{
+				// GLEW failed!
+				exit(1);
+			}
+
+			int glContextAttribs[] =
+			{
+				WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+				WGL_CONTEXT_MINOR_VERSION_ARB, 0,
+				WGL_CONTEXT_FLAGS_ARB, 0,
+				0
+			};
+
+			HGLRC glContext = wglCreateContextAttribsARB(GlobalDeviceContext, dummyContext, glContextAttribs);
+			wglMakeCurrent(GlobalDeviceContext, glContext);
+
+			wglDeleteContext(dummyContext);
+
+			//MessageBoxA(0, (char*)glGetString(GL_VERSION), "OPENGL VERSION", 0);
 
             if(Samples && GameMemory.PermanentStorage && GameMemory.TransientStorage)
             {
@@ -912,10 +952,10 @@ WinMain(HINSTANCE Instance,
                         LastCounter = EndCounter;
                 
                         win32_window_dimension Dimension = Win32GetWindowDimension(Window);
-                        HDC DeviceContext = GetDC(Window);
-                        Win32DisplayBufferInWindow(&GlobalBackbuffer, DeviceContext,
+                        //HDC DeviceContext = GetDC(Window);
+                        Win32DisplayBufferInWindow(&GlobalBackbuffer, GlobalDeviceContext,
                                                    Dimension.Width, Dimension.Height);
-                        ReleaseDC(Window, DeviceContext);
+                        //ReleaseDC(Window, DeviceContext);
 
                         FlipWallClock = Win32GetWallClock();
 #if HANDMADE_INTERNAL

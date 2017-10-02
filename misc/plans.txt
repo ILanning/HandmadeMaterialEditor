@@ -1,0 +1,24 @@
+Memory Allocation:
+	The memory which will not change depending on the model and images loaded will be allocated as a single chunk and handled in the way shown on the Handmade Hero stream.
+	The memory required for the images and models will be allocated on a file-by-file basis, with each file being its own object.
+
+
+Goals:
+
+Start up an OpenGl context using GLEW
+Draw a line on the screen
+Draw a spinning cube
+Import an image using stb_image
+Draw the image on the screen
+Generate the graphic for a button, store it in the common memory buffer, and draw it on the screen
+Make it clickable
+Load a font using stb_truetype
+Print text
+Render text to a button sprite
+Make an editable text box
+Load a .mtl file
+Display the material data on the screen with sensible components editable
+Allow saving of the file
+Load an .obj file, including associated textures
+Render a model with OpenGL
+Apply material effects to the model as a preview

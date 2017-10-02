@@ -15,13 +15,17 @@
     1 - Build for developer only
 
   HANDMADE_SLOW:
-    0 - Not slow code allowed!
+    0 - No slow code allowed!
     1 - Slow code welcome.
 */
 
-// TODO(casey): Implement sine ourselves
 #include <math.h>
 #include <stdint.h>
+#include "libraries\glew.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "libraries\stb_image.h"
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "libraries\stb_truetype.h"
 
 #define internal static 
 #define local_persist static 

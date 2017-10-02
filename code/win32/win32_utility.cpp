@@ -33,6 +33,20 @@ StringLength(char *String)
 	return(Count);
 }
 
+inline FILETIME
+Win32GetLastWriteTime(char *Filename)
+{
+	FILETIME LastWriteTime = {};
+
+	WIN32_FILE_ATTRIBUTE_DATA Data;
+	if (GetFileAttributesEx(Filename, GetFileExInfoStandard, &Data))
+	{
+		LastWriteTime = Data.ftLastWriteTime;
+	}
+
+	return(LastWriteTime);
+}
+
 internal void
 Win32GetEXEFileName(win32_state *State)
 {
