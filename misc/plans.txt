@@ -5,7 +5,7 @@ Memory Allocation:
 
 Goals:
 
-Start up an OpenGl context using GLEW
+Start up an OpenGl context using GLEW  - Done
 Draw a line on the screen
 Draw a spinning cube
 Import an image using stb_image

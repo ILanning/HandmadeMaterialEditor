@@ -476,7 +476,7 @@ WinMain(HINSTANCE Instance,
             
             game_memory GameMemory = {};
             GameMemory.PermanentStorageSize = Megabytes(64);
-            GameMemory.TransientStorageSize = Gigabytes(1);
+            GameMemory.TransientStorageSize = Megabytes(256);
             GameMemory.DEBUGPlatformFreeFileMemory = DEBUGPlatformFreeFileMemory;
             GameMemory.DEBUGPlatformReadEntireFile = DEBUGPlatformReadEntireFile;
             GameMemory.DEBUGPlatformWriteEntireFile = DEBUGPlatformWriteEntireFile;
@@ -578,6 +578,8 @@ WinMain(HINSTANCE Instance,
 			wglDeleteContext(dummyContext);
 
 			//MessageBoxA(0, (char*)glGetString(GL_VERSION), "OPENGL VERSION", 0);
+
+			PrepareScene();
 
             if(Samples && GameMemory.PermanentStorage && GameMemory.TransientStorage)
             {
@@ -784,6 +786,7 @@ WinMain(HINSTANCE Instance,
                         {
                             Game.UpdateAndRender(&Thread, &GameMemory, NewInput, &Buffer);
                         }
+						GLRender();
 
                         LARGE_INTEGER AudioWallClock = Win32GetWallClock();
                         real32 FromBeginToAudioSeconds = Win32GetSecondsElapsed(FlipWallClock, AudioWallClock);
@@ -953,8 +956,8 @@ WinMain(HINSTANCE Instance,
                 
                         win32_window_dimension Dimension = Win32GetWindowDimension(Window);
                         //HDC DeviceContext = GetDC(Window);
-                        Win32DisplayBufferInWindow(&GlobalBackbuffer, GlobalDeviceContext,
-                                                   Dimension.Width, Dimension.Height);
+                        //Win32DisplayBufferInWindow(&GlobalBackbuffer, GlobalDeviceContext,
+                        //                           Dimension.Width, Dimension.Height);
                         //ReleaseDC(Window, DeviceContext);
 
                         FlipWallClock = Win32GetWallClock();

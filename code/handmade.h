@@ -27,6 +27,9 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "libraries\stb_truetype.h"
 
+#include "math\Vector2.h"
+#include "math\Vector3.h"
+
 #define internal static 
 #define local_persist static 
 #define global_variable static

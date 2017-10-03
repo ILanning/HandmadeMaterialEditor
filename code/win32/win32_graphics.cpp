@@ -51,6 +51,142 @@ Win32DisplayBufferInWindow(win32_offscreen_buffer *Buffer,
 		DIB_RGB_COLORS, SRCCOPY);
 }
 
+struct GLObjects
+{
+	
+};
+
+const GLchar *vertexSource = R"glsl(
+	#version 150 core
+	in vec2 position;
+	void main()
+	{
+		gl_Position = vec4(position, 0.0, 1.0);
+	}
+)glsl";
+
+const GLchar *fragmentSource = R"glsl(
+	#version 150 core
+	out vec4 outColor;
+	void main()
+	{
+		outColor = vec4(1.0, 1.0, 1.0, 1.0);
+	}
+)glsl";
+
+internal void MessageGLErrors()
+{
+	GLenum glError = glGetError();
+	while (glError != GL_NO_ERROR)
+	{
+		char *glErrorString;
+		switch (glError)
+		{
+		case GL_INVALID_ENUM:
+		{
+			glErrorString = "GL_INVALID_ENUM";
+		} break;
+		case GL_INVALID_VALUE:
+		{
+			glErrorString = "GL_INVALID_VALUE";
+		} break;
+		case GL_INVALID_OPERATION:
+		{
+			glErrorString = "GL_INVALID_OPERATION";
+		} break;
+		case GL_STACK_OVERFLOW:
+		{
+			glErrorString = "GL_STACK_OVERFLOW";
+		} break;
+		case GL_STACK_UNDERFLOW:
+		{
+			glErrorString = "GL_STACK_UNDERFLOW";
+		} break;
+		case GL_OUT_OF_MEMORY:
+		{
+			glErrorString = "GL_OUT_OF_MEMORY";
+		} break;
+		case GL_INVALID_FRAMEBUFFER_OPERATION:
+		{
+			glErrorString = "GL_INVALID_FRAMEBUFFER_OPERATION";
+		} break;
+		case GL_CONTEXT_LOST:
+		{
+			glErrorString = "GL_CONTEXT_LOST";
+		} break;
+		default:
+		{
+			glErrorString = "Unknown OpenGL error!";
+		} break;
+		}
+		MessageBoxA(0, glErrorString, "GL Error!", 0);
+		glError = glGetError();
+	}
+}
+
+internal void PrepareScene()
+{
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+		GLuint vao;
+		glGenVertexArrays(1, &vao);
+		glBindVertexArray(vao);
+
+		GLuint vbo;
+		glGenBuffers(1, &vbo);
+
+		GLfloat vertices[] = {
+			0.0f, 0.5f,
+			0.5f, -0.5f,
+			-0.5f, -0.5f
+		};
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+		glShaderSource(vertexShader, 1, &vertexSource, NULL);
+		glCompileShader(vertexShader);
+
+		GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+		glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
+		glCompileShader(fragmentShader);
+
+		GLuint shaderProgram = glCreateProgram();
+		glAttachShader(shaderProgram, vertexShader);
+		glAttachShader(shaderProgram, fragmentShader);
+
+		glBindFragDataLocation(shaderProgram, 0, "outColor");
+		glLinkProgram(shaderProgram);
+		glUseProgram(shaderProgram);
+
+		/*GLint isLinked;
+		glGetProgramiv(shaderProgram, GL_LINK_STATUS, &isLinked);
+		if (!isLinked)
+		{
+			//TODO(Ian): True diagnostics
+			MessageBoxA(0, "Shader link failed!", 0, 0);
+		}*/
+
+		GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
+		glEnableVertexAttribArray(posAttrib);
+		glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+		MessageGLErrors();
+
+}
+
+void GLRender()
+{
+	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	//glViewport(0, 0, 1280, 720);
+	
+	SwapBuffers(GlobalDeviceContext);
+}
+
 #if 0
 
 internal void
