@@ -34,8 +34,13 @@
 #include <malloc.h>
 #include <xinput.h>
 #include <dsound.h>
+#ifndef GLEW_IMPORTED
+
 #include "..\libraries\glew.h"
 #include "..\libraries\wglew.h"
+#define GLEW_IMPORTED 1
+
+#endif
 
 #include "win32_handmade.h"
 #include "win32_utility.cpp"
@@ -221,6 +226,7 @@ Win32MainWindowCallback(HWND Window,
         
         case WM_PAINT:
         {
+			//TODO(Ian): Does this need to pull in a new HDC, or should it use the global one?
             PAINTSTRUCT Paint;
             HDC DeviceContext = BeginPaint(Window, &Paint);
             win32_window_dimension Dimension = Win32GetWindowDimension(Window);

@@ -1,4 +1,5 @@
 #if !defined(HANDMADE_H)
+#define HANDMADE_H
 /* ========================================================================
    $File: $
    $Date: $
@@ -27,28 +28,12 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "libraries\stb_truetype.h"
 
+#include "handmade_typedefs.h"
+
 #include "math\Vector2.h"
 #include "math\Vector3.h"
-
-#define internal static 
-#define local_persist static 
-#define global_variable static
-
-#define Pi32 3.14159265359f
-
-typedef int8_t int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
-typedef int32 bool32;
-
-typedef uint8_t uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-typedef uint64_t uint64;
-
-typedef float real32;
-typedef double real64;
+#include "math\Matrix3.h"
+#include "math\Matrix4.h"
 
 #if HANDMADE_SLOW
 // TODO(casey): Complete assertion macro - don't worry everyone!
@@ -229,5 +214,4 @@ struct game_state
     real32 tJump;
 };
 
-#define HANDMADE_H
 #endif
