@@ -6,12 +6,15 @@ Memory Allocation:
 Goals:
 
 Start up an OpenGl context using GLEW  - Done
-Draw a line on the screen
-Draw a spinning cube
-Import an image using stb_image
-Draw the image on the screen
-Generate the graphic for a button, store it in the common memory buffer, and draw it on the screen
-Make it clickable
+Import an image using stb_image - Done
+Draw the image on the screen - Done
+Finish Quaternion class
+Create Matrix4::CreateOrthographic(screenWidth, screenHeight);
+Build a Model class and use it to draw axis arrows, a ground plane, and the test quad - Done
+Move rendering code out of platform layer (where appropriate)
+Generate the graphic for a button, store it in the common memory buffer, and draw it on the test quad
+Formalize GLState, PrepareScene, and GLRender
+Make the button clickable
 Load a font using stb_truetype
 Print text
 Render text to a button sprite

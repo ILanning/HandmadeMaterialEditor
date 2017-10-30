@@ -4,23 +4,26 @@
 #include <math.h>
 #include "..\handmade_typedefs.h"
 
-union Vector3
+struct Vector3
 {
 	static const int ElementCount = 3;
 
-	struct
+	union
 	{
-		real32 x, y, z;
+		struct
+		{
+			real32 x, y, z;
+		};
+		struct
+		{
+			real32 u, v, w;
+		};
+		struct
+		{
+			real32 r, g, b;
+		};
+		real32 elements[ElementCount];
 	};
-	struct
-	{
-		real32 u, v, w;
-	};
-	struct
-	{
-		real32 r, g, b;
-	};
-	real32 elements[ElementCount];
 
 	Vector3 Normalize();
 	real32 Dot(const Vector3 &b);

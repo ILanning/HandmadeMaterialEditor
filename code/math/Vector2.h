@@ -4,19 +4,22 @@
 #include <math.h>
 #include "..\handmade_typedefs.h"
 
-union Vector2
+struct Vector2
 {
 	static const int ElementCount = 2;
 
-	struct
+	union
 	{
-		real32 x, y;
+		struct
+		{
+			real32 x, y;
+		};
+		struct
+		{
+			real32 u, v;
+		};
+		real32 elements[ElementCount];
 	};
-	struct
-	{
-		real32 u, v;
-	};
-	real32 elements[ElementCount];
 
 	Vector2 Normalize();
 	real32 Dot(const Vector2 &b);

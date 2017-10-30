@@ -20,14 +20,15 @@
   - WM_SETCURSOR (control cursor visibility)
   - QueryCancelAutoplay
   - WM_ACTIVATEAPP (for when we are not the active application)
-  - Blit speed improvements (BitBlt)
-  - Hardware acceleration (OpenGL or Direct3D or BOTH??)
   - GetKeyboardLayout (for French keyboards, international WASD support)
+  - Tell game layer when a window resize has happened and handle it gracefully
+  - Add a way to restrict the size/aspect ratio/resolution of the window to a set of certain values
 
   Just a partial list of stuff!!
 */
 
 #include "..\handmade.h"
+#include "..\drawing\GLState.h"
 
 #include <windows.h>
 #include <stdio.h>
@@ -47,6 +48,9 @@
 #include "win32_audio.cpp"
 #include "win32_input.cpp"
 #include "win32_graphics.cpp"
+
+static real32 testRotY = 0;
+static real32 testRotX = 0;
 
 DEBUG_PLATFORM_FREE_FILE_MEMORY(DEBUGPlatformFreeFileMemory)
 {
@@ -132,13 +136,9 @@ DEBUG_PLATFORM_WRITE_ENTIRE_FILE(DEBUGPlatformWriteEntireFile)
     return(Result);
 }
 
-internal win32_game_code
-Win32LoadGameCode(char *SourceDLLName, char *TempDLLName)
+internal win32_game_code Win32LoadGameCode(char *SourceDLLName, char *TempDLLName)
 {
     win32_game_code Result = {};
-
-    // TODO(casey): Need to get the proper path here!
-    // TODO(casey): Automatic determination of when updates are necessary.
 
     Result.DLLLastWriteTime = Win32GetLastWriteTime(SourceDLLName);
 
@@ -166,8 +166,7 @@ Win32LoadGameCode(char *SourceDLLName, char *TempDLLName)
     return(Result);
 }
 
-internal void
-Win32UnloadGameCode(win32_game_code *GameCode)
+internal void Win32UnloadGameCode(win32_game_code *GameCode)
 {
     if(GameCode->GameCodeDLL)
     {
@@ -180,8 +179,7 @@ Win32UnloadGameCode(win32_game_code *GameCode)
     GameCode->GetSoundSamples = 0;
 }
 
-internal LRESULT CALLBACK
-Win32MainWindowCallback(HWND Window,
+internal LRESULT CALLBACK Win32MainWindowCallback(HWND Window,
                         UINT Message,
                         WPARAM WParam,
                         LPARAM LParam)
@@ -224,7 +222,7 @@ Win32MainWindowCallback(HWND Window,
             Assert(!"Keyboard input came in through a non-dispatch message!");
         } break;
         
-        case WM_PAINT:
+        /*case WM_PAINT:
         {
 			//TODO(Ian): Does this need to pull in a new HDC, or should it use the global one?
             PAINTSTRUCT Paint;
@@ -233,7 +231,7 @@ Win32MainWindowCallback(HWND Window,
             Win32DisplayBufferInWindow(&GlobalBackbuffer, DeviceContext,
                                        Dimension.Width, Dimension.Height);
             EndPaint(Window, &Paint);
-        } break;
+        } break;*/
 
         default:
         {
@@ -245,8 +243,7 @@ Win32MainWindowCallback(HWND Window,
     return(Result);
 }
 
-internal void
-Win32ProcessPendingMessages(win32_state *State, game_controller_input *KeyboardController)
+internal void Win32ProcessPendingMessages(win32_state *State, game_controller_input *KeyboardController)
 {
     MSG Message;
     while(PeekMessage(&Message, 0, 0, 0, PM_REMOVE))
@@ -369,11 +366,10 @@ Win32ProcessPendingMessages(win32_state *State, game_controller_input *KeyboardC
     }
 }
 
-int CALLBACK
-WinMain(HINSTANCE Instance,
-        HINSTANCE PrevInstance,
-        LPSTR CommandLine,
-        int ShowCode)
+int CALLBACK WinMain(HINSTANCE Instance,
+					 HINSTANCE PrevInstance,
+					 LPSTR CommandLine,
+					 int ShowCode)
 {
     win32_state Win32State = {};
 
@@ -400,7 +396,7 @@ WinMain(HINSTANCE Instance,
     
     WNDCLASSA WindowClass = {};
 
-    Win32ResizeDIBSection(&GlobalBackbuffer, 1280, 720);
+    //Win32ResizeDIBSection(&GlobalBackbuffer, 1280, 720);
     
     WindowClass.style = CS_HREDRAW|CS_VREDRAW|CS_OWNDC;
     WindowClass.lpfnWndProc = Win32MainWindowCallback;
@@ -489,8 +485,6 @@ WinMain(HINSTANCE Instance,
 
 
             // TODO(casey): Handle various memory footprints (USING SYSTEM METRICS)
-            // TODO(casey): Use MEM_LARGE_PAGES and call adjust token
-            // privileges when not on Windows XP?
             Win32State.TotalSize = GameMemory.PermanentStorageSize + GameMemory.TransientStorageSize;
             Win32State.GameMemoryBlock = VirtualAlloc(BaseAddress, (size_t)Win32State.TotalSize,
                                                       MEM_RESERVE|MEM_COMMIT,
@@ -566,7 +560,7 @@ WinMain(HINSTANCE Instance,
 
 			if (GLEW_OK != glewInit())
 			{
-				// GLEW failed!
+				//TODO(Ian): Diagnostic
 				exit(1);
 			}
 
@@ -583,9 +577,7 @@ WinMain(HINSTANCE Instance,
 
 			wglDeleteContext(dummyContext);
 
-			//MessageBoxA(0, (char*)glGetString(GL_VERSION), "OPENGL VERSION", 0);
-
-			PrepareScene();
+			GLState *glState = PrepareScene();
 
             if(Samples && GameMemory.PermanentStorage && GameMemory.TransientStorage)
             {
@@ -792,7 +784,7 @@ WinMain(HINSTANCE Instance,
                         {
                             Game.UpdateAndRender(&Thread, &GameMemory, NewInput, &Buffer);
                         }
-						GLRender();
+						GLRender(glState, NewInput);
 
                         LARGE_INTEGER AudioWallClock = Win32GetWallClock();
                         real32 FromBeginToAudioSeconds = Win32GetSecondsElapsed(FlipWallClock, AudioWallClock);

@@ -8,7 +8,7 @@ set path="%~dp0";%path%
 set exe_path=%~dp0
 set handmade_folder=%exe_path:~0,-5%
 set exe_path=%handmade_folder%build\win32_handmade.exe
-REM call devenv %exe_path%
+REM call devenv "%exe_path%"
 
 echo Environment Variables:
 echo ===========================

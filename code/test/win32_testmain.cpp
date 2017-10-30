@@ -8,6 +8,8 @@ TEST_SUITE_BEGIN("math");
 
 #include "math/test_vector2.cpp"
 #include "math/test_vector3.cpp"
+#include "math/test_matrix3.cpp"
+#include "math/test_matrix4.cpp"
 
 TEST_SUITE_END();
 

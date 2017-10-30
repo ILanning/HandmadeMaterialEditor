@@ -6,11 +6,20 @@
 #define GLEW_IMPORTED 1
 
 #endif
+#include "..\handmade_typedefs.h"
+#include "..\handmade.h"
 
 #include "..\math\Vector2.h"
+#include "..\math\Vector3.h"
+#include "..\math\Matrix4.h"
+#include "..\drawing\GLState.h"
+#include "..\drawing\Texture2D.h"
+#include "..\drawing\Geometry.h"
+#include "..\drawing\Model.h"
+#include "..\drawing\Vertex.h"
+#include "..\drawing\GeometryHelpers.cpp"
 
-internal void
-Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
+/*internal void Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 {
 	// TODO(casey): Bulletproof this.
 	// Maybe don't free first, free after, then free first if that fails.
@@ -45,10 +54,9 @@ Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 	Buffer->Pitch = Width*BytesPerPixel;
 
 	// TODO(casey): Probably clear this to black
-}
+}*/
 
-internal void
-Win32DisplayBufferInWindow(win32_offscreen_buffer *Buffer,
+/*internal void Win32DisplayBufferInWindow(win32_offscreen_buffer *Buffer,
 	HDC DeviceContext, int WindowWidth, int WindowHeight)
 {
 	// NOTE(casey): For prototyping purposes, we're going to always blit
@@ -60,28 +68,26 @@ Win32DisplayBufferInWindow(win32_offscreen_buffer *Buffer,
 		Buffer->Memory,
 		&Buffer->Info,
 		DIB_RGB_COLORS, SRCCOPY);
-}
+}*/
 
-struct GLObjects
-{
-	
-};
-
-const GLchar* vertexSource = R"glsl(
+const GLchar *vertexSourceCode = R"glsl(
     #version 150 core
-    in vec2 position;
+    in vec3 position;
     in vec3 color;
     in vec2 texcoord;
+	uniform mat4 mvp;
+	uniform vec3 meshColor;
     out vec3 Color;
     out vec2 Texcoord;
     void main()
     {
-        Color = color;
+        Color = color * meshColor;
         Texcoord = texcoord;
-        gl_Position = vec4(position, 0.0, 1.0);
+        gl_Position = mvp * vec4(position, 1.0);
     }
 )glsl";
-const GLchar* fragmentSource = R"glsl(
+
+const GLchar *fragmentSourceCode = R"glsl(
     #version 150 core
     in vec3 Color;
     in vec2 Texcoord;
@@ -89,12 +95,12 @@ const GLchar* fragmentSource = R"glsl(
     uniform sampler2D tex;
     void main()
     {
-		vec4 texel = texture(tex, Texcoord);
-		if(texel.a < 1)
+		vec4 texColor = texture(tex, Texcoord);
+		if(texColor.w < 0.5)
 		{
 			discard;
 		}
-        outColor = texel * vec4(Color, 1.0);
+        outColor = texColor * vec4(Color, 1.0);
     }
 )glsl";
 
@@ -148,39 +154,43 @@ internal void MessageGLErrors()
 	}
 }
 
-internal void PrepareScene()
+static Model *arrow;
+static Model *enterButton;
+static Model *enter2;
+
+void BuildTestObjects(GLuint shaderProgram)
 {
-	//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	int32 width, height, components;
+	uint8 *image = stbi_load("EnterButton.png", &width, &height, &components, 4);
+	real32 imageRatio = ((real32)width) / height;
 
-	GLuint vao;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
+	Texture2D *enterTexture = new Texture2D(image, width, height, GL_RGBA, GL_RGBA);
 
-	GLuint vertexBuffer;
-	glGenBuffers(1, &vertexBuffer);
+	VertexColorTexture *vertices = new VertexColorTexture[4];
+	//Position                   Color                   Texcoords
+	vertices[0] = { -0.5f * imageRatio,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f }; // Top-left
+	vertices[1] = { 0.5f * imageRatio,  0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f }; // Top-right
+	vertices[2] = { 0.5f * imageRatio, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f }; // Bottom-right
+	vertices[3] = { -0.5f * imageRatio, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f }; // Bottom-left
 
-	GLfloat vertices[] = {
-		//  Position      Color             Texcoords
-		-0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
-		0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
-		-0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
-	};
 
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	GLuint elementBuffer;
-	glGenBuffers(1, &elementBuffer);
-
-	GLuint elements[] = {
+	GLuint *elements = new GLuint[6]{
 		0, 1, 2,
 		2, 3, 0
 	};
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
+	Geometry *enterMesh = new Geometry(new VertexColorTextureArray(vertices, 4), elements, 6, shaderProgram, enterTexture);
+	enterButton = new Model(enterMesh, { 0, 0, 0 }, { (real32)1, (real32)1, 1 });
+	enter2 = new Model(enterMesh, { 0, 1, 0 }, { (real32)1, (real32)1, 1 });
+	arrow = MakeArrow({ 1, 1, 1 }, 16, shaderProgram);
 
+	arrow->Rotation = Matrix4::CreateRotationX(Pi32 / 2);
+	arrow->Position.y = 3;
+	arrow->Size.z = 3;
+}
+
+GLuint BuildShaderProgram(const GLchar *vertexSource, const GLchar *fragmentSource)
+{
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertexShader, 1, &vertexSource, NULL);
 	glCompileShader(vertexShader);
@@ -195,7 +205,6 @@ internal void PrepareScene()
 
 	glBindFragDataLocation(shaderProgram, 0, "outColor");
 	glLinkProgram(shaderProgram);
-	glUseProgram(shaderProgram);
 
 	GLint isLinked;
 	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &isLinked);
@@ -205,52 +214,111 @@ internal void PrepareScene()
 		MessageBoxA(0, "Shader link failed!", 0, 0);
 	}
 
-	int vertexSize = 7 * sizeof(GLfloat);
-	GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-	glEnableVertexAttribArray(posAttrib);
-	glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, vertexSize, 0);
-
-	GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
-	glEnableVertexAttribArray(colAttrib);
-	glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, vertexSize, (void*)(2 * sizeof(GLfloat)));
-
-	GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
-	glEnableVertexAttribArray(texAttrib);
-	glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, vertexSize, (void*)(5 * sizeof(GLfloat)));
-
-	// Load texture
-	GLuint tex;
-	glGenTextures(1, &tex);
-	glBindTexture(GL_TEXTURE_2D, tex);
-
-	int width, height, components;
-	//unsigned char* image = SOIL_load_image("sample.png", &width, &height, 0, SOIL_LOAD_RGB);
-	uint8 *image = stbi_load("EnterButton.png", &width, &height, &components, 4);
-	/*uint8 image[] = {0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0xff,
-		0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff};
-	width = 2;
-	height = 2;*/
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
-
-	delete image;
-	//SOIL_free_image_data(image);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	MessageGLErrors();
+	return shaderProgram;
 }
 
-void GLRender()
+internal GLState* PrepareScene()
 {
+	GLState *glState = new GLState();
+		
+	GLuint shaderProgram = BuildShaderProgram(vertexSourceCode, fragmentSourceCode);
+	glState->ShaderProgram = shaderProgram;
+
+	glUseProgram(shaderProgram);
+
+	BuildTestObjects(shaderProgram);
+
+	//glState->SetProjection(Matrix4::CreatePerspective(Pi32 / 2, 16.0f / 9.0f, 1, 100));
+	glState->SetProjection(Matrix4::CreateOrthographic(1280, 720, 0.1f, 1000));
+	arrow->Size *= 100;
+	enterButton->Size *= 100;
+	enter2->Size *= 100;
+	enter2->Position *= 100;
+	glState->SetView(Matrix4::CreateTranslation({ 0, 0, -10 }));
+
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	MessageGLErrors();
+
+	return glState;
+}
+
+void GLRender(GLState *glState, game_input *input)
+{
+
+	Vector3 rotateDirection = {};
+	if (input->Controllers[0].MoveDown.EndedDown)
+	{
+		rotateDirection.x++;
+	}
+	if (input->Controllers[0].MoveUp.EndedDown)
+	{
+		rotateDirection.x--;
+	}
+	if (input->Controllers[0].MoveLeft.EndedDown)
+	{
+		rotateDirection.y++;
+	}
+	if (input->Controllers[0].MoveRight.EndedDown)
+	{
+		rotateDirection.y--;
+	}
+	if (input->Controllers[0].RightShoulder.EndedDown)
+	{
+		rotateDirection.z++;
+	}
+	if (input->Controllers[0].LeftShoulder.EndedDown)
+	{
+		rotateDirection.z--;
+	}
+
+	real32 rotateSpeed = 0.05f;
+	if (rotateDirection.MagnitudeSquared() != 0)
+	{
+		rotateDirection = rotateDirection.Normalize() * rotateSpeed;
+	}
+	arrow->Rotation *= Matrix4::CreateRotation(rotateDirection);
+
+
+	Vector3 moveDirection = {};
+	if (input->Controllers[0].ActionRight.EndedDown)
+	{
+		moveDirection.x++;
+	}
+	if (input->Controllers[0].ActionLeft.EndedDown)
+	{
+		moveDirection.x--;
+	}
+	if (input->Controllers[0].ActionUp.EndedDown)
+	{
+		moveDirection.y++;
+	}
+	if (input->Controllers[0].ActionDown.EndedDown)
+	{
+		moveDirection.y--;
+	}
+	if (input->Controllers[0].Start.EndedDown)
+	{
+		moveDirection.z++;
+	}
+	if (input->Controllers[0].Back.EndedDown)
+	{
+		moveDirection.z--;
+	}
+
+	real32 moveSpeed = 0.03f;
+	if (rotateDirection.MagnitudeSquared() != 0)
+	{
+		moveDirection = moveDirection.Normalize() * moveSpeed;
+	}
+	arrow->Position += moveDirection;
+
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-	//glViewport(0, 0, 1280, 720);
+	
+	enterButton->Draw(glState->View, glState->Projection);
+	enter2->Draw(glState->View, glState->Projection);
+	arrow->Draw(glState->View, glState->Projection);
 	
 	SwapBuffers(GlobalDeviceContext);
 }
