@@ -61,7 +61,7 @@ struct Geometry
 	}
 
 	Geometry(VertexArray *vertices, GLuint *elements, uint32 elementCount, GLuint shaderProgram,
-		Texture2D *texture = NULL, bool genBuffers = true, GLenum mode = GL_TRIANGLES, uint32 primitiveRestartIndex = 0xffffffff)
+		Texture2D *texture = nullptr, bool genBuffers = true, GLenum mode = GL_TRIANGLES, uint32 primitiveRestartIndex = MaxInt32)
 		: Vertices(vertices), Elements(elements), ElementCount(elementCount), Texture(texture), Mode(mode), PrimitiveRestartIndex(primitiveRestartIndex)
 	{
 		if (genBuffers)
@@ -93,7 +93,18 @@ struct Geometry
 		glDrawElements(Mode, (GLsizei)ElementCount, GL_UNSIGNED_INT, 0);
 	}
 
-	//TODO(Ian): Write Geometry destructor
+
+	~Geometry()
+	{
+		delete[] Vertices;
+		delete[] Elements;
+		
+		GLuint buffers[] = { VBO, EBO };
+		glDeleteBuffers(2, buffers);
+		glDeleteVertexArrays(1, &VAO);
+		//CONSIDER(Ian):  Eventually a ContentManager will be handling assets, including textures. As a result, we probably don't want to delete the textures this holds.
+		//Should there be something here that tells the ContentManager that the textures held by this object have one less dependency?
+	}
 };
 
 #endif

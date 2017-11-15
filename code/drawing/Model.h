@@ -35,6 +35,8 @@ struct Model
 		Matrix4 mvp = projection * view * GetModelMatrix();
 		MeshData->Draw(mvp, Color);
 	}
+
+	//TODO(Ian): Pivot matrix
 };
 
 #endif

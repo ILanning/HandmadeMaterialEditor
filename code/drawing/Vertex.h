@@ -6,6 +6,9 @@
 #include "../math/Vector3.h"
 #include "../libraries/glew.h"
 
+//TODO(Ian):  Define a VertexInfo class with one child class for each type of vertex, to 
+//            better enable functions that can handle many types of vertices
+
 struct VertexColorTexture
 {
 	static const int32 VertexSize = 8;

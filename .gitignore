@@ -155,6 +155,7 @@ $RECYCLE.BIN/
 # Non-Code Folders
 Content Files/
 Meta Development Files/
+[Dd]ocs/
 
 #Compressed Files
 *.7z

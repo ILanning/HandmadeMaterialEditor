@@ -5,7 +5,12 @@
 #define local_persist static 
 #define global_variable static
 
-#define Pi32 3.14159265359f
+//TODO(Ian): Max/Min Real32/64
+
+#define Kilobytes(Value) ((Value)*1024LL)
+#define Megabytes(Value) (Kilobytes(Value)*1024LL)
+#define Gigabytes(Value) (Megabytes(Value)*1024LL)
+#define Terabytes(Value) (Gigabytes(Value)*1024LL)
 
 typedef int8_t int8;
 typedef int16_t int16;
@@ -20,5 +25,14 @@ typedef uint64_t uint64;
 
 typedef float real32;
 typedef double real64;
+
+#define Pi32 3.14159265359f
+
+#define MaxInt16 0x7fff
+#define MinInt16 0x8000
+#define MaxInt32 0x7fffffff
+#define MinInt32 0x80000000
+#define MaxInt64 0x7fffffffffffffff
+#define MinInt64 0x8000000000000000
 
 #endif

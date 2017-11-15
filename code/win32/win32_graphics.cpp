@@ -9,6 +9,8 @@
 #include "..\handmade_typedefs.h"
 #include "..\handmade.h"
 
+#include "win32_debug.cpp"
+
 #include "..\math\Vector2.h"
 #include "..\math\Vector3.h"
 #include "..\math\Matrix4.h"
@@ -81,7 +83,7 @@ const GLchar *vertexSourceCode = R"glsl(
     out vec2 Texcoord;
     void main()
     {
-        Color = color * meshColor;
+        Color = meshColor;
         Texcoord = texcoord;
         gl_Position = mvp * vec4(position, 1.0);
     }
@@ -157,14 +159,15 @@ internal void MessageGLErrors()
 static Model *arrow;
 static Model *enterButton;
 static Model *enter2;
+static Model *Virt;
 
 void BuildTestObjects(GLuint shaderProgram)
 {
 	int32 width, height, components;
-	uint8 *image = stbi_load("EnterButton.png", &width, &height, &components, 4);
+	uint8 *image = stbi_load("EnterButton.png", &width, &height, &components, 3);
 	real32 imageRatio = ((real32)width) / height;
 
-	Texture2D *enterTexture = new Texture2D(image, width, height, GL_RGBA, GL_RGBA);
+	Texture2D *enterTexture = new Texture2D(image, width, height, GL_RGB, GL_RGBA);
 
 	VertexColorTexture *vertices = new VertexColorTexture[4];
 	//Position                   Color                   Texcoords
@@ -178,6 +181,15 @@ void BuildTestObjects(GLuint shaderProgram)
 		0, 1, 2,
 		2, 3, 0
 	};
+
+	thread_context dummy = {};
+	debug_read_file_result file = DEBUGPlatformReadEntireFile(&dummy, "Assets/virt/Virt.obj");
+
+	int32 virtWidth, virtHeight, virtComponents;
+	uint8 *virtImage = stbi_load("Assets/virt/VirtTextureMapFinal.png", &virtWidth, &virtHeight, &virtComponents, 4);
+	Texture2D *virtTex = new Texture2D(virtImage, virtWidth, virtHeight, GL_RGBA, GL_RGBA);
+	Geometry *virtMesh = ParseOBJ((char *)file.Contents, file.ContentsSize, shaderProgram, virtTex);
+	Virt = new Model(virtMesh);
 
 	Geometry *enterMesh = new Geometry(new VertexColorTextureArray(vertices, 4), elements, 6, shaderProgram, enterTexture);
 	enterButton = new Model(enterMesh, { 0, 0, 0 }, { (real32)1, (real32)1, 1 });
@@ -221,6 +233,8 @@ internal GLState* PrepareScene()
 {
 	GLState *glState = new GLState();
 		
+	glEnable(GL_DEPTH_TEST);
+
 	GLuint shaderProgram = BuildShaderProgram(vertexSourceCode, fragmentSourceCode);
 	glState->ShaderProgram = shaderProgram;
 
@@ -234,6 +248,8 @@ internal GLState* PrepareScene()
 	enterButton->Size *= 100;
 	enter2->Size *= 100;
 	enter2->Position *= 100;
+	Virt->Size *= 20;
+	Virt->Position = { 0, -275, 0 };
 	glState->SetView(Matrix4::CreateTranslation({ 0, 0, -10 }));
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -277,7 +293,7 @@ void GLRender(GLState *glState, game_input *input)
 	{
 		rotateDirection = rotateDirection.Normalize() * rotateSpeed;
 	}
-	arrow->Rotation *= Matrix4::CreateRotation(rotateDirection);
+	Virt->Rotation *= Matrix4::CreateRotation(rotateDirection);
 
 
 	Vector3 moveDirection = {};
@@ -314,11 +330,12 @@ void GLRender(GLState *glState, game_input *input)
 	arrow->Position += moveDirection;
 
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	enterButton->Draw(glState->View, glState->Projection);
-	enter2->Draw(glState->View, glState->Projection);
-	arrow->Draw(glState->View, glState->Projection);
+	Virt->Draw(glState->View, glState->Projection);
+	//enterButton->Draw(glState->View, glState->Projection);
+	//enter2->Draw(glState->View, glState->Projection);
+	//arrow->Draw(glState->View, glState->Projection);
 	
 	SwapBuffers(GlobalDeviceContext);
 }

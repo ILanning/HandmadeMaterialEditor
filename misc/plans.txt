@@ -8,20 +8,32 @@ Goals:
 Start up an OpenGl context using GLEW  - Done
 Import an image using stb_image - Done
 Draw the image on the screen - Done
-Finish Quaternion class
-Create Matrix4::CreateOrthographic(screenWidth, screenHeight);
+Create Matrix4::CreateOrthographic(screenWidth, screenHeight); - Done
 Build a Model class and use it to draw axis arrows, a ground plane, and the test quad - Done
-Move rendering code out of platform layer (where appropriate)
+Load an .obj file, including associated texture
+Load a .mtl file
+Render a loaded model with OpenGL
+Cleanup Pass - Formalize GLState, PrepareScene, and GLRender
+Cleanup Pass - Move rendering code out of platform layer (where appropriate)
+Cleanup Pass - Organize everything into sensible namespaces
+Cleanup Pass - Ensure Doxygen support
+Cleanup Pass - Ensure robust unit tests exist for anything that they'd be sensible for
+Cleanup Pass - Reexamine TODOs and CONSIDERs
+
+Finish Quaternion class
+Write InputManager
+Write MemoryArena
+Write ContentManager
+Cleanup Pass - Examine all uses of new, VirtualAlloc(), etc. and ensure that there aren't any memory leaks
+Cleanup Pass - Ensure Doxygen support
+Cleanup Pass - Ensure robust unit tests exist for anything that they'd be sensible for
+
 Generate the graphic for a button, store it in the common memory buffer, and draw it on the test quad
-Formalize GLState, PrepareScene, and GLRender
 Make the button clickable
 Load a font using stb_truetype
 Print text
 Render text to a button sprite
 Make an editable text box
-Load a .mtl file
 Display the material data on the screen with sensible components editable
 Allow saving of the file
-Load an .obj file, including associated textures
-Render a model with OpenGL
 Apply material effects to the model as a preview

@@ -1,0 +1,13 @@
+Commenting conventions:
+
+TODO(Name):
+  -Represents something that needs to be done, though not neccesarily with any sort of urgency
+
+NOTE(Name):
+  -Commentary on how the code works
+
+ASK(Name):
+  -Questions for a better programmer than me
+
+CONSIDER(Name):
+  -Fairly low priority tasks that could clean things up/improve speed/etc., but may have drawbacks
