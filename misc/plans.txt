@@ -10,9 +10,9 @@ Import an image using stb_image - Done
 Draw the image on the screen - Done
 Create Matrix4::CreateOrthographic(screenWidth, screenHeight); - Done
 Build a Model class and use it to draw axis arrows, a ground plane, and the test quad - Done
-Load an .obj file, including associated texture
+Load an .obj file, including associated texture - Done
 Load a .mtl file
-Render a loaded model with OpenGL
+Render a loaded model with OpenGL - Done
 Cleanup Pass - Formalize GLState, PrepareScene, and GLRender
 Cleanup Pass - Move rendering code out of platform layer (where appropriate)
 Cleanup Pass - Organize everything into sensible namespaces

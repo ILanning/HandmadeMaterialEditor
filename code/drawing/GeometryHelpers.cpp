@@ -391,7 +391,7 @@ Geometry *ParseOBJ(char *file, const int32 fileLength, GLuint shaderProgram, Tex
 						elements.PushBack((GLuint)faceVerts[1]);
 
 						elements.PushBack((GLuint)faceVerts[2]);
-						elements.PushBack((GLuint)faceVerts[1]);
+						elements.PushBack((GLuint)faceVerts[0]);
 						elements.PushBack((GLuint)faceVerts[3]);
 					}
 

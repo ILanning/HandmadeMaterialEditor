@@ -84,7 +84,7 @@ const GLchar *vertexSourceCode = R"glsl(
     void main()
     {
         Color = meshColor;
-        Texcoord = texcoord;
+        Texcoord = vec2(texcoord.x, -texcoord.y);
         gl_Position = mvp * vec4(position, 1.0);
     }
 )glsl";
