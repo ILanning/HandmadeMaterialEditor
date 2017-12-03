@@ -13,6 +13,13 @@ TEST_SUITE_BEGIN("math");
 
 TEST_SUITE_END();
 
+TEST_SUITE_BEGIN("general");
+
+#include "general/test_stringhelpers.cpp"
+#include "general/test_pathhelpers.cpp"
+
+TEST_SUITE_END();
+
 //-lts list test suites
 //-tc=*x*
 //-sf --source-file=

@@ -61,6 +61,25 @@ struct thread_context
     int Placeholder;
 };
 
+struct FileData
+{
+	int32 PathSize;
+	char* Path;
+	uint32 FileSize;
+	bool IsLoaded;
+	void *File;
+
+	/**
+	\brief Loads the contents of the file into *File if they have not already been loaded.
+
+	\readFile The function to use to load this file.
+	\reload Set to true to force this file to be loaded fresh
+	*/
+};
+
+#define PLATFORM_READ_FILE(name) FileData name(char *path, int32 pathLength, bool *outSuccess)
+typedef PLATFORM_READ_FILE(ReadFileFunc);
+
 /*
   NOTE(casey): Services that the platform layer provides to the game
 */
@@ -79,7 +98,7 @@ struct debug_read_file_result
 #define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(thread_context *Thread, void *Memory)
 typedef DEBUG_PLATFORM_FREE_FILE_MEMORY(debug_platform_free_file_memory);
 
-#define DEBUG_PLATFORM_READ_ENTIRE_FILE(name) debug_read_file_result name(thread_context *Thread, char *Filename)
+#define DEBUG_PLATFORM_READ_ENTIRE_FILE(name) debug_read_file_result name(thread_context *Thread, char *Filename, bool *outSuccess)
 typedef DEBUG_PLATFORM_READ_ENTIRE_FILE(debug_platform_read_entire_file);
 
 #define DEBUG_PLATFORM_WRITE_ENTIRE_FILE(name) bool32 name(thread_context *Thread, char *Filename, uint32 MemorySize, void *Memory)
@@ -193,7 +212,6 @@ typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 // or asking about it, etc.
 #define GAME_GET_SOUND_SAMPLES(name) void name(thread_context *Thread, game_memory *Memory, game_sound_output_buffer *SoundBuffer)
 typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
-
 //
 //
 //

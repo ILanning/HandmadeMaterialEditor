@@ -18,6 +18,7 @@ DEBUG_PLATFORM_FREE_FILE_MEMORY(DEBUGPlatformFreeFileMemory)
 DEBUG_PLATFORM_READ_ENTIRE_FILE(DEBUGPlatformReadEntireFile)
 {
 	debug_read_file_result Result = {};
+	bool success = false;
 
 	HANDLE FileHandle = CreateFileA(Filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
 	if (FileHandle != INVALID_HANDLE_VALUE)
@@ -34,6 +35,7 @@ DEBUG_PLATFORM_READ_ENTIRE_FILE(DEBUGPlatformReadEntireFile)
 					(FileSize32 == BytesRead))
 				{
 					// NOTE(casey): File read successfully
+					success = true;
 					Result.ContentsSize = FileSize32;
 				}
 				else
@@ -60,7 +62,39 @@ DEBUG_PLATFORM_READ_ENTIRE_FILE(DEBUGPlatformReadEntireFile)
 		// TODO(casey): Logging
 	}
 
+	if (outSuccess)
+	{
+		*outSuccess = success;
+	}
+
 	return(Result);
+}
+
+PLATFORM_READ_FILE(DebugReadWrapper)
+{
+	FileData result = {};
+	result.Path = path;
+	result.PathSize = pathLength;
+
+	bool success = false;
+	debug_read_file_result file = DEBUGPlatformReadEntireFile({}, path, &success);
+
+	if (success)
+	{
+		result.File = file.Contents;
+		result.FileSize = file.ContentsSize;
+		result.IsLoaded = true;
+	}
+	else
+	{
+		result.IsLoaded = false;
+	}
+	if (outSuccess)
+	{
+		*outSuccess = success;
+	}
+
+	return result;
 }
 
 DEBUG_PLATFORM_WRITE_ENTIRE_FILE(DEBUGPlatformWriteEntireFile)

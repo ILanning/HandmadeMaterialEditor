@@ -6,6 +6,7 @@
 #include "../math/Matrix4.h"
 #include "Texture2D.h"
 #include "Vertex.h"
+#include "Material.h"
 #include "../libraries/glew.h"
 
 struct Geometry
@@ -23,7 +24,7 @@ struct Geometry
 	GLint MVPUniform;
 	GLint ColorUniform;
 
-	Texture2D *Texture;
+	Material *MeshMaterial;
 
 	bool Initialized;
 
@@ -61,8 +62,8 @@ struct Geometry
 	}
 
 	Geometry(VertexArray *vertices, GLuint *elements, uint32 elementCount, GLuint shaderProgram,
-		Texture2D *texture = nullptr, bool genBuffers = true, GLenum mode = GL_TRIANGLES, uint32 primitiveRestartIndex = MaxInt32)
-		: Vertices(vertices), Elements(elements), ElementCount(elementCount), Texture(texture), Mode(mode), PrimitiveRestartIndex(primitiveRestartIndex)
+		Material *material = nullptr, bool genBuffers = true, GLenum mode = GL_TRIANGLES, uint32 primitiveRestartIndex = MaxInt32)
+		: Vertices(vertices), Elements(elements), ElementCount(elementCount), MeshMaterial(material), Mode(mode), PrimitiveRestartIndex(primitiveRestartIndex)
 	{
 		if (genBuffers)
 		{
@@ -85,9 +86,9 @@ struct Geometry
 		glBindVertexArray(VAO);
 		glUniform3fv(ColorUniform, 1, color.elements);
 		glUniformMatrix4fv(MVPUniform, 1, GL_TRUE, mvp.elements);
-		if (Texture)
+		if (MeshMaterial)
 		{
-			Texture->Bind();
+			MeshMaterial->Use();
 		}
 
 		glDrawElements(Mode, (GLsizei)ElementCount, GL_UNSIGNED_INT, 0);

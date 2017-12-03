@@ -4,7 +4,7 @@
 #include "../../math/Matrix3.h"
 
 #ifndef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "../libraries/doctest.h"
+#include "../../libraries/doctest.h"
 #endif
 
 TEST_CASE("Testing the Matrix3 class")

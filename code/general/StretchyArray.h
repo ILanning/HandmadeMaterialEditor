@@ -92,6 +92,35 @@ public:
 		return nextEmpty - 1;
 	}
 
+	/**
+		/brief Adds `count` objects in the passed-in array to the StretchyArray.
+	*/
+	int32 PushBackMany(const T *items, int32 count)
+	{
+		for (int32 i = 0; i < count; i++)
+		{
+			PushBack(items[i]);
+		}
+		return nextEmpty - 1;
+	}
+
+	/**
+		/brief Adds all - or optionally `count` - objects in the passed-in StretchyArray to this one.
+	*/
+	int32 PushBackMany(StretchyArray<T> items, int32 count = -1)
+	{
+		if (count == -1)
+		{
+			count = items.Length();
+		}
+		for (int32 i = 0; i < count; i++)
+		{
+			PushBack(items[i]);
+		}
+		return nextEmpty - 1;
+
+	}
+
 	int32 Length()
 	{
 		return nextEmpty;

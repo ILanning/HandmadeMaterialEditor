@@ -3,37 +3,66 @@ Memory Allocation:
 	The memory required for the images and models will be allocated on a file-by-file basis, with each file being its own object.
 
 
-Goals:
+Core Goals:
 
-Start up an OpenGl context using GLEW  - Done
-Import an image using stb_image - Done
-Draw the image on the screen - Done
-Create Matrix4::CreateOrthographic(screenWidth, screenHeight); - Done
-Build a Model class and use it to draw axis arrows, a ground plane, and the test quad - Done
-Load an .obj file, including associated texture - Done
-Load a .mtl file
-Render a loaded model with OpenGL - Done
-Cleanup Pass - Formalize GLState, PrepareScene, and GLRender
-Cleanup Pass - Move rendering code out of platform layer (where appropriate)
-Cleanup Pass - Organize everything into sensible namespaces
-Cleanup Pass - Ensure Doxygen support
-Cleanup Pass - Ensure robust unit tests exist for anything that they'd be sensible for
-Cleanup Pass - Reexamine TODOs and CONSIDERs
+	Start up an OpenGl context using GLEW  - Done
+	Import an image using stb_image - Done
+	Draw the image on the screen - Done
+	Create Matrix4::CreateOrthographic(screenWidth, screenHeight); - Done
+	Build a Model class and use it to draw axis arrows, a ground plane, and the test quad - Done
+	Load an .obj file, including associated texture - Done
+	Write path string handling functions to deal with the relative paths in files
+	Load a .mtl file
+	Render a loaded model with OpenGL - Done
+	Apply material effects to the model as a preview
+	Cleanup Pass - Formalize GLState, PrepareScene, and GLRender
+	Cleanup Pass - Move rendering code out of platform layer (where appropriate)
+	Cleanup Pass - Organize everything into sensible namespaces
+	Cleanup Pass - Ensure Doxygen support
+	Cleanup Pass - Ensure robust unit tests exist for anything that they'd be sensible for
+	Cleanup Pass - Reexamine TODOs and CONSIDERs
 
-Finish Quaternion class
-Write InputManager
-Write MemoryArena
-Write ContentManager
-Cleanup Pass - Examine all uses of new, VirtualAlloc(), etc. and ensure that there aren't any memory leaks
-Cleanup Pass - Ensure Doxygen support
-Cleanup Pass - Ensure robust unit tests exist for anything that they'd be sensible for
+	Update build.bat to automatically hand the .cpp files in certain directories to MSVC
+	Edit includes to be something more standard
+	Finish Quaternion class
+	Write HandmadeString class
+	Write InputManager class
+	Write MemoryArena class
+	Write ContentManager class
+	Write ShaderManager class
+	Cleanup Pass - Examine all uses of new, VirtualAlloc(), etc. and ensure that there aren't any memory leaks
+	Cleanup Pass - Ensure Doxygen support
+	Cleanup Pass - Ensure robust unit tests exist for anything that they'd be sensible for
+	Cleanup Pass - Reexamine TODOs and CONSIDERs
 
-Generate the graphic for a button, store it in the common memory buffer, and draw it on the test quad
-Make the button clickable
-Load a font using stb_truetype
-Print text
-Render text to a button sprite
-Make an editable text box
-Display the material data on the screen with sensible components editable
-Allow saving of the file
-Apply material effects to the model as a preview
+	Load a font using stb_truetype
+	Render text to the screen
+	Write TextPositionColor class
+	Cleanup Pass - Ensure Doxygen support
+	Cleanup Pass - Ensure robust unit tests exist for anything that they'd be sensible for
+	Cleanup Pass - Reexamine TODOs and CONSIDERs
+
+	Generate and draw the graphic for a button
+	Render text to a button sprite
+	Support UI rendering in the render engine
+	Make the button clickable
+	Make an editable text box
+	Display the material data on the screen with sensible components editable
+	Allow saving of the file
+	Cleanup Pass - Ensure Doxygen support
+	Cleanup Pass - Ensure robust unit tests exist for anything that they'd be sensible for
+	Cleanup Pass - Reexamine TODOs and CONSIDERs
+
+	Replace UI code and platform layer with a C#/WPF application, using the same handmade.dll for both
+
+	Develop a UE4 plugin with the same functionality, and if possible/sensible also using the same handmade.dll 
+
+Nice To Have/Future Goals:
+
+	Add audio
+
+	Editing hints - say when a value is invalid, nonstandard, etc.
+
+	Use a true rendering engine (Such as Pango) and UTF-8 for all sensible strings
+
+	Make MTL and OBJ loaders extensible from outside libraries

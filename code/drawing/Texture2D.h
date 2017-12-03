@@ -3,6 +3,8 @@
 
 #include "../handmade_typedefs.h"
 #include "../libraries/glew.h"
+#include "../content/TextureMapType.h"
+#include "../content/MTLTextureOptions.h"
 
 struct Texture2D
 {
@@ -10,6 +12,7 @@ struct Texture2D
 	GLint ImageFormat;
 	GLsizei Width;
 	GLsizei Height;
+	GLint WrapStyle;
 	GLenum GLFormat;
 	GLuint GLID;
 
@@ -19,9 +22,34 @@ struct Texture2D
 		glGenTextures(1, &GLID);
 		glBindTexture(GL_TEXTURE_2D, GLID);
 		glTexImage2D(GL_TEXTURE_2D, 0, ImageFormat, Width, Height, 0, GLFormat, GL_UNSIGNED_BYTE, Data);
+		WrapStyle = GL_REPEAT;
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, WrapStyle);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, WrapStyle);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+
+	Texture2D(Content::OBJ::MTLTextureOptions options, Content::TextureMapType mapType)
+	{
+		glGenTextures(1, &GLID);
+		glBindTexture(GL_TEXTURE_2D, GLID); 
+		int32 components;
+		Data = stbi_load(options.TexturePath, &Width, &Height, &components, 4);
+		if (options.Clamp)
+		{
+			WrapStyle = GL_CLAMP_TO_EDGE;
+		}
+		else
+		{
+			WrapStyle = GL_REPEAT;
+		}
+		glTexImage2D(GL_TEXTURE_2D, 0, ImageFormat, Width, Height, 0, GLFormat, GL_UNSIGNED_BYTE, Data);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, WrapStyle);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, WrapStyle);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -42,6 +70,7 @@ struct Texture2D
 	~Texture2D()
 	{
 		delete[] Data;
+		Data = nullptr;
 		glDeleteTextures(1, &GLID);
 	}
 };

@@ -20,6 +20,7 @@
 #include "..\drawing\Model.h"
 #include "..\drawing\Vertex.h"
 #include "..\drawing\GeometryHelpers.cpp"
+#include "..\content\OBJLoader.h"
 
 /*internal void Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 {
@@ -164,10 +165,10 @@ static Model *Virt;
 void BuildTestObjects(GLuint shaderProgram)
 {
 	int32 width, height, components;
-	uint8 *image = stbi_load("EnterButton.png", &width, &height, &components, 3);
+	uint8 *image = stbi_load("EnterButton.png", &width, &height, &components, 4);
 	real32 imageRatio = ((real32)width) / height;
 
-	Texture2D *enterTexture = new Texture2D(image, width, height, GL_RGB, GL_RGBA);
+	Texture2D *enterTexture = new Texture2D(image, width, height, GL_RGBA, GL_RGBA);
 
 	VertexColorTexture *vertices = new VertexColorTexture[4];
 	//Position                   Color                   Texcoords
@@ -182,16 +183,15 @@ void BuildTestObjects(GLuint shaderProgram)
 		2, 3, 0
 	};
 
-	thread_context dummy = {};
-	debug_read_file_result file = DEBUGPlatformReadEntireFile(&dummy, "Assets/virt/Virt.obj");
+	//thread_context dummyThread = {};
+	//bool dummyBool = false;
+	//debug_read_file_result file = DEBUGPlatformReadEntireFile(&dummyThread, "Assets/virt/Virt.obj", &dummyBool);
 
-	int32 virtWidth, virtHeight, virtComponents;
-	uint8 *virtImage = stbi_load("Assets/virt/VirtTextureMapFinal.png", &virtWidth, &virtHeight, &virtComponents, 4);
-	Texture2D *virtTex = new Texture2D(virtImage, virtWidth, virtHeight, GL_RGBA, GL_RGBA);
-	Geometry *virtMesh = ParseOBJ((char *)file.Contents, file.ContentsSize, shaderProgram, virtTex);
+	Geometry *virtMesh = Content::ParseOBJ("Assets/virt/Virt.obj", 21, shaderProgram, *DebugReadWrapper);
 	Virt = new Model(virtMesh);
 
-	Geometry *enterMesh = new Geometry(new VertexColorTextureArray(vertices, 4), elements, 6, shaderProgram, enterTexture);
+	Material *enterMaterial = new Material("EnterMaterial", 14, enterTexture);
+	Geometry *enterMesh = new Geometry(new VertexColorTextureArray(vertices, 4), elements, 6, shaderProgram, enterMaterial);
 	enterButton = new Model(enterMesh, { 0, 0, 0 }, { (real32)1, (real32)1, 1 });
 	enter2 = new Model(enterMesh, { 0, 1, 0 }, { (real32)1, (real32)1, 1 });
 	arrow = MakeArrow({ 1, 1, 1 }, 16, shaderProgram);
