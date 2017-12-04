@@ -11,12 +11,14 @@
 
 struct Model
 {
+	//TODO(Ian): Transform matrices for each mesh in the geometry object
 	Geometry *MeshData;
 
 	Vector3 Size;
 	Matrix4 Rotation;
 	Vector3 Position;
 	Vector3 Color;
+	Vector3 Pivot = {};
 
 	Model(Geometry *meshData, const Vector3 &position = { 0, 0, 0 }, const Vector3 &size = { 1, 1, 1 }, const Matrix4 &rotation = Matrix4::Identity(), const Vector3 &color = { 1, 1, 1 })
 		: MeshData(meshData), Position(position), Size(size), Rotation(rotation), Color(color)
@@ -26,7 +28,7 @@ struct Model
 
 	Matrix4 GetModelMatrix()
 	{
-		Matrix4 result = Matrix4::CreateTranslation(Position) * Rotation * Matrix4::CreateScale(Size);
+		Matrix4 result = Matrix4::CreateTranslation(Position) * Rotation * Matrix4::CreateScale(Size) * Matrix4::CreateTranslation(Pivot);
 		return result;
 	}
 
@@ -35,8 +37,6 @@ struct Model
 		Matrix4 mvp = projection * view * GetModelMatrix();
 		MeshData->Draw(mvp, Color);
 	}
-
-	//TODO(Ian): Pivot matrix
 };
 
 #endif

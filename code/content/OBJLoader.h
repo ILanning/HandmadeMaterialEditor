@@ -9,6 +9,7 @@
 #include "../general/StringHelpers.cpp"
 #include "../general/PathHelpers.cpp"
 #include "../drawing/Texture2D.h"
+#include "../drawing/Mesh.h"
 #include "../drawing/Geometry.h"
 #include "../drawing/Vertex.h"
 #include "../libraries/glew.h"
@@ -342,7 +343,8 @@ namespace Content
 				GLuint *elementArray = elements.ToArray();
 				uint32 elementCount = elements.Length();
 
-				Geometry *result = new Geometry(vertexArray, elementArray, elementCount, shaderProgram, new Material(materials[0]));
+				Mesh *mesh = new Mesh(vertexArray, elementArray, elementCount, shaderProgram, new Material(materials[0]));
+				Geometry *result = new Geometry(mesh, 1);
 
 				return result;
 			}

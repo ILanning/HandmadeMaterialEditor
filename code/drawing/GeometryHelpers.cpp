@@ -20,7 +20,7 @@
 //           Maybe part of a package of named defaults associated with the ContentManager?
 //           ie. pass Load<Texture2D>(string) "White1x1" to get this, no file load needed
 Texture2D *BlankTexture = new Texture2D(new uint8[4]{ 255, 255, 255, 255 }, 1, 1, GL_RGBA, GL_RGBA, CString::CopySubstring("White1x1", 8), 9);
-Material BlankMaterial = Material("BlankFlat", 10, BlankTexture);
+Material *BlankMaterial = new Material("BlankFlat", 10, BlankTexture);
 
 void GenerateVertexRing(Matrix4 &transformation, const Vector3 &color, int count, VertexColorTexture *container)
 {
@@ -117,8 +117,9 @@ Model* MakeArrow(const Vector3 &color, int32 ringVertices, GLuint shaderProgram)
 	}
 
 	VertexColorTextureArray *verts = new VertexColorTextureArray(vertices, vertexCount);
-	Geometry *arrowMesh = new Geometry(verts, elements, elementCount, shaderProgram, &BlankMaterial);
-	Model *arrow = new Model(arrowMesh, { 0, 0, 0 }, { 1, 1, 1 }, Matrix4::Identity(), color);
+	Mesh *arrowMesh = new Mesh(verts, elements, elementCount, shaderProgram, BlankMaterial);
+	Geometry *arrowGeo = new Geometry(arrowMesh, 1);
+	Model *arrow = new Model(arrowGeo, { 0, 0, 0 }, { 1, 1, 1 }, Matrix4::Identity(), color);
 
 	return arrow;
 }

@@ -9,7 +9,6 @@ struct GLState
 {
 	Matrix4 View;
 	Matrix4 Projection;
-	GLint ShaderProgram;
 
 	GLState();
 
@@ -21,8 +20,6 @@ GLState::GLState()
 {
 	View = Matrix4::Identity();
 	Projection = Matrix4::Identity();
-
-	ShaderProgram = 0;
 }
 
 void GLState::SetView(const Matrix4 &view)

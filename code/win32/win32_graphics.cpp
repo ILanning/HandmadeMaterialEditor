@@ -108,7 +108,7 @@ const GLchar *fragmentSourceCode = R"glsl(
     }
 )glsl";
 
-internal void MessageGLErrors()
+internal void MessageBoxGLErrors()
 {
 	GLenum glError = glGetError();
 	while (glError != GL_NO_ERROR)
@@ -185,12 +185,14 @@ void BuildTestObjects(GLuint shaderProgram)
 	};
 
 	Geometry *virtMesh = Content::ParseOBJ("Assets/virt/Virt.obj", 21, shaderProgram, *DebugReadWrapper);
+	DebugOutputGLErrors();
 	Virt = new Model(virtMesh);
 
 	Material *enterMaterial = new Material("EnterMaterial", 14, enterTexture);
-	Geometry *enterMesh = new Geometry(new VertexColorTextureArray(vertices, 4), elements, 6, shaderProgram, enterMaterial);
-	enterButton = new Model(enterMesh, { 0, 0, 0 }, { (real32)1, (real32)1, 1 });
-	enter2 = new Model(enterMesh, { 0, 1, 0 }, { (real32)1, (real32)1, 1 });
+	Mesh *enterMesh = new Mesh(new VertexColorTextureArray(vertices, 4), elements, 6, shaderProgram, enterMaterial);
+	Geometry *enterGeo = new Geometry(enterMesh, 1);
+	enterButton = new Model(enterGeo, { 0, 0, 0 }, { (real32)1, (real32)1, 1 });
+	enter2 = new Model(enterGeo, { 0, 1, 0 }, { (real32)1, (real32)1, 1 });
 	arrow = MakeArrow({ 1, 1, 1 }, 16, shaderProgram);
 
 	arrow->Rotation = Matrix4::CreateRotationX(Pi32 / 2);
@@ -234,7 +236,6 @@ internal GLState* PrepareScene()
 	glCullFace(GL_BACK);
 
 	GLuint shaderProgram = BuildShaderProgram(vertexSourceCode, fragmentSourceCode);
-	glState->ShaderProgram = shaderProgram;
 
 	glUseProgram(shaderProgram);
 
@@ -247,12 +248,12 @@ internal GLState* PrepareScene()
 	enter2->Size *= 100;
 	enter2->Position *= 100;
 	Virt->Size *= 20;
-	Virt->Position = { 0, -275, 0 };
+	Virt->Position = { 0, -125, 0 };
+	Virt->Pivot = { 0, -10, 0 };
 	glState->SetView(Matrix4::CreateTranslation({ 0, 0, -10 }));
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	MessageGLErrors();
 
 	return glState;
 }

@@ -61,6 +61,7 @@ struct VertexColorTextureArray : VertexArray
 	//			 How should I best signify the global state that this requires, since modifying the current VAO myself here would cause other issues?
 	void BindShaderVariables(GLuint shaderProgram)
 	{
+		//TODO(Ian): Figure out why this function is causing a GL_INVALID_VALUE error
 		int32 vertexSize = sizeof(VertexColorTexture);
 		GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
 		glEnableVertexAttribArray(posAttrib);
