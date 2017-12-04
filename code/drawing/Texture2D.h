@@ -5,19 +5,23 @@
 #include "../libraries/glew.h"
 #include "../content/TextureMapType.h"
 #include "../content/MTLTextureOptions.h"
+#include "../general/StringHelpers.cpp"
 
 struct Texture2D
 {
-	uint8 *Data;
-	GLint ImageFormat;
-	GLsizei Width;
-	GLsizei Height;
-	GLint WrapStyle;
-	GLenum GLFormat;
-	GLuint GLID;
+	char *Name = nullptr;
+	int32 NameLength = 0;
+	uint8 *Data = nullptr;
+	GLint ImageFormat = 0;
+	GLsizei Width = 0;
+	GLsizei Height = 0;
+	GLint WrapStyle = 0;
+	GLenum GLFormat = 0;
+	GLuint GLID = 0;
 
-	Texture2D(uint8 *data, GLsizei width, GLsizei height, GLint imageFormat, GLenum glFormat)
-		:Data(data), Width(width), Height(height), ImageFormat(imageFormat), GLFormat(glFormat)
+	Texture2D(uint8 *data, GLsizei width, GLsizei height, GLint imageFormat, GLenum glFormat, char *name, int32 nameLength = -1)
+		:Data(data), Width(width), Height(height), ImageFormat(imageFormat), GLFormat(glFormat), 
+		 Name(name), NameLength(nameLength == -1 ? CString::GetLength(name) : nameLength)
 	{
 		glGenTextures(1, &GLID);
 		glBindTexture(GL_TEXTURE_2D, GLID);
@@ -34,6 +38,8 @@ struct Texture2D
 
 	Texture2D(Content::OBJ::MTLTextureOptions options, Content::TextureMapType mapType)
 	{
+		Name = CString::CopySubstring(options.TexturePath, options.PathLength - 1, &NameLength);
+
 		glGenTextures(1, &GLID);
 		glBindTexture(GL_TEXTURE_2D, GLID); 
 		int32 components;
@@ -46,7 +52,7 @@ struct Texture2D
 		{
 			WrapStyle = GL_REPEAT;
 		}
-		glTexImage2D(GL_TEXTURE_2D, 0, ImageFormat, Width, Height, 0, GLFormat, GL_UNSIGNED_BYTE, Data);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, Data);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, WrapStyle);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, WrapStyle);
@@ -69,6 +75,8 @@ struct Texture2D
 
 	~Texture2D()
 	{
+		delete[] Name;
+		Name = nullptr;
 		delete[] Data;
 		Data = nullptr;
 		glDeleteTextures(1, &GLID);

@@ -3,12 +3,13 @@
 
 #include "../handmade_typedefs.h"
 #include "../math/Vector3.h"
+#include "../general/StringHelpers.cpp"
 #include "Texture2D.h"
 
 struct Material
 {
-	char *Name;
-	int32 NameLength;
+	char *Name = nullptr;
+	int32 NameLength = 0;
 	Vector3 AmbientColor = { 1, 1, 1 };
 	Texture2D *AmbientMap = nullptr;
 	Vector3 DiffuseColor = { 1, 1, 1 };
@@ -49,15 +50,123 @@ struct Material
 	10		Casts shadows onto invisible surfaces
 	*/
 
+	friend void swap(Material &first, Material &second)
+	{
+		//ASK(Ian): Any reason in this case to not just do this?
+		//Only disadvantage seems to be somewhat more memory used on the stack
+		char temp[sizeof(Material)];
+		memcpy(temp, &first, sizeof(Material));
+		memcpy(&first, &second, sizeof(Material));
+		memcpy(&second, temp, sizeof(Material));
+
+		/* *tempString = first.Name;
+		first.Name = second.Name;
+		second.Name = first.Name;
+
+		int32 tempInt = first.NameLength;
+		first.NameLength = second.NameLength;
+		second.NameLength = tempInt;
+
+		Texture2D *swapTex = first.AmbientMap;
+		first.AmbientMap = second.AmbientMap;
+		second.AmbientMap = swapTex;
+
+		swapTex = first.DiffuseMap;
+		first.DiffuseMap = second.DiffuseMap;
+		second.DiffuseMap = swapTex;
+
+		swapTex = first.SpecularMap;
+		first.SpecularMap = second.SpecularMap;
+		second.SpecularMap = swapTex;
+
+		swapTex = first.GlossMap;
+		first.GlossMap = second.GlossMap;
+		second.GlossMap = swapTex;
+
+		swapTex = first.DissolveMap;
+		first.DissolveMap = second.DissolveMap;
+		second.DissolveMap = swapTex;
+
+		swapTex = first.BumpMap;
+		first.BumpMap = second.BumpMap;
+		second.BumpMap = swapTex;
+
+		swapTex = first.NormalMap;
+		first.NormalMap = second.NormalMap;
+		second.NormalMap = swapTex;
+
+		swapTex = first.ReflectionMap;
+		first.ReflectionMap = second.ReflectionMap;
+		second.ReflectionMap = swapTex;
+
+
+		Vector3 swapVec3 = first.AmbientColor;
+		first.AmbientColor = second.AmbientColor;
+		second.AmbientColor = swapVec3;
+
+		swapVec3 = first.DiffuseColor;
+		first.DiffuseColor = second.DiffuseColor;
+		second.DiffuseColor = swapVec3;
+
+		swapVec3 = first.SpecularColor;
+		first.SpecularColor = second.SpecularColor;
+		second.SpecularColor = swapVec3;
+
+		swapVec3 = first.TransmissionFilter;
+		first.TransmissionFilter = second.TransmissionFilter;
+		second.TransmissionFilter = swapVec3;
+
+
+		real32 swapReal = first.Gloss;
+		first.Gloss = second.Gloss;
+		second.Gloss = swapReal;
+
+		swapReal = first.Dissolve;
+		first.Dissolve = second.Dissolve;
+		second.Dissolve = swapReal;
+
+		swapReal = first.ReflectionSharpness;
+		first.ReflectionSharpness = second.ReflectionSharpness;
+		second.ReflectionSharpness = swapReal;
+
+		swapReal = first.OpticalDensity;
+		first.OpticalDensity = second.OpticalDensity;
+		second.OpticalDensity = swapReal;
+
+		uint8 swapModel = first.IlluminationModel;
+		first.IlluminationModel = second.IlluminationModel;
+		second.IlluminationModel = swapModel;
+
+		bool swapHalo = first.DissolveHalo;
+		first.DissolveHalo = second.DissolveHalo;
+		second.DissolveHalo = swapHalo;*/
+	}
+
 	Material() {}
 	Material(char *name, int32 nameLength, Texture2D* diffuse) : Name(name), NameLength(nameLength), DiffuseMap(diffuse) { }
 
+	Material(const Material &other) : NameLength(other.NameLength)
+	{
+		memcpy(this, &other, sizeof(Material));
+		Name = CString::CopySubstring(Name, NameLength - 1);
+	}
+
+	Material(Material &&other) : Material()
+	{
+		swap(*this, other);
+	}
 	/**
 		/brief Prepares the GL to draw meshes using this material
 	*/
 	void Use()
 	{
+		DiffuseMap->Bind();
+	}
 
+	Material &operator=(Material other)
+	{
+		swap(*this, other);
+		return *this;
 	}
 
 	~Material()

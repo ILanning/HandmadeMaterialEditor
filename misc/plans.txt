@@ -11,8 +11,8 @@ Core Goals:
 	Create Matrix4::CreateOrthographic(screenWidth, screenHeight); - Done
 	Build a Model class and use it to draw axis arrows, a ground plane, and the test quad - Done
 	Load an .obj file, including associated texture - Done
-	Write path string handling functions to deal with the relative paths in files
-	Load a .mtl file
+	Write path string handling functions to deal with the relative paths in files - Done
+	Load a .mtl file - Done
 	Render a loaded model with OpenGL - Done
 	Apply material effects to the model as a preview
 	Cleanup Pass - Formalize GLState, PrepareScene, and GLRender
@@ -23,8 +23,10 @@ Core Goals:
 	Cleanup Pass - Reexamine TODOs and CONSIDERs
 
 	Update build.bat to automatically hand the .cpp files in certain directories to MSVC
-	Edit includes to be something more standard
+	Edit includes to be something more standard, compare compile times
+
 	Finish Quaternion class
+	Write StretchArrayIterator class
 	Write HandmadeString class
 	Write InputManager class
 	Write MemoryArena class

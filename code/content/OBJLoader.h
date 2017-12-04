@@ -296,12 +296,26 @@ namespace Content
 					case 'm': //Material file
 					{
 						int32 offset = nextLineStart + 7;
-						int32 newMatCount = 0;
+
 						int32 pathLength = 0;
 						char *path = CString::CopySubstring(file, nextLineEnd - offset, &pathLength, fileLength, offset);
+						if (Path::IsRelative(path))
+						{
+							char *pathStart = Path::GetParentDirectory(toLoad.Path);
+							char *pathEnd = path;
+
+							path = Path::Combine(pathStart, pathEnd, 0, 0, &pathLength);
+
+							delete[] pathStart;
+							delete[] pathEnd;
+						}
+
+						int32 newMatCount = 0;
 						Material *newMaterials = ParseMTL(path, pathLength, readFile, newMatCount);
 						delete[] path;
+
 						materials.PushBackMany(newMaterials, newMatCount);
+						delete[] newMaterials;
 						break;
 					}
 					case 'u': //usemtl
@@ -314,6 +328,10 @@ namespace Content
 					}
 
 					nextLineStart = CString::FindNonWhitespace(file, fileLength, nextLineEnd);
+					if (nextLineStart == -1)
+					{
+						break;
+					}
 					nextLineEnd = CString::FindLineEnd(file, fileLength, nextLineStart);
 				}
 			}
@@ -324,7 +342,7 @@ namespace Content
 				GLuint *elementArray = elements.ToArray();
 				uint32 elementCount = elements.Length();
 
-				Geometry *result = new Geometry(vertexArray, elementArray, elementCount, shaderProgram, &(materials[0]));
+				Geometry *result = new Geometry(vertexArray, elementArray, elementCount, shaderProgram, new Material(materials[0]));
 
 				return result;
 			}

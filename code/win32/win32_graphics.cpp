@@ -21,6 +21,7 @@
 #include "..\drawing\Vertex.h"
 #include "..\drawing\GeometryHelpers.cpp"
 #include "..\content\OBJLoader.h"
+#include "../general/StringHelpers.cpp"
 
 /*internal void Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 {
@@ -157,10 +158,10 @@ internal void MessageGLErrors()
 	}
 }
 
-static Model *arrow;
-static Model *enterButton;
-static Model *enter2;
-static Model *Virt;
+Model *arrow;
+Model *enterButton;
+Model *enter2;
+Model *Virt;
 
 void BuildTestObjects(GLuint shaderProgram)
 {
@@ -168,7 +169,7 @@ void BuildTestObjects(GLuint shaderProgram)
 	uint8 *image = stbi_load("EnterButton.png", &width, &height, &components, 4);
 	real32 imageRatio = ((real32)width) / height;
 
-	Texture2D *enterTexture = new Texture2D(image, width, height, GL_RGBA, GL_RGBA);
+	Texture2D *enterTexture = new Texture2D(image, width, height, GL_RGBA, GL_RGBA, CString::CopySubstring("EnterButton.png", 15), 16);
 
 	VertexColorTexture *vertices = new VertexColorTexture[4];
 	//Position                   Color                   Texcoords
@@ -182,10 +183,6 @@ void BuildTestObjects(GLuint shaderProgram)
 		0, 1, 2,
 		2, 3, 0
 	};
-
-	//thread_context dummyThread = {};
-	//bool dummyBool = false;
-	//debug_read_file_result file = DEBUGPlatformReadEntireFile(&dummyThread, "Assets/virt/Virt.obj", &dummyBool);
 
 	Geometry *virtMesh = Content::ParseOBJ("Assets/virt/Virt.obj", 21, shaderProgram, *DebugReadWrapper);
 	Virt = new Model(virtMesh);
@@ -234,6 +231,7 @@ internal GLState* PrepareScene()
 	GLState *glState = new GLState();
 		
 	glEnable(GL_DEPTH_TEST);
+	glCullFace(GL_BACK);
 
 	GLuint shaderProgram = BuildShaderProgram(vertexSourceCode, fragmentSourceCode);
 	glState->ShaderProgram = shaderProgram;
@@ -242,7 +240,7 @@ internal GLState* PrepareScene()
 
 	BuildTestObjects(shaderProgram);
 
-	//glState->SetProjection(Matrix4::CreatePerspective(Pi32 / 2, 16.0f / 9.0f, 1, 100));
+	//glState->SetProjection(Matrix4::CreatePerspective(Pi32 / 2, 16.0f / 9.0f, 1, 1000));
 	glState->SetProjection(Matrix4::CreateOrthographic(1280, 720, 0.1f, 1000));
 	arrow->Size *= 100;
 	enterButton->Size *= 100;

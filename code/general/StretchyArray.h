@@ -107,13 +107,15 @@ public:
 	/**
 		/brief Adds all - or optionally `count` - objects in the passed-in StretchyArray to this one.
 	*/
-	int32 PushBackMany(StretchyArray<T> items, int32 count = -1)
-	{
+	int32 PushBackMany(StretchyArray<T> items, int32 count = -1, int32 offset = 0)
+	{		
+		Assert(count + offset <= items.Length());
+
 		if (count == -1)
 		{
 			count = items.Length();
 		}
-		for (int32 i = 0; i < count; i++)
+		for (int32 i = offset; i < count + offset; i++)
 		{
 			PushBack(items[i]);
 		}
@@ -128,9 +130,10 @@ public:
 
 	T *ToArray()
 	{
-		//TODO(Ian):  Fill this out, use memcpy() probably
 		T *result = new T[nextEmpty];
 
+		//NOTE(Ian): Can't use memcpy() due to move semantics
+		/*
 		int32 sectionSize = StretchyArrayNode<T>::Capacity;
 		StretchyArrayNode<T> *curr = head;
 		for (int i = 0; i < lastSection - 1; i++)
@@ -138,7 +141,23 @@ public:
 			memcpy(result + i * sectionSize, curr, sectionSize * sizeof(T));
 			curr = curr->Next;
 		}
-		memcpy(result + (lastSection - 1) * sectionSize, curr, (nextEmpty % sectionSize) * sizeof(T));
+		memcpy(result + (lastSection - 1) * sectionSize, curr, (nextEmpty % sectionSize) * sizeof(T));*/
+
+		int32 sectionSize = StretchyArrayNode<T>::Capacity;
+		StretchyArrayNode<T> *curr = head;
+		for (int sectionIter = 0; sectionIter < lastSection - 1; sectionIter++)
+		{
+			for (int32 i = 0; i < sectionSize; i++)
+			{
+				result[sectionIter * sectionSize + i] = curr->Items[i];
+			}
+			curr = curr->Next;
+		}
+
+		for (int32 i = 0; i < nextEmpty % sectionSize; i++)
+		{
+			result[(lastSection - 1) * sectionSize + i] = curr->Items[i];
+		}
 
 		return result;
 	}

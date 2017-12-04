@@ -14,7 +14,7 @@ namespace CString
 			return -1;
 		}
 
-		for (int32 i = startIndex; i < withinLength - findLength; i++)
+		for (int32 i = startIndex; i < withinLength - findLength + 1; i++)
 		{
 			if (within[i] == find[0])
 			{
@@ -58,6 +58,15 @@ namespace CString
 
 	char *CopySubstring(const char *source, int32 copyLength, int32 *outFinalLength = nullptr, int32 sourceLength = MaxInt32, int32 offset = 0)
 	{
+		if (!source)
+		{
+			if (outFinalLength)
+			{
+				*outFinalLength = 0;
+			}
+			return nullptr;
+		}
+
 		int32 overflow = sourceLength - (copyLength + offset);
 		int32 finalLength = (overflow >= 0) ? copyLength : copyLength + overflow;
 		finalLength++;
