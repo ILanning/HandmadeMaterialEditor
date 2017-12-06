@@ -14,8 +14,9 @@ Core Goals:
 	Write path string handling functions to deal with the relative paths in files - Done
 	Load a .mtl file - Done
 	Render a loaded model with OpenGL - Done
-	Advanced .obj loading - Geometry becomes Mesh, new Geometry class composed of one or more meshes
-	Advanced .obj loading - Add support for the new Geometry in ParseOBJ
+	Advanced .obj loading - Geometry becomes Mesh, new Geometry class composed of one or more meshes - Done
+	Advanced .obj loading - Add support for the new Geometry in ParseOBJ - Done
+	Convert GLState into a controllable camera class
 	Cleanup Pass - Formalize GLState, PrepareScene, and GLRender
 	Cleanup Pass - Move rendering code out of platform layer (where appropriate)
 	Cleanup Pass - Organize everything into sensible namespaces

@@ -2,7 +2,8 @@
 #define DIRECT_SOUND_CREATE(name) HRESULT WINAPI name(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter)
 typedef DIRECT_SOUND_CREATE(direct_sound_create);
 
-
+//TODO(Ian): Convert this to XAudio
+//TODO(Ian):  This causes a crash on startup in the machine has no audio outputs, maybe fix that
 internal void
 Win32InitDSound(HWND Window, int32 SamplesPerSecond, int32 BufferSize)
 {
@@ -118,7 +119,7 @@ Win32ClearBuffer(win32_sound_output *SoundOutput)
 internal void
 Win32FillSoundBuffer(win32_sound_output *SoundOutput, DWORD ByteToLock, DWORD BytesToWrite,
 	game_sound_output_buffer *SourceBuffer)
-{
+{/*
 	// TODO(casey): More strenuous test!
 	VOID *Region1;
 	DWORD Region1Size;
@@ -156,5 +157,5 @@ Win32FillSoundBuffer(win32_sound_output *SoundOutput, DWORD ByteToLock, DWORD By
 		}
 
 		GlobalSecondaryBuffer->Unlock(Region1, Region1Size, Region2, Region2Size);
-	}
+	}*/
 }

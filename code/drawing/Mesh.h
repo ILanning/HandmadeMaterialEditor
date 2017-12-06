@@ -12,22 +12,22 @@
 
 struct Mesh
 {
-	VertexArray *Vertices;
-	GLuint *Elements;
-	uint32 ElementCount;
-	GLenum Mode;
-	uint32 PrimitiveRestartIndex;
+	VertexArray *Vertices = nullptr;
+	GLuint *Elements = nullptr;
+	uint32 ElementCount = 0;
+	GLenum Mode = GL_TRIANGLES;
+	uint32 PrimitiveRestartIndex = MaxInt32;
 
-	GLuint VAO;
-	GLuint VBO;
-	GLuint EBO;
+	GLuint VAO = 0;
+	GLuint VBO = 0;
+	GLuint EBO = 0;
 
-	GLint MVPUniform;
-	GLint ColorUniform;
+	GLint MVPUniform = -1;
+	GLint ColorUniform = -1;
 
-	Material *MeshMaterial;
+	Material *MeshMaterial = nullptr;
 
-	bool Initialized;
+	bool Initialized = false;
 
 	void CreateBufferObjects(GLuint shaderProgram)
 	{
@@ -62,6 +62,8 @@ struct Mesh
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * ElementCount, Elements, GL_STATIC_DRAW);
 	}
 
+	Mesh() {}
+
 	Mesh(VertexArray *vertices, GLuint *elements, uint32 elementCount, GLuint shaderProgram,
 		Material *material = nullptr, bool genBuffers = true, GLenum mode = GL_TRIANGLES, uint32 primitiveRestartIndex = MaxInt32)
 		: Vertices(vertices), Elements(elements), ElementCount(elementCount), MeshMaterial(material), Mode(mode), PrimitiveRestartIndex(primitiveRestartIndex)
@@ -95,6 +97,31 @@ struct Mesh
 		glDrawElements(Mode, (GLsizei)ElementCount, GL_UNSIGNED_INT, 0);
 	}
 
+	friend void swap(Mesh &first, Mesh &second)
+	{
+		//ASK(Ian): Any reason in this case to not just do this?
+		//Only disadvantage seems to be somewhat more memory used on the stack
+		char temp[sizeof(Mesh)];
+		memcpy(temp, &first, sizeof(Mesh));
+		memcpy(&first, &second, sizeof(Mesh));
+		memcpy(&second, temp, sizeof(Mesh));
+	}
+
+	Mesh(const Mesh &other)
+	{
+		memcpy(this, &other, sizeof(Mesh));
+	}
+
+	Mesh(Mesh &&other)
+	{
+		swap(*this, other);
+	}
+
+	Mesh &operator=(Mesh other)
+	{
+		swap(*this, other);
+		return *this;
+	}
 
 	~Mesh()
 	{

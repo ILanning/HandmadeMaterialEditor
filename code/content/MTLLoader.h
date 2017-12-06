@@ -232,15 +232,17 @@ namespace Content
 			return options;
 		}
 
-		///Returns a *collection* of materials
-		Material *ParseMTL(FileData toLoad, int32 &outMaterialCount)
+		StretchyArray<Material> *ParseMTL(FileData toLoad, StretchyArray<Material> *materialList = nullptr)
 		{
 			bool endOfFile = false;
 			bool materialFound = false;
 			char *file = (char *)toLoad.File;
 			char *fileDirectory = Path::GetParentDirectory(toLoad.Path);
 			int32 fileLength = toLoad.FileSize;
-			StretchyArray<Material> materials = StretchyArray<Material>();
+			if (!materialList)
+			{
+				materialList = new StretchyArray<Material>();
+			}
 			Material currentMaterial = Material();
 
 			int32 nextLineStart = CString::FindNonWhitespace(file, fileLength, 0);
@@ -261,7 +263,7 @@ namespace Content
 					}
 					else
 					{
-						materials.PushBack(currentMaterial);
+						materialList->PushBack(currentMaterial);
 					}
 
 					currentMaterial = Material();
@@ -391,30 +393,62 @@ namespace Content
 
 			if (materialFound)
 			{
-				materials.PushBack(currentMaterial);
-
-				outMaterialCount = materials.Length();
-				return materials.ToArray();
+				materialList->PushBack(currentMaterial);
+				return materialList;
 			}
 			else
 			{
 				//TODO(Ian): Logging, provide a way to report a failure to find any materials
+				return nullptr;
+			}
+		}
+
+		Material *ParseMTL(FileData file, int32 &outMaterialCount)
+		{
+			StretchyArray<Material> *mats = ParseMTL(file);
+			if (mats)
+			{
+				outMaterialCount = mats->Length();
+				Material *outputArray = mats->ToArray();
+				delete mats;
+
+				return outputArray;
+			}
+			else
+			{
 				outMaterialCount = 0;
+				return nullptr;
+			}
+		}
+
+		StretchyArray<Material> *ParseMTL(char *path, int32 pathLength, ReadFileFunc *readFile, StretchyArray<Material> *materialList = nullptr)
+		{
+			bool success = false;
+			FileData file = readFile(path, pathLength, &success);
+			if (success)
+			{
+				return ParseMTL(file, materialList);
+			}
+			else
+			{
+				//TODO(Ian): Logging, provide a way to report a failure to load the file
 				return nullptr;
 			}
 		}
 
 		Material *ParseMTL(char *path, int32 pathLength, ReadFileFunc *readFile, int32 &outMaterialCount)
 		{
-			bool success = false;
-			FileData file = readFile(path, pathLength, &success);
-			if (success)
+			StretchyArray<Material> *mats = ParseMTL(path, pathLength, readFile);
+			if (mats)
 			{
-				return ParseMTL(file, outMaterialCount);
+				outMaterialCount = mats->Length();
+				Material *outputArray = mats->ToArray();
+				delete mats;
+
+				return outputArray;
 			}
 			else
 			{
-				//TODO(Ian): Logging, provide a way to report a failure to load the file
 				outMaterialCount = 0;
 				return nullptr;
 			}

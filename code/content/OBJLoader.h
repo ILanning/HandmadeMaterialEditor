@@ -12,6 +12,7 @@
 #include "../drawing/Mesh.h"
 #include "../drawing/Geometry.h"
 #include "../drawing/Vertex.h"
+#include "../drawing/defaults/DefaultMaterials.h"
 #include "../libraries/glew.h"
 #include "MTLLoader.h"
 #include <cstdlib>
@@ -86,28 +87,36 @@ namespace Content
 				outResult = result;
 				return true;
 			}
-		};
 
-		class ObjParser
-		{
-			StretchyArray<ObjVertexNode> vertexBlueprints;
-			StretchyArray<VertexNormalTexture> builtVertices;
-			StretchyArray<GLuint> elements;
-			StretchyArray<Vector3> positions;
-			StretchyArray<Vector3> normals;
-			StretchyArray<Vector2> uvs;
-			StretchyArray<Material> materials;
-
-			void DeleteNodes(ObjVertexNode head)
+			void Reset()
 			{
-				ObjVertexNode *next = head.Next;
+				ObjVertexNode *next = this->Next;
 				while (next)
 				{
 					ObjVertexNode *toDelete = next;
 					next = next->Next;
 					delete toDelete;
 				}
+
+				this->FinalIndex = -1;
+				this->Normal = -1;
+				this->Texture = -1;
+				this->Next = nullptr;
 			}
+		};
+
+		class ObjParser
+		{
+			StretchyArray<Mesh *> meshes;
+			StretchyArray<Material> materials;
+			StretchyArray<Texture2D *> textures;
+
+			StretchyArray<ObjVertexNode> vertexBlueprints;
+			StretchyArray<VertexNormalTexture> builtVertices;
+			StretchyArray<GLuint> elements;
+			StretchyArray<Vector3> positions;
+			StretchyArray<Vector3> normals;
+			StretchyArray<Vector2> uvs;
 
 		public:
 
@@ -152,7 +161,26 @@ namespace Content
 				}
 			}
 
-			ObjParser(FileData toLoad, ReadFileFunc *readFile)
+			void PushMesh(GLuint shaderProgram, Material *mat)
+			{
+				VertexNormalTextureArray *vertexArray = new VertexNormalTextureArray(builtVertices.ToArray(), builtVertices.Length());
+				GLuint *elementArray = elements.ToArray();
+				uint32 elementCount = elements.Length();
+
+				Mesh *mesh = new Mesh(vertexArray, elementArray, elementCount, shaderProgram, new Material(*mat));
+				meshes.PushBack(mesh);
+
+				//Clear builtVertices, elements, and possibly vertexBlueprints as well
+				builtVertices = StretchyArray<VertexNormalTexture>();
+				elements = StretchyArray<GLuint>();
+				int32 count = vertexBlueprints.Length();
+				for (int32 i = 0; i < count; i++)
+				{
+					vertexBlueprints[i].Reset();
+				}
+			}
+
+			ObjParser(FileData toLoad, ReadFileFunc *readFile, GLuint shaderProgram)
 			{
 				builtVertices = StretchyArray<VertexNormalTexture>();
 				elements = StretchyArray<GLuint>();
@@ -168,7 +196,11 @@ namespace Content
 				normals.PushBack({ 0, 0, 0 });
 				uvs = StretchyArray<Vector2>();
 				uvs.PushBack({ 0, 0 });
+
 				materials = StretchyArray<Material>();
+				meshes = StretchyArray<Mesh*>();
+				textures = StretchyArray<Texture2D*>();
+				Material *setMaterial = Drawing::Defaults::BlankMaterial;
 
 				char *file = (char *)toLoad.File;
 				int32 fileLength = toLoad.FileSize;
@@ -185,6 +217,7 @@ namespace Content
 					}
 					switch (file[nextLineStart])
 					{
+						//TODO(Ian): Examine lod support
 					case 'v': //Vector components
 					{
 						switch (file[nextLineStart + 1])
@@ -289,9 +322,9 @@ namespace Content
 						//TODO(Ian): Recognize shading group line
 						break;
 					}
-					case 'g': //Material Group
+					case 'g': //Group
 					{
-						//TODO(Ian): Recognize material group line
+						//TODO(Ian): Recognize group line
 						break;
 					}
 					case 'm': //Material file
@@ -311,20 +344,42 @@ namespace Content
 							delete[] pathEnd;
 						}
 
-						int32 newMatCount = 0;
-						Material *newMaterials = ParseMTL(path, pathLength, readFile, newMatCount);
+						ParseMTL(path, pathLength, readFile, &materials);
 						delete[] path;
 
-						materials.PushBackMany(newMaterials, newMatCount);
-						delete[] newMaterials;
 						break;
 					}
 					case 'u': //usemtl
 					{
+						int32 materialNameStart = CString::FindNonWhitespace(file, fileLength, nextLineStart + 6);						
 
+						//Search through materials by name
+						bool foundMaterial = false;
+						Material *currMat = nullptr;
+
+						int32 matCount = materials.Length();
+						for (int32 i = 0; i < matCount; i++)
+						{
+							currMat = &(materials[i]);
+							if (CString::IsEqual(file, currMat->Name, nextLineEnd, currMat->NameLength - 1, materialNameStart, 0))
+							{
+								foundMaterial = true;
+								break;
+							}
+						}
+						if (foundMaterial)
+						{
+							//If the current list of built vertices and elements has any values, package that into a new finished mesh
+							if (builtVertices.Length() > 0)
+							{
+								PushMesh(shaderProgram, currMat);
+							}
+
+							setMaterial = currMat;
+						}
 					}
 					default:
-						//TODO(Ian):  Warn/fail over non-polygonal geometry data, since we don't care about supporting that
+						//TODO(Ian):  Warn over non-polygonal geometry data, since we don't care about supporting that
 						break;
 					}
 
@@ -335,16 +390,29 @@ namespace Content
 					}
 					nextLineEnd = CString::FindLineEnd(file, fileLength, nextLineStart);
 				}
+
+				if (builtVertices.Length() > 0)
+				{
+					PushMesh(shaderProgram, setMaterial);
+				}
 			}
 
-			Geometry *ExportGeometry(GLuint shaderProgram)
+			Geometry *ExportGeometry()
 			{
-				VertexNormalTextureArray *vertexArray = new VertexNormalTextureArray(builtVertices.ToArray(), builtVertices.Length());
-				GLuint *elementArray = elements.ToArray();
-				uint32 elementCount = elements.Length();
+				//VertexNormalTextureArray *vertexArray = new VertexNormalTextureArray(builtVertices.ToArray(), builtVertices.Length());
+				//GLuint *elementArray = elements.ToArray();
+				//uint32 elementCount = elements.Length();
 
-				Mesh *mesh = new Mesh(vertexArray, elementArray, elementCount, shaderProgram, new Material(materials[0]));
-				Geometry *result = new Geometry(mesh, 1);
+				//Mesh *mesh = new Mesh(vertexArray, elementArray, elementCount, shaderProgram, new Material(materials[0]));
+				int32 arraySize = meshes.Length();
+				Mesh *meshArray = new Mesh[arraySize];
+				for (int32 i = 0; i < arraySize; i++)
+				{
+					swap(meshArray[i], *meshes[i]);
+					delete meshes[i];
+				}
+
+				Geometry *result = new Geometry(meshArray, arraySize);
 
 				return result;
 			}
@@ -360,7 +428,7 @@ namespace Content
 				int32 arraySize = vertexBlueprints.Length();
 				for (int i = 0; i < arraySize; i++)
 				{
-					DeleteNodes(vertexBlueprints[i]);
+					vertexBlueprints[i].Reset();
 				}
 			}
 		};
@@ -390,8 +458,8 @@ namespace Content
 		FileData file = readFile(path, pathLength, &success);
 		if (success)
 		{
-			OBJ::ObjParser builder = OBJ::ObjParser(file, readFile);
-			return builder.ExportGeometry(shaderProgram);
+			OBJ::ObjParser builder = OBJ::ObjParser(file, readFile, shaderProgram);
+			return builder.ExportGeometry();
 		}
 		else
 		{
