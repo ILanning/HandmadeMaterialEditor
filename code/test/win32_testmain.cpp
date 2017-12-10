@@ -10,6 +10,7 @@ TEST_SUITE_BEGIN("math");
 #include "math/test_vector3.cpp"
 #include "math/test_matrix3.cpp"
 #include "math/test_matrix4.cpp"
+#include "math/test_quaternion.cpp"
 
 TEST_SUITE_END();
 
@@ -19,6 +20,8 @@ TEST_SUITE_BEGIN("general");
 #include "general/test_pathhelpers.cpp"
 
 TEST_SUITE_END();
+
+#include "drawing/test_thirdpersoncamera.cpp"
 
 //-lts list test suites
 //-tc=*x*

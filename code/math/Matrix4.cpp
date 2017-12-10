@@ -65,7 +65,7 @@ Matrix4 Matrix4::Transpose()
 	{
 		for (int32 y = 0; y < Matrix4::RowCount; y++)
 		{
-			result.m[x][y] = this->m[y][x];
+			result.m[x][y] = m[y][x];
 		}
 	}
 	return result;
@@ -82,12 +82,19 @@ Vector3 Matrix4::Transform(const Vector3 &a)
 		real32 cellResult = 0;
 		for (int32 i = 0; i < size; i++)
 		{
-			cellResult += base[i] * this->m[yPos][i];
+			cellResult += base[i] * m[yPos][i];
 		}
 		result.elements[yPos] = cellResult;
 	}
 
 	return result;
+}
+
+void Matrix4::SetTranslation(const Vector3 &a)
+{
+	m03 = a.x;
+	m13 = a.y;
+	m23 = a.z;
 }
 
 Matrix4 operator+(const Matrix4 &a, const Matrix4 &b)
@@ -163,7 +170,6 @@ Matrix4 operator*(const Matrix4 &a, real32 b)
 	return result;
 }
 
-//TODO(Ian): Should this throw when b == 0?
 Matrix4 operator/(const Matrix4 &a, real32 b)
 {
 	Matrix4 result = {};

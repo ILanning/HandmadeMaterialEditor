@@ -7,6 +7,7 @@
 #include "../math/Vector3.h"
 #include "../math/Matrix3.h"
 #include "../math/Matrix4.h"
+#include "../math/Quaternion.h"
 
 //TODO(Ian): Should these really be macros, or is there a better solution?
 
@@ -54,6 +55,7 @@ char *ToCharArray(const className &a)															\
 
 HANDMADE_TO_CHARARRAY_VECTOR(Vector2)
 HANDMADE_TO_CHARARRAY_VECTOR(Vector3)
+HANDMADE_TO_CHARARRAY_VECTOR(Quaternion)
 
 #undef HANDMADE_TO_CHARARRAY_VECTOR
 
@@ -72,8 +74,9 @@ std::ostream &operator<<(std::ostream &os, const className &a)		  \
 	return os << ")";												  \
 }
 
-	HANDMADE_STREAM_VECTOR(Vector2)
-	HANDMADE_STREAM_VECTOR(Vector3)
+HANDMADE_STREAM_VECTOR(Vector2)
+HANDMADE_STREAM_VECTOR(Vector3)
+HANDMADE_STREAM_VECTOR(Quaternion)
 
 #undef HANDMADE_STREAM_VECTOR
 
@@ -97,8 +100,8 @@ std::ostream &operator<<(std::ostream &os, const className &a)			 \
 	return os;															 \
 }
 
-	HANDMADE_STREAM_MATRIX(Matrix3)
-	HANDMADE_STREAM_MATRIX(Matrix4)
+HANDMADE_STREAM_MATRIX(Matrix3)
+HANDMADE_STREAM_MATRIX(Matrix4)
 
 #undef HANDMADE_STREAM_MATRIX
 
@@ -115,10 +118,11 @@ std::ostream &operator<<(std::ostream &os, const className &a)			 \
 	return true;																							\
 }
 
-	HANDMADE_CHECK_WITHIN_BOUNDS(Vector2)
-	HANDMADE_CHECK_WITHIN_BOUNDS(Vector3)
-	HANDMADE_CHECK_WITHIN_BOUNDS(Matrix3)
-	HANDMADE_CHECK_WITHIN_BOUNDS(Matrix4)
+HANDMADE_CHECK_WITHIN_BOUNDS(Vector2)
+HANDMADE_CHECK_WITHIN_BOUNDS(Vector3)
+HANDMADE_CHECK_WITHIN_BOUNDS(Quaternion)
+HANDMADE_CHECK_WITHIN_BOUNDS(Matrix3)
+HANDMADE_CHECK_WITHIN_BOUNDS(Matrix4)
 
 #undef HANDMADE_CHECK_WITHIN_BOUNDS
 

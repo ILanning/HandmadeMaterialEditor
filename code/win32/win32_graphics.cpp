@@ -19,9 +19,10 @@
 #include "..\drawing\Geometry.h"
 #include "..\drawing\Model.h"
 #include "..\drawing\Vertex.h"
+#include "..\drawing\ThirdPersonCamera.h"
 #include "..\drawing\GeometryHelpers.cpp"
 #include "..\content\OBJLoader.h"
-#include "../general/StringHelpers.cpp"
+#include "..\general\StringHelpers.cpp"
 
 /*internal void Win32ResizeDIBSection(win32_offscreen_buffer *Buffer, int Width, int Height)
 {
@@ -227,10 +228,11 @@ GLuint BuildShaderProgram(const GLchar *vertexSource, const GLchar *fragmentSour
 
 	return shaderProgram;
 }
+Drawing::ThirdPersonCamera Camera;
 
-internal GLState* PrepareScene()
+internal void PrepareScene()
 {
-	GLState *glState = new GLState();
+	//GLState *glState = new GLState();
 		
 	glEnable(GL_DEPTH_TEST);
 	glCullFace(GL_BACK);
@@ -242,7 +244,7 @@ internal GLState* PrepareScene()
 	BuildTestObjects(shaderProgram);
 
 	//glState->SetProjection(Matrix4::CreatePerspective(Pi32 / 2, 16.0f / 9.0f, 1, 1000));
-	glState->SetProjection(Matrix4::CreateOrthographic(1280, 720, 0.1f, 1000));
+	Camera.Projection = Matrix4::CreateOrthographic(1280, 720, 0.1f, 1000);
 	arrow->Size *= 100;
 	enterButton->Size *= 100;
 	enter2->Size *= 100;
@@ -250,15 +252,17 @@ internal GLState* PrepareScene()
 	Virt->Size *= 20;
 	Virt->Position = { 0, -125, 0 };
 	Virt->Pivot = { 0, -10, 0 };
-	glState->SetView(Matrix4::CreateTranslation({ 0, 0, -10 }));
+	//glState->SetView(Matrix4::CreateTranslation({ 0, 0, -10 }));
+	Camera.Position = { 0, -10, 0 };
+	Camera.rotation = Quaternion::CreateFromAxisAngle({ 1, 0, 0 }, 0.3f);
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
-	return glState;
+	//return glState;
 }
 
-void GLRender(GLState *glState, game_input *input)
+void GLRender(game_input *input)
 {
 
 	Vector3 rotateDirection = {};
@@ -270,29 +274,30 @@ void GLRender(GLState *glState, game_input *input)
 	{
 		rotateDirection.x--;
 	}
-	if (input->Controllers[0].MoveLeft.EndedDown)
-	{
-		rotateDirection.y++;
-	}
-	if (input->Controllers[0].MoveRight.EndedDown)
+	if (input->Controllers[0].MoveLeft.EndedDown) //About Y axis
 	{
 		rotateDirection.y--;
 	}
-	if (input->Controllers[0].RightShoulder.EndedDown)
+	if (input->Controllers[0].MoveRight.EndedDown)
 	{
-		rotateDirection.z++;
+		rotateDirection.y++;
+	}
+	if (input->Controllers[0].RightShoulder.EndedDown) //About Z Axis
+	{
+		rotateDirection.z--;
 	}
 	if (input->Controllers[0].LeftShoulder.EndedDown)
 	{
-		rotateDirection.z--;
+		rotateDirection.z++;
 	}
 
 	real32 rotateSpeed = 0.05f;
 	if (rotateDirection.MagnitudeSquared() != 0)
 	{
-		rotateDirection = rotateDirection.Normalize() * rotateSpeed;
+		rotateDirection = rotateDirection.Normalize();
+		Camera.Rotate(Quaternion::CreateFromAxisAngle(rotateDirection, rotateSpeed));
 	}
-	Virt->Rotation *= Matrix4::CreateRotation(rotateDirection);
+	//Virt->Rotation *= Matrix4::CreateRotation(rotateDirection * rotateSpeed);
 
 
 	Vector3 moveDirection = {};
@@ -331,7 +336,7 @@ void GLRender(GLState *glState, game_input *input)
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	Virt->Draw(glState->View, glState->Projection);
+	Virt->Draw(Camera.GetView(), Camera.Projection);
 	//enterButton->Draw(glState->View, glState->Projection);
 	//enter2->Draw(glState->View, glState->Projection);
 	//arrow->Draw(glState->View, glState->Projection);

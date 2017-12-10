@@ -38,6 +38,7 @@ struct Matrix4
 	real32 Determinant();
 	Matrix4 Cofactor();
 	Matrix4 Transpose();
+	void SetTranslation(const Vector3 &a);
 	Vector3 Transform(const Vector3 &a);
 
 	friend Matrix4 operator+(const Matrix4 &a, const Matrix4 &b);

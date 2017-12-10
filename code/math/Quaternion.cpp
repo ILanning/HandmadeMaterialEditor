@@ -19,6 +19,32 @@ Quaternion Quaternion::Inverse()
 	return result / this->Magnitude();
 }
 
+Matrix4 Quaternion::ToRotationMatrix() const
+{
+	real32 xx = x * x;
+	real32 yy = y * y;
+	real32 zz = z * z;
+
+	real32 xy = x * y;
+	real32 xz = x * z;
+	real32 xw = x * w;
+	
+	real32 yz = y * z;
+	real32 yw = y * w;
+
+	real32 zw = z * w;
+
+	Matrix4 rotation = 
+	{	1 - 2 * (yy + zz),     2 * (xy - zw),     2 * (xz + yw), 0,
+		    2 * (xy + zw), 1 - 2 * (xx + zz),     2 * (yz - xw), 0,
+			2 * (xz - yw),     2 * (yz + xw), 1 - 2 * (xx + yy), 0,
+			0,                 0,                 0,             1 };
+
+	//http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm
+
+	return rotation;
+}
+
 /*static Quaternion Lerp(const Quaternion &start, const Quaternion &end, const real32 &fraction)
 {
 
@@ -29,7 +55,21 @@ static Quaternion CosInterpolate(const Quaternion &start, const Quaternion &end,
 
 }*/
 
-friend Quaternion operator*(const Quaternion &a, const Quaternion &b)
+//TODO(Ian): From Ogre3D source code, figure out why this works
+Vector3 operator*(const Quaternion &a, const Vector3 &b)
+{
+	// nVidia SDK implementation
+	Vector3 uv, uuv;
+	Vector3 qvec = { a.x, a.y, a.z };
+	uv = qvec.Cross(b);
+	uuv = qvec.Cross(uv);
+	uv *= (2.0f * a.w);
+	uuv *= 2.0f;
+
+	return b + uv + uuv;
+}
+
+Quaternion operator*(const Quaternion &a, const Quaternion &b)
 {
 	Quaternion result;
 	result.x = a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y;
@@ -50,37 +90,37 @@ friend Quaternion operator*(const Quaternion &a, const Quaternion &b)
 	*/
 }
 
-friend Quaternion operator*(const Quaternion &a, const real32 &b)
+Quaternion operator*(const Quaternion &a, const real32 &b)
 {
 	Quaternion result = { a.x * b, a.y * b, a.z * b, a.w * b };
 	return result;
 }
 
-friend Quaternion operator/(const Quaternion &a, const real32 &b)
+Quaternion operator/(const Quaternion &a, const real32 &b)
 {
 	Quaternion result = { a.x / b, a.y / b, a.z / b, a.w / b };
 	return result;
 }
 
-friend Quaternion& operator*=(Quaternion &a, const Quaternion &b)
+Quaternion& operator*=(Quaternion &a, const Quaternion &b)
 {
 	a = a * b;
-	return &a;
+	return a;
 }
 
-friend Quaternion& operator*=(Quaternion &a, const real32 &b)
+Quaternion& operator*=(Quaternion &a, const real32 &b)
 {
 	a = a * b;
-	return &a;
+	return a;
 }
 
-friend Quaternion& operator/=(Quaternion &a, const real32 &b)
+Quaternion& operator/=(Quaternion &a, const real32 &b)
 {
 	a = a / b;
-	return &a;
+	return a;
 }
 
-friend bool operator==(const Quaternion &a, const Quaternion &b)
+bool operator==(const Quaternion &a, const Quaternion &b)
 {
 	for (int32 i = 0; i < Quaternion::ElementCount; i++)
 	{
@@ -92,7 +132,7 @@ friend bool operator==(const Quaternion &a, const Quaternion &b)
 	return true;
 }
 
-friend bool operator!=(const Quaternion &a, const Quaternion &b)
+bool operator!=(const Quaternion &a, const Quaternion &b)
 {
 	return !(a == b);
 }

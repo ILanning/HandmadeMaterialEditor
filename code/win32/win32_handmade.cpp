@@ -494,7 +494,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
 
 			wglDeleteContext(dummyContext);
 
-			GLState *glState = PrepareScene();
+			PrepareScene();
 
             if(Samples && GameMemory.PermanentStorage && GameMemory.TransientStorage)
             {
@@ -701,7 +701,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
                         {
                             Game.UpdateAndRender(&Thread, &GameMemory, NewInput, &Buffer);
                         }
-						GLRender(glState, NewInput);
+						GLRender(NewInput);
 
                         LARGE_INTEGER AudioWallClock = Win32GetWallClock();
                         real32 FromBeginToAudioSeconds = Win32GetSecondsElapsed(FlipWallClock, AudioWallClock);

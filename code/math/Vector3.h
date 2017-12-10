@@ -50,6 +50,16 @@ struct Vector3
 
 	friend bool operator==(const Vector3 &a, const Vector3 &b);
 	friend bool operator!=(const Vector3 &a, const Vector3 &b);
+
+	static Vector3 Up() { return{ 0, 1, 0 }; }
+	static Vector3 Down() { return{ 0, -1, 0 }; }
+	static Vector3 Left() { return{ -1, 0, 0 }; }
+	static Vector3 Right() { return{ 1, 0, 0 }; }
+	static Vector3 Forward() { return{ 0, 0, 1 }; }
+	static Vector3 Back() { return{ 0, 0, -1 }; }
+
+	static Vector3 Zero() { return{ 0, 0, 0 }; }
+	static Vector3 One() { return{ 1, 1, 1 }; }
 };
 
 #include "Vector3.cpp"
