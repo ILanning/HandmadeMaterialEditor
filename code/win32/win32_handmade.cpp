@@ -28,7 +28,6 @@
 */
 
 #include "..\handmade.h"
-#include "..\drawing\GLState.h"
 
 #include <windows.h>
 #include <stdio.h>
@@ -64,18 +63,23 @@ internal win32_game_code Win32LoadGameCode(char *SourceDLLName, char *TempDLLNam
     Result.GameCodeDLL = LoadLibraryA(TempDLLName);
     if(Result.GameCodeDLL)
     {
+		Result.Initialize = (game_initialize *)
+			GetProcAddress(Result.GameCodeDLL, "GameInitialize");
+
         Result.UpdateAndRender = (game_update_and_render *)
             GetProcAddress(Result.GameCodeDLL, "GameUpdateAndRender");
         
         Result.GetSoundSamples = (game_get_sound_samples *)
             GetProcAddress(Result.GameCodeDLL, "GameGetSoundSamples");
 
-        Result.IsValid = (Result.UpdateAndRender &&
+        Result.IsValid = (Result.Initialize && 
+						  Result.UpdateAndRender &&
                           Result.GetSoundSamples);
     }
 
     if(!Result.IsValid)
     {
+		Result.Initialize = 0;
         Result.UpdateAndRender = 0;
         Result.GetSoundSamples = 0;
     }
@@ -283,6 +287,61 @@ internal void Win32ProcessPendingMessages(win32_state *State, game_controller_in
     }
 }
 
+/**
+ * \brief Creates an OpenGL context.
+*/
+HGLRC InitializeOpenGL()
+{
+	//NOTE(Ian): OpenGL Context Creation
+	PIXELFORMATDESCRIPTOR pfd =
+	{
+		sizeof(PIXELFORMATDESCRIPTOR),
+		1,
+		PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
+		PFD_TYPE_RGBA,            //The kind of framebuffer. RGBA or palette.
+		32,                        //Colordepth of the framebuffer.
+		0, 0, 0, 0, 0, 0,
+		0,
+		0,
+		0,
+		0, 0, 0, 0,
+		24,                        //Number of bits for the depthbuffer
+		8,                        //Number of bits for the stencilbuffer
+		0,                        //Number of Aux buffers in the framebuffer.
+		PFD_MAIN_PLANE,
+		0,
+		0, 0, 0
+	};
+	int32 pixelFormatNumber = ChoosePixelFormat(GlobalDeviceContext, &pfd);
+	if (!pixelFormatNumber)
+	{
+		//TODO(Ian): Diagnostic
+		exit(1);
+	}
+	SetPixelFormat(GlobalDeviceContext, pixelFormatNumber, &pfd);
+	HGLRC dummyContext = wglCreateContext(GlobalDeviceContext);
+	wglMakeCurrent(GlobalDeviceContext, dummyContext);
+
+	if (GLEW_OK != glewInit())
+	{
+		//TODO(Ian): Diagnostic
+		exit(1);
+	}
+
+	int glContextAttribs[] =
+	{
+		WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+		WGL_CONTEXT_MINOR_VERSION_ARB, 0,
+		WGL_CONTEXT_FLAGS_ARB, 0,
+		0
+	};
+
+	HGLRC glContext = wglCreateContextAttribsARB(GlobalDeviceContext, dummyContext, glContextAttribs);
+	wglDeleteContext(dummyContext);
+
+	return glContext;
+}
+
 int CALLBACK WinMain(HINSTANCE Instance,
 					 HINSTANCE PrevInstance,
 					 LPSTR CommandLine,
@@ -396,9 +455,11 @@ int CALLBACK WinMain(HINSTANCE Instance,
             game_memory GameMemory = {};
             GameMemory.PermanentStorageSize = Megabytes(64);
             GameMemory.TransientStorageSize = Megabytes(256);
+			GameMemory.ReadEntireFile = DebugReadWrapper;
             GameMemory.DEBUGPlatformFreeFileMemory = DEBUGPlatformFreeFileMemory;
             GameMemory.DEBUGPlatformReadEntireFile = DEBUGPlatformReadEntireFile;
             GameMemory.DEBUGPlatformWriteEntireFile = DEBUGPlatformWriteEntireFile;
+			GameMemory.DEBUGMessageError = VSOutputDebugString;
 
 
             // TODO(casey): Handle various memory footprints (USING SYSTEM METRICS)
@@ -444,59 +505,10 @@ int CALLBACK WinMain(HINSTANCE Instance,
                 }
             }
 
-
-			//NOTE(Ian): OpenGL Context Creation
-			PIXELFORMATDESCRIPTOR pfd =
-			{
-				sizeof(PIXELFORMATDESCRIPTOR),
-				1,
-				PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
-				PFD_TYPE_RGBA,            //The kind of framebuffer. RGBA or palette.
-				32,                        //Colordepth of the framebuffer.
-				0, 0, 0, 0, 0, 0,
-				0,
-				0,
-				0,
-				0, 0, 0, 0,
-				24,                        //Number of bits for the depthbuffer
-				8,                        //Number of bits for the stencilbuffer
-				0,                        //Number of Aux buffers in the framebuffer.
-				PFD_MAIN_PLANE,
-				0,
-				0, 0, 0
-			};
-			int32 pixelFormatNumber = ChoosePixelFormat(GlobalDeviceContext, &pfd);
-			if (!pixelFormatNumber)
-			{
-				//TODO(Ian): Diagnostic
-				exit(1);
-			}
-			SetPixelFormat(GlobalDeviceContext, pixelFormatNumber, &pfd);
-			HGLRC dummyContext = wglCreateContext(GlobalDeviceContext);
-			wglMakeCurrent(GlobalDeviceContext, dummyContext);
-
-			if (GLEW_OK != glewInit())
-			{
-				//TODO(Ian): Diagnostic
-				exit(1);
-			}
-
-			int glContextAttribs[] =
-			{
-				WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
-				WGL_CONTEXT_MINOR_VERSION_ARB, 0,
-				WGL_CONTEXT_FLAGS_ARB, 0,
-				0
-			};
-
-			HGLRC glContext = wglCreateContextAttribsARB(GlobalDeviceContext, dummyContext, glContextAttribs);
+			HGLRC glContext = InitializeOpenGL();
 			wglMakeCurrent(GlobalDeviceContext, glContext);
-
-			wglDeleteContext(dummyContext);
-
-			PrepareScene();
-
-            if(Samples && GameMemory.PermanentStorage && GameMemory.TransientStorage)
+			
+            if(Samples && GameMemory.PermanentStorage && GameMemory.TransientStorage && glContext)
             {
                 game_input Input[2] = {};
                 game_input *NewInput = &Input[0];
@@ -515,6 +527,12 @@ int CALLBACK WinMain(HINSTANCE Instance,
                 win32_game_code Game = Win32LoadGameCode(SourceGameCodeDLLFullPath,
                                                          TempGameCodeDLLFullPath);
                 uint32 LoadCounter = 0;
+
+				if (Game.Initialize)
+				{
+					thread_context dummyThreadContext = { 1 };
+					Game.Initialize(&dummyThreadContext, &GameMemory);
+				}
 
                 uint64 LastCycleCount = __rdtsc();
                 while(GlobalRunning)
@@ -701,7 +719,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
                         {
                             Game.UpdateAndRender(&Thread, &GameMemory, NewInput, &Buffer);
                         }
-						GLRender(NewInput);
+						SwapBuffers(GlobalDeviceContext);
 
                         LARGE_INTEGER AudioWallClock = Win32GetWallClock();
                         real32 FromBeginToAudioSeconds = Win32GetSecondsElapsed(FlipWallClock, AudioWallClock);

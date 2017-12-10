@@ -18,14 +18,9 @@ TEST_CASE("Testing the third person camera class")
 	SUBCASE("Test")
 	{
 		Drawing::ThirdPersonCamera camera = {};
-		camera.zoomLevel = 10;
-		Vector3 rotateDirection = { 1, 1, 0 };
-		real32 rotateSpeed = 0.5f;
-
-		rotateDirection = rotateDirection.Normalize();
-		Vector3 rotateAxis = camera.GetLookVector().Cross(rotateDirection).Normalize();
-		camera.rotation = Quaternion::CreateFromAxisAngle(rotateAxis, rotateSpeed) * camera.rotation;
-
+		camera.rotation = Quaternion::CreateFromAxisAngle(Vector3::Up(), Pi32 / 8);
+		std::cout << camera.rotation << '\n';
+		std::cout << camera.rotation.Transform({ 0, 0, 10 });
 		std::cout << camera.GetView() << '\n';
 	}
 }

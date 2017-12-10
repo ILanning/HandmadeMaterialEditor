@@ -21,7 +21,8 @@ namespace Drawing
 
 		Matrix4 GetView()
 		{
-			Matrix4 view = Matrix4::CreateTranslation(Position) * rotation.ToRotationMatrix() * Matrix4::CreateScale(zoomLevel, zoomLevel, zoomLevel);
+			Vector3 zoomVec = { 0, 0, -zoomLevel };
+			Matrix4 view = rotation.Inverse().ToRotationMatrix() * Matrix4::CreateTranslation(Position * -1 + rotation.Transform(zoomVec));
 			return view;
 		}
 
@@ -32,7 +33,7 @@ namespace Drawing
 
 		void Rotate(Quaternion spin)
 		{
-			rotation = spin * rotation;
+			rotation = rotation * spin;
 			rotation = rotation.Normalize();
 		}
 	};

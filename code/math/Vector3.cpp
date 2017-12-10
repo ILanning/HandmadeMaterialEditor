@@ -17,8 +17,8 @@ Vector3 Vector3::Cross(const Vector3 &other)
 {
 	return{
 		this->y * other.z - this->z * other.y,
-		this->x * other.z - this->z * other.x,
-		this->y * other.x - this->x * other.y,
+		this->z * other.x - this->x * other.z,
+		this->x * other.y - this->y * other.x,
 	};
 }
 

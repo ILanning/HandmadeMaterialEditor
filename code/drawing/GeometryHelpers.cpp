@@ -68,9 +68,9 @@ Model* MakeArrow(const Vector3 &color, int32 ringVertices, GLuint shaderProgram)
 	//Build cap
 	for (int i = 1; i < ringVertices + 1; i++)
 	{
-		elements[currElement++] = (i % ringVertices) + 1;
-		elements[currElement++] = i;
 		elements[currElement++] = 0;
+		elements[currElement++] = i;
+		elements[currElement++] = (i % ringVertices) + 1;
 	}
 
 	//Build cap underside
@@ -83,9 +83,9 @@ Model* MakeArrow(const Vector3 &color, int32 ringVertices, GLuint shaderProgram)
 		elements[currElement++] = i;
 		elements[currElement++] = bottomLeft;
 		elements[currElement++] = topRight;
-		elements[currElement++] = bottomLeft;
-		elements[currElement++] = topRight;
 		elements[currElement++] = bottomRight;
+		elements[currElement++] = topRight;
+		elements[currElement++] = bottomLeft;
 	}
 
 	//Build tube
@@ -98,17 +98,17 @@ Model* MakeArrow(const Vector3 &color, int32 ringVertices, GLuint shaderProgram)
 		elements[currElement++] = i;
 		elements[currElement++] = bottomLeft;
 		elements[currElement++] = topRight;
-		elements[currElement++] = bottomLeft;
-		elements[currElement++] = topRight;
 		elements[currElement++] = bottomRight;
+		elements[currElement++] = topRight;
+		elements[currElement++] = bottomLeft;
 	}
 
 	//Build bottom
 	for (int i = ringVertices * 2 + 1; i < ringVertices * 3 + 1; i++)
 	{
-		elements[currElement++] = ringVertices * 3 + 1;
-		elements[currElement++] = i;
 		elements[currElement++] = (i % ringVertices) + ringVertices * 2 + 1;
+		elements[currElement++] = i;
+		elements[currElement++] = ringVertices * 3 + 1;
 	}
 
 	VertexColorTextureArray *verts = new VertexColorTextureArray(vertices, vertexCount);

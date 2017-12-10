@@ -3,8 +3,9 @@
 
 #include "../libraries/glew.h"
 #include "../handmade_typedefs.h"
+#include "../handmade.h"
 
-internal void DebugOutputGLErrors()
+internal void DebugOutputGLErrors(DebugMessageErrorFunc *messageError)
 {
 	GLenum glError = glGetError();
 	while (glError != GL_NO_ERROR)
@@ -49,7 +50,7 @@ internal void DebugOutputGLErrors()
 			glErrorString = "Unknown OpenGL error!\n";
 		} break;
 		}
-		OutputDebugString(glErrorString);
+		messageError(glErrorString);
 		glError = glGetError();
 	}
 }

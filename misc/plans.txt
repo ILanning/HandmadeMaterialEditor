@@ -16,7 +16,7 @@ Core Goals:
 	Render a loaded model with OpenGL - Done
 	Advanced .obj loading - Geometry becomes Mesh, new Geometry class composed of one or more meshes - Done
 	Advanced .obj loading - Add support for the new Geometry in ParseOBJ - Done
-	Convert GLState into a controllable camera class
+	Convert GLState into a controllable camera class - Done
 	Cleanup Pass - Formalize GLState, PrepareScene, and GLRender
 	Cleanup Pass - Move rendering code out of platform layer (where appropriate)
 	Cleanup Pass - Organize everything into sensible namespaces
@@ -31,6 +31,8 @@ Core Goals:
 	Write StretchArrayIterator class
 	Write HandmadeString class
 	Write InputManager class
+	Add input control function to ThirdPersonCamera
+	Write a spherical coordinates based camera
 	Write MemoryArena class
 	Write ContentManager class
 	Write ShaderManager class

@@ -30,11 +30,6 @@
 
 #include "handmade_typedefs.h"
 
-#include "math\Vector2.h"
-#include "math\Vector3.h"
-#include "math\Matrix3.h"
-#include "math\Matrix4.h"
-
 #if HANDMADE_SLOW
 // TODO(casey): Complete assertion macro - don't worry everyone!
 #define Assert(Expression) if(!(Expression)) {*(int *)0 = 0;}
@@ -103,6 +98,9 @@ typedef DEBUG_PLATFORM_READ_ENTIRE_FILE(debug_platform_read_entire_file);
 
 #define DEBUG_PLATFORM_WRITE_ENTIRE_FILE(name) bool32 name(thread_context *Thread, char *Filename, uint32 MemorySize, void *Memory)
 typedef DEBUG_PLATFORM_WRITE_ENTIRE_FILE(debug_platform_write_entire_file);
+
+#define DEBUG_PLATFORM_MESSAGE_ERROR_FUNC(name) void name(char *errorString)
+typedef DEBUG_PLATFORM_MESSAGE_ERROR_FUNC(DebugMessageErrorFunc);
 
 #endif
 
@@ -198,10 +196,15 @@ struct game_memory
     uint64 TransientStorageSize;
     void *TransientStorage; // NOTE(casey): REQUIRED to be cleared to zero at startup
 
+	ReadFileFunc *ReadEntireFile;
     debug_platform_free_file_memory *DEBUGPlatformFreeFileMemory;
     debug_platform_read_entire_file *DEBUGPlatformReadEntireFile;
     debug_platform_write_entire_file *DEBUGPlatformWriteEntireFile;
+	DebugMessageErrorFunc *DEBUGMessageError;
 };
+
+#define GAME_INITIALIZE(name) void name(thread_context *Thread, game_memory *Memory)
+typedef GAME_INITIALIZE(game_initialize);
 
 #define GAME_UPDATE_AND_RENDER(name) void name(thread_context *Thread, game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
 typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
@@ -212,21 +215,5 @@ typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 // or asking about it, etc.
 #define GAME_GET_SOUND_SAMPLES(name) void name(thread_context *Thread, game_memory *Memory, game_sound_output_buffer *SoundBuffer)
 typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
-//
-//
-//
-
-struct game_state
-{
-    int ToneHz;
-    int GreenOffset;
-    int BlueOffset;
-    
-    real32 tSine;
-
-    int PlayerX;
-    int PlayerY;
-    real32 tJump;
-};
 
 #endif

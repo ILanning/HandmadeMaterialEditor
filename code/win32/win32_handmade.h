@@ -1,4 +1,5 @@
 #if !defined(WIN32_HANDMADE_H)
+#define WIN32_HANDMADE_H
 /* ========================================================================
    $File: $
    $Date: $
@@ -55,6 +56,7 @@ struct win32_game_code
 
     // IMPORTANT(casey): Either of the callbacks can be 0!  You must
     // check before calling.
+	game_initialize *Initialize;
     game_update_and_render *UpdateAndRender;
     game_get_sound_samples *GetSoundSamples;
 
@@ -93,5 +95,4 @@ global_variable LPDIRECTSOUNDBUFFER GlobalSecondaryBuffer;
 global_variable int64 GlobalPerfCountFrequency;
 global_variable HDC GlobalDeviceContext;
 
-#define WIN32_HANDMADE_H
 #endif

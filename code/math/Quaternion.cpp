@@ -55,6 +55,17 @@ static Quaternion CosInterpolate(const Quaternion &start, const Quaternion &end,
 
 }*/
 
+Vector3 Quaternion::Transform(const Vector3 &b) const
+{
+	// nVidia SDK implementation
+	Vector3 uv, uuv;
+	Vector3 qvec = { x, y, z };
+	uv = qvec.Cross(b) * 2.0f;
+	uuv = qvec.Cross(uv);
+
+	return b + uv * w + uuv;
+}
+
 //TODO(Ian): From Ogre3D source code, figure out why this works
 Vector3 operator*(const Quaternion &a, const Vector3 &b)
 {

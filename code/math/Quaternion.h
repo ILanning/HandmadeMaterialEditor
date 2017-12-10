@@ -29,7 +29,7 @@ struct Quaternion
 		result.z = axis.z * halfSineAngle;
 		result.w = cosf(angle) / 2;
 
-		return result;
+		return result.Normalize();
 	}
 
 	//TODO(Ian): Copied from Ogre3D, replace this with something you actually understand later
@@ -83,7 +83,7 @@ struct Quaternion
 	real32 Magnitude();
 	real32 MagnitudeSquared();
 	Quaternion Inverse();
-	Vector3 Transform(Vector3 vector);
+	Vector3 Transform(const Vector3 &b) const;
 
 	static Quaternion Identity()
 	{
@@ -95,6 +95,8 @@ struct Quaternion
 
 	friend Quaternion operator*(const Quaternion &a, const Quaternion &b);
 	friend Quaternion operator*(const Quaternion &a, const real32 &b);
+	//TODO(Why does this give an unresolved external error when actually used elsewhere?)
+	friend Vector3 operator*(const Quaternion &a, const Vector3 &b);
 	friend Quaternion operator/(const Quaternion &a, const real32 &b);
 	friend Quaternion& operator*=(Quaternion &a, const Quaternion &b);
 	friend Quaternion& operator*=(Quaternion &a, const real32 &b);

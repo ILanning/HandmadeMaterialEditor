@@ -300,19 +300,19 @@ namespace Content
 						}
 						if (faceVerts[3] == -1)
 						{
-							elements.PushBack((GLuint)faceVerts[0]);
-							elements.PushBack((GLuint)faceVerts[2]);
 							elements.PushBack((GLuint)faceVerts[1]);
+							elements.PushBack((GLuint)faceVerts[2]);
+							elements.PushBack((GLuint)faceVerts[0]);
 						}
 						else
 						{
-							elements.PushBack((GLuint)faceVerts[0]);
-							elements.PushBack((GLuint)faceVerts[2]);
 							elements.PushBack((GLuint)faceVerts[1]);
-
 							elements.PushBack((GLuint)faceVerts[2]);
 							elements.PushBack((GLuint)faceVerts[0]);
+
 							elements.PushBack((GLuint)faceVerts[3]);
+							elements.PushBack((GLuint)faceVerts[0]);
+							elements.PushBack((GLuint)faceVerts[2]);
 						}
 
 						break;

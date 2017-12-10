@@ -111,7 +111,7 @@ TEST_CASE("Testing the Vector3 class")
 
 	SUBCASE("Testing Cross()")
 	{
-		Vector3 c = {-22, -8, -5};
+		Vector3 c = {-22, 8, 5};
 		CHECK(a.Cross(b) == c);
 
 		c = { 0, 0, 0 };

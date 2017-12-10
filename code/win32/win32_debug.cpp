@@ -97,6 +97,11 @@ PLATFORM_READ_FILE(DebugReadWrapper)
 	return result;
 }
 
+DEBUG_PLATFORM_MESSAGE_ERROR_FUNC(VSOutputDebugString)
+{
+	OutputDebugStringA(errorString);
+}
+
 DEBUG_PLATFORM_WRITE_ENTIRE_FILE(DEBUGPlatformWriteEntireFile)
 {
 	bool32 Result = false;
