@@ -102,6 +102,51 @@ RenderPlayer(game_offscreen_buffer *Buffer, int PlayerX, int PlayerY)
 
 DebugMessageErrorFunc *MessageError;
 
+void HandleInput(game_input *input, GameState *state)
+{
+	for (int ControllerIndex = 0;
+		ControllerIndex < ArrayCount(input->Controllers);
+		++ControllerIndex)
+	{
+		game_controller_input *Controller = GetController(input, ControllerIndex);
+		if (Controller->IsAnalog)
+		{
+			// NOTE(casey): Use analog movement tuning
+			//GameState->BlueOffset += (int)(4.0f*Controller->StickAverageX);
+			//GameState->ToneHz = 512 + (int)(128.0f*Controller->StickAverageY);
+		}
+		else
+		{
+			// NOTE(casey): Use digital movement tuning
+			if (Controller->MoveLeft.EndedDown)
+			{
+				//GameState->BlueOffset -= 1;
+			}
+
+			if (Controller->MoveRight.EndedDown)
+			{
+				//GameState->BlueOffset += 1;
+			}
+		}
+
+		// Input.AButtonEndedDown;
+		// Input.AButtonHalfTransitionCount;
+
+		/*GameState->PlayerX += (int)(4.0f*Controller->StickAverageX);
+		GameState->PlayerY -= (int)(4.0f*Controller->StickAverageY);
+		if(GameState->tJump > 0)
+		{
+		GameState->PlayerY += (int)(5.0f*sinf(0.5f*Pi32*GameState->tJump));
+		}
+		if(Controller->ActionDown.EndedDown)
+		{
+		GameState->tJump = 4.0;
+		}
+		GameState->tJump -= 0.033f;*/
+	}
+	state->globals.Camera.HandleInput(input);
+}
+
 extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 {
     Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) ==
@@ -132,48 +177,9 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     }
 
 	if (!MessageError)
-		MessageError = Memory->DEBUGMessageError;
+		MessageError = Memory->DEBUGMessageError;    
 
-    for(int ControllerIndex = 0;
-        ControllerIndex < ArrayCount(Input->Controllers);
-        ++ControllerIndex)
-    {
-        game_controller_input *Controller = GetController(Input, ControllerIndex);
-        if(Controller->IsAnalog)
-        {
-            // NOTE(casey): Use analog movement tuning
-            //GameState->BlueOffset += (int)(4.0f*Controller->StickAverageX);
-            //GameState->ToneHz = 512 + (int)(128.0f*Controller->StickAverageY);
-        }
-        else
-        {
-            // NOTE(casey): Use digital movement tuning
-            if(Controller->MoveLeft.EndedDown)
-            {
-                //GameState->BlueOffset -= 1;
-            }
-            
-            if(Controller->MoveRight.EndedDown)
-            {
-                //GameState->BlueOffset += 1;
-            }
-        }
-
-        // Input.AButtonEndedDown;
-        // Input.AButtonHalfTransitionCount;
-
-        /*GameState->PlayerX += (int)(4.0f*Controller->StickAverageX);
-        GameState->PlayerY -= (int)(4.0f*Controller->StickAverageY);
-        if(GameState->tJump > 0)
-        {
-            GameState->PlayerY += (int)(5.0f*sinf(0.5f*Pi32*GameState->tJump));
-        }
-        if(Controller->ActionDown.EndedDown)
-        {
-            GameState->tJump = 4.0;
-        }
-        GameState->tJump -= 0.033f;*/
-    }
+	HandleInput(Input, gameState);
     
 	RenderScene(Input, gameState);
     /*RenderWeirdGradient(Buffer, GameState->BlueOffset, GameState->GreenOffset);

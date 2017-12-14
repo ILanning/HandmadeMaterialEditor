@@ -36,6 +36,76 @@ namespace Drawing
 			rotation = rotation * spin;
 			rotation = rotation.Normalize();
 		}
+
+		void HandleInput(game_input *input)
+		{
+			//TODO(Ian): Use InputManager instead
+			Vector3 rotateDirection = {};
+			if (input->Controllers[0].MoveDown.EndedDown)
+			{
+				rotateDirection.x++;
+			}
+			if (input->Controllers[0].MoveUp.EndedDown)
+			{
+				rotateDirection.x--;
+			}
+			if (input->Controllers[0].MoveLeft.EndedDown) //About Y axis
+			{
+				rotateDirection.y--;
+			}
+			if (input->Controllers[0].MoveRight.EndedDown)
+			{
+				rotateDirection.y++;
+			}
+			if (input->Controllers[0].RightShoulder.EndedDown) //About Z Axis
+			{
+				rotateDirection.z--;
+			}
+			if (input->Controllers[0].LeftShoulder.EndedDown)
+			{
+				rotateDirection.z++;
+			}
+
+			real32 rotateSpeed = 0.05f;
+			if (rotateDirection.MagnitudeSquared() != 0)
+			{
+				rotateDirection = rotateDirection.Normalize();
+				Rotate(Quaternion::CreateFromAxisAngle(rotateDirection, rotateSpeed));
+			}
+
+			Vector3 moveDirection = {};
+			if (input->Controllers[0].ActionRight.EndedDown)
+			{
+				moveDirection.x++;
+			}
+			if (input->Controllers[0].ActionLeft.EndedDown)
+			{
+				moveDirection.x--;
+			}
+			if (input->Controllers[0].ActionUp.EndedDown)
+			{
+				moveDirection.z--;
+			}
+			if (input->Controllers[0].ActionDown.EndedDown)
+			{
+				moveDirection.z++;
+			}
+			if (input->Controllers[0].Start.EndedDown)
+			{
+				moveDirection.y++;
+			}
+			if (input->Controllers[0].Back.EndedDown)
+			{
+				moveDirection.y--;
+			}
+
+			real32 moveSpeed = 0.03f;
+			if (rotateDirection.MagnitudeSquared() != 0)
+			{
+				moveDirection = moveDirection.Normalize() * moveSpeed;
+			}
+			Position += moveDirection;
+		}
 	};
 }
 

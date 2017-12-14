@@ -2,36 +2,54 @@ Memory Allocation:
 	The memory which will not change depending on the model and images loaded will be allocated as a single chunk and handled in the way shown on the Handmade Hero stream.
 	The memory required for the images and models will be allocated on a file-by-file basis, with each file being its own object.
 
+	Arena Types:
+		StackArena:
+			-Allows additions of arbitrary size
+			-Anything may be accessed, but only the last item may be deleted
+		FixedSizeArena (needs a better name):
+			-The size of the items within is set at initialization
+			-Items may be deleted at will
+			-Keeps a heap (data structure) of deleted entries which starts at the end of the Arena and grows inwards
+		NewDeleteArena:
+			-Just a wrapper for new and delete
+		FillInArena (needs a better name):
+			-Allows additions of arbitary size, as well as deletions from anywhere
+			-Each entry has a leading int32 denoting the size
+			-Keeps a list of deleted entries and their sizes
+			-New additions search the deleted list first, looking for an open spot of sufficient size
+			-If it finds a space of the right size or greater, it fills that spot in and subtracts the space it used from the size of the entry
+			-Prone to fragmentation over time if some entries are long lived and others are not
+
 
 Core Goals:
 
-	Start up an OpenGl context using GLEW  - Done
-	Import an image using stb_image - Done
-	Draw the image on the screen - Done
-	Create Matrix4::CreateOrthographic(screenWidth, screenHeight); - Done
-	Build a Model class and use it to draw axis arrows, a ground plane, and the test quad - Done
-	Load an .obj file, including associated texture - Done
-	Write path string handling functions to deal with the relative paths in files - Done
-	Load a .mtl file - Done
-	Render a loaded model with OpenGL - Done
-	Advanced .obj loading - Geometry becomes Mesh, new Geometry class composed of one or more meshes - Done
-	Advanced .obj loading - Add support for the new Geometry in ParseOBJ - Done
-	Convert GLState into a controllable camera class - Done
-	Cleanup Pass - Formalize GLState, PrepareScene, and GLRender
-	Cleanup Pass - Move rendering code out of platform layer (where appropriate)
-	Cleanup Pass - Organize everything into sensible namespaces
-	Cleanup Pass - Ensure Doxygen support
-	Cleanup Pass - Ensure robust unit tests exist for anything that they'd be sensible for
-	Cleanup Pass - Reexamine TODOs and CONSIDERs
+	Start up an OpenGl context using GLEW 															   - Done
+	Import an image using stb_image																	   - Done
+	Draw the image on the screen																	   - Done
+	Create Matrix4::CreateOrthographic(screenWidth, screenHeight);									   - Done
+	Build a Model class and use it to draw axis arrows, a ground plane, and the test quad			   - Done
+	Load an .obj file, including associated texture													   - Done
+	Write path string handling functions to deal with the relative paths in files					   - Done
+	Load a .mtl file																				   - Done
+	Render a loaded model with OpenGL																   - Done
+	Advanced .obj loading - Geometry becomes Mesh, new Geometry class composed of one or more meshes   - Done
+	Advanced .obj loading - Add support for the new Geometry in ParseOBJ							   - Done
+	Convert GLState into a controllable camera class												   - Done
+	Cleanup Pass - Formalize GLState, PrepareScene, and GLRender									   - Done
+	Cleanup Pass - Move rendering code out of platform layer (where appropriate)					   - Done
+	Cleanup Pass - Organize everything into sensible namespaces										   - Done
+	Cleanup Pass - Ensure Doxygen support															   - Done
+	Cleanup Pass - Ensure robust unit tests exist for anything that they'd be sensible for			   - Done
+	Cleanup Pass - Reexamine TODOs and CONSIDERs													   - Done
 
-	Update build.bat to automatically hand the .cpp files in certain directories to MSVC
-	Edit includes to be something more standard, compare compile times
+	Update build.bat to automatically hand the .cpp files in certain directories to MSVC			   - DELAYED (Low priority)
+	Edit includes to be something more standard, compare compile times								   - DELAYED (Low priority)
 
-	Finish Quaternion class
-	Write StretchArrayIterator class
-	Write HandmadeString class
-	Write InputManager class
-	Add input control function to ThirdPersonCamera
+	Finish Quaternion class                                                                            - Done (Enough for now, at least)
+	Write StretchArrayIterator class																   - DELAYED (Low priority)
+	Write HandmadeString class																		   - DELAYED (Low priority)
+	Write InputManager class																		   
+	Add input control function to ThirdPersonCamera													   
 	Write a spherical coordinates based camera
 	Write MemoryArena class
 	Write ContentManager class

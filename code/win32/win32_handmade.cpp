@@ -48,6 +48,7 @@
 #include "win32_input.cpp"
 #include "win32_graphics.cpp"
 #include "win32_debug.cpp"
+#include "InputProcessor.h"
 
 static real32 testRotY = 0;
 static real32 testRotX = 0;
@@ -139,6 +140,7 @@ internal LRESULT CALLBACK Win32MainWindowCallback(HWND Window,
         case WM_SYSKEYUP:
         case WM_KEYDOWN:
         case WM_KEYUP:
+		case WM_INPUT:
         {
             Assert(!"Keyboard input came in through a non-dispatch message!");
         } break;
@@ -164,7 +166,7 @@ internal LRESULT CALLBACK Win32MainWindowCallback(HWND Window,
     return(Result);
 }
 
-internal void Win32ProcessPendingMessages(win32_state *State, game_controller_input *KeyboardController)
+internal void Win32ProcessPendingMessages(win32_state *State, game_controller_input *KeyboardController, InputProcessor *inputProcessor)
 {
     MSG Message;
     while(PeekMessage(&Message, 0, 0, 0, PM_REMOVE))
@@ -175,13 +177,18 @@ internal void Win32ProcessPendingMessages(win32_state *State, game_controller_in
             {
                 GlobalRunning = false;
             } break;
-            
+
+			case WM_INPUT:
+			{
+				inputProcessor->HandleRawInputMessages(Message);
+			} break;
+
             case WM_SYSKEYDOWN:
             case WM_SYSKEYUP:
             case WM_KEYDOWN:
             case WM_KEYUP:
             {
-                uint32 VKCode = (uint32)Message.wParam;
+                /*uint32 VKCode = (uint32)Message.wParam;
 
                 // NOTE(casey): Since we are comparing WasDown to IsDown,
                 // we MUST use == and != to convert these bit tests to actual
@@ -275,7 +282,7 @@ internal void Win32ProcessPendingMessages(win32_state *State, game_controller_in
                 if((VKCode == VK_F4) && AltKeyWasDown)
                 {
                     GlobalRunning = false;
-                }
+                }*/
             } break;
 
             default:
@@ -371,13 +378,11 @@ int CALLBACK WinMain(HINSTANCE Instance,
     Win32LoadXInput();
     
     WNDCLASSA WindowClass = {};
-
-    //Win32ResizeDIBSection(&GlobalBackbuffer, 1280, 720);
     
     WindowClass.style = CS_HREDRAW|CS_VREDRAW|CS_OWNDC;
     WindowClass.lpfnWndProc = Win32MainWindowCallback;
     WindowClass.hInstance = Instance;
-//    WindowClass.hIcon;
+//    WindowClass.hIcon;  //TODO(Ian): Add a window icon
     WindowClass.lpszClassName = "HandmadeHeroWindowClass";
 
     if(RegisterClassA(&WindowClass))
@@ -398,7 +403,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
                 0);
         if(Window)
         {
-            win32_sound_output SoundOutput = {};
+            //win32_sound_output SoundOutput = {};
 
 			GlobalDeviceContext = GetDC(Window);
 
@@ -412,8 +417,10 @@ int CALLBACK WinMain(HINSTANCE Instance,
             real32 GameUpdateHz = (MonitorRefreshHz / 2.0f);
             real32 TargetSecondsPerFrame = 1.0f / (real32)GameUpdateHz;
 
+			GlobalRunning = true;
+
             // TODO(casey): Make this like sixty seconds?
-            SoundOutput.SamplesPerSecond = 48000;
+            /*SoundOutput.SamplesPerSecond = 48000;
             SoundOutput.BytesPerSample = sizeof(int16)*2;
             SoundOutput.SecondaryBufferSize = SoundOutput.SamplesPerSecond*SoundOutput.BytesPerSample;
             // TODO(casey): Actually compute this variance and see
@@ -422,8 +429,6 @@ int CALLBACK WinMain(HINSTANCE Instance,
             Win32InitDSound(Window, SoundOutput.SamplesPerSecond, SoundOutput.SecondaryBufferSize);
             Win32ClearBuffer(&SoundOutput);
             GlobalSecondaryBuffer->Play(0, 0, DSBPLAY_LOOPING);
-
-            GlobalRunning = true;
 
 #if 0
             // NOTE(casey): This tests the PlayCursor/WriteCursor update frequency
@@ -443,8 +448,10 @@ int CALLBACK WinMain(HINSTANCE Instance,
             
             // TODO(casey): Pool with bitmap VirtualAlloc
             int16 *Samples = (int16 *)VirtualAlloc(0, SoundOutput.SecondaryBufferSize,
-                                                   MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+                                                   MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE); */
 
+			InputProcessor inputProcessor = {};
+			inputProcessor.RegisterRawInput();
             
 #if HANDMADE_INTERNAL
             LPVOID BaseAddress = (LPVOID)Terabytes(2);
@@ -508,7 +515,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
 			HGLRC glContext = InitializeOpenGL();
 			wglMakeCurrent(GlobalDeviceContext, glContext);
 			
-            if(Samples && GameMemory.PermanentStorage && GameMemory.TransientStorage && glContext)
+            if(GameMemory.PermanentStorage && GameMemory.TransientStorage && glContext)
             {
                 game_input Input[2] = {};
                 game_input *NewInput = &Input[0];
@@ -546,6 +553,8 @@ int CALLBACK WinMain(HINSTANCE Instance,
                         LoadCounter = 0;
                     }
 
+		//START KEYBOARD
+
                     // TODO(casey): Zeroing macro
                     // TODO(casey): We can't zero everything because the up/down state will
                     // be wrong!!!
@@ -561,7 +570,10 @@ int CALLBACK WinMain(HINSTANCE Instance,
                             OldKeyboardController->Buttons[ButtonIndex].EndedDown;
                     }
 
-                    Win32ProcessPendingMessages(&Win32State, NewKeyboardController);
+                    Win32ProcessPendingMessages(&Win32State, NewKeyboardController, &inputProcessor);
+
+		//END KEYBOARD
+		//START MOUSE
 
                     if(!GlobalPause)
                     {
@@ -582,6 +594,9 @@ int CALLBACK WinMain(HINSTANCE Instance,
                         Win32ProcessKeyboardMessage(&NewInput->MouseButtons[4],
                                                     GetKeyState(VK_XBUTTON2) & (1 << 15));
                         
+		//END MOUSE
+		//START CONTROLLER
+
                         // TODO(casey): Need to not poll disconnected controllers to avoid
                         // xinput frame rate hit on older libraries...
                         // TODO(casey): Should we poll this more frequently
@@ -697,6 +712,8 @@ int CALLBACK WinMain(HINSTANCE Instance,
                             }
                         }
 
+				//END CONTROLLER
+
                         thread_context Thread = {};
                         
                         game_offscreen_buffer Buffer = {};
@@ -721,7 +738,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
                         }
 						SwapBuffers(GlobalDeviceContext);
 
-                        LARGE_INTEGER AudioWallClock = Win32GetWallClock();
+                       /* LARGE_INTEGER AudioWallClock = Win32GetWallClock();
                         real32 FromBeginToAudioSeconds = Win32GetSecondsElapsed(FlipWallClock, AudioWallClock);
 
                         DWORD PlayCursor;
@@ -753,7 +770,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
                                audio perfectly, so we will write one frame's
                                worth of audio plus the safety margin's worth
                                of guard samples.
-                            */
+                            *
                             if(!SoundIsValid)
                             {
                                 SoundOutput.RunningSampleIndex = WriteCursor / SoundOutput.BytesPerSample;
@@ -845,7 +862,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
                         else
                         {
                             SoundIsValid = false;
-                        }
+                        }*/
                     
                         LARGE_INTEGER WorkCounter = Win32GetWallClock();
                         real32 WorkSecondsElapsed = Win32GetSecondsElapsed(LastCounter, WorkCounter);
@@ -887,7 +904,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
                         real32 MSPerFrame = 1000.0f*Win32GetSecondsElapsed(LastCounter, EndCounter);                    
                         LastCounter = EndCounter;
                 
-                        win32_window_dimension Dimension = Win32GetWindowDimension(Window);
+                        //win32_window_dimension Dimension = Win32GetWindowDimension(Window);
                         //HDC DeviceContext = GetDC(Window);
                         //Win32DisplayBufferInWindow(&GlobalBackbuffer, GlobalDeviceContext,
                         //                           Dimension.Width, Dimension.Height);
@@ -896,7 +913,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
                         FlipWallClock = Win32GetWallClock();
 #if HANDMADE_INTERNAL
                         // NOTE(casey): This is debug code
-                        {
+                        /*{
                             PlayCursor = 0;
                             WriteCursor = 0;
                             if(GlobalSecondaryBuffer->GetCurrentPosition(&PlayCursor, &WriteCursor) == DS_OK)
@@ -907,7 +924,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
                                 Marker->FlipWriteCursor = WriteCursor;
                             }
                         
-                        }
+                        }*/
 #endif
 
                         game_input *Temp = NewInput;
