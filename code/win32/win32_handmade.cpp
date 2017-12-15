@@ -50,9 +50,6 @@
 #include "win32_debug.cpp"
 #include "InputProcessor.h"
 
-static real32 testRotY = 0;
-static real32 testRotX = 0;
-
 internal win32_game_code Win32LoadGameCode(char *SourceDLLName, char *TempDLLName)
 {
     win32_game_code Result = {};
@@ -67,6 +64,9 @@ internal win32_game_code Win32LoadGameCode(char *SourceDLLName, char *TempDLLNam
 		Result.Initialize = (game_initialize *)
 			GetProcAddress(Result.GameCodeDLL, "GameInitialize");
 
+		Result.HandleInput = (game_handle_input *)
+			GetProcAddress(Result.GameCodeDLL, "GameHandleInput");
+
         Result.UpdateAndRender = (game_update_and_render *)
             GetProcAddress(Result.GameCodeDLL, "GameUpdateAndRender");
         
@@ -74,15 +74,17 @@ internal win32_game_code Win32LoadGameCode(char *SourceDLLName, char *TempDLLNam
             GetProcAddress(Result.GameCodeDLL, "GameGetSoundSamples");
 
         Result.IsValid = (Result.Initialize && 
+						  Result.HandleInput &&
 						  Result.UpdateAndRender &&
                           Result.GetSoundSamples);
     }
 
     if(!Result.IsValid)
     {
-		Result.Initialize = 0;
-        Result.UpdateAndRender = 0;
-        Result.GetSoundSamples = 0;
+		Result.Initialize = nullptr;
+		Result.HandleInput = nullptr;
+        Result.UpdateAndRender = nullptr;
+        Result.GetSoundSamples = nullptr;
     }
 
     return(Result);
@@ -97,8 +99,10 @@ internal void Win32UnloadGameCode(win32_game_code *GameCode)
     }
 
     GameCode->IsValid = false;
-    GameCode->UpdateAndRender = 0;
-    GameCode->GetSoundSamples = 0;
+	GameCode->Initialize = nullptr;
+	GameCode->HandleInput = nullptr;
+    GameCode->UpdateAndRender = nullptr;
+    GameCode->GetSoundSamples = nullptr;
 }
 
 internal LRESULT CALLBACK Win32MainWindowCallback(HWND Window,
@@ -140,7 +144,7 @@ internal LRESULT CALLBACK Win32MainWindowCallback(HWND Window,
         case WM_SYSKEYUP:
         case WM_KEYDOWN:
         case WM_KEYUP:
-		case WM_INPUT:
+		//case WM_INPUT:
         {
             Assert(!"Keyboard input came in through a non-dispatch message!");
         } break;
@@ -391,7 +395,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
             CreateWindowExA(
                 0, // WS_EX_TOPMOST|WS_EX_LAYERED,
                 WindowClass.lpszClassName,
-                "Handmade Hero",
+                "Handmade Material Editor",
                 WS_OVERLAPPEDWINDOW|WS_VISIBLE,
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
@@ -517,9 +521,9 @@ int CALLBACK WinMain(HINSTANCE Instance,
 			
             if(GameMemory.PermanentStorage && GameMemory.TransientStorage && glContext)
             {
-                game_input Input[2] = {};
-                game_input *NewInput = &Input[0];
-                game_input *OldInput = &Input[1];
+                GameInput Input[2] = {};
+				GameInput *NewInput = &Input[0];
+				GameInput *OldInput = &Input[1];
     
                 LARGE_INTEGER LastCounter = Win32GetWallClock();
                 LARGE_INTEGER FlipWallClock = Win32GetWallClock();
@@ -732,9 +736,13 @@ int CALLBACK WinMain(HINSTANCE Instance,
                         {
                             Win32PlayBackInput(&Win32State, NewInput);
                         }
+						if (Game.HandleInput)
+						{
+							Game.HandleInput(&Thread, NewInput, &GameMemory);
+						}
                         if(Game.UpdateAndRender)
                         {
-                            Game.UpdateAndRender(&Thread, &GameMemory, NewInput, &Buffer);
+                            Game.UpdateAndRender(&Thread, &GameMemory, &Buffer);
                         }
 						SwapBuffers(GlobalDeviceContext);
 
@@ -927,7 +935,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
                         }*/
 #endif
 
-                        game_input *Temp = NewInput;
+                        GameInput *Temp = NewInput;
                         NewInput = OldInput;
                         OldInput = Temp;
                         // TODO(casey): Should I clear these here?

@@ -11,9 +11,9 @@ namespace Input
 	{
 		static const int32 KeyArraySize = PHYSICALINPUTS_LAST / 32 + 1;
 		//Bitflag array of pressed keys
-		bool32 PressedKeys[KeyArraySize];
-		Vector2 MousePos;
-		Vector2 BallisticsMousePos;
+		bool32 PressedKeys[KeyArraySize] = {0};
+		Vector2 MousePos = {0};
+		Vector2 BallisticsMousePos = {0};
 
 		bool GetKey(PhysicalInputs key)
 		{

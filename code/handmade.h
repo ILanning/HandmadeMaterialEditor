@@ -29,6 +29,7 @@
 #include "libraries\stb_truetype.h"
 
 #include "handmade_typedefs.h"
+#include "input\InputFrame.h"
 
 #if HANDMADE_SLOW
 // TODO(casey): Complete assertion macro - don't worry everyone!
@@ -170,15 +171,15 @@ struct game_controller_input
     };
 };
 
-struct game_input
+struct GameInput
 {
     game_button_state MouseButtons[5];
     int32 MouseX, MouseY, MouseZ;
-
+	Input::InputFrame newFrame;
     // TODO(casey): Insert clock values here.    
     game_controller_input Controllers[5];
 };
-inline game_controller_input *GetController(game_input *Input, int unsigned ControllerIndex)
+inline game_controller_input *GetController(GameInput *Input, int unsigned ControllerIndex)
 {
     Assert(ControllerIndex < ArrayCount(Input->Controllers));
     
@@ -203,10 +204,13 @@ struct game_memory
 	DebugMessageErrorFunc *DEBUGMessageError;
 };
 
-#define GAME_INITIALIZE(name) void name(thread_context *Thread, game_memory *Memory)
+#define GAME_INITIALIZE(name) void name(thread_context *thread, game_memory *memory)
 typedef GAME_INITIALIZE(game_initialize);
 
-#define GAME_UPDATE_AND_RENDER(name) void name(thread_context *Thread, game_memory *Memory, game_input *Input, game_offscreen_buffer *Buffer)
+#define GAME_HANDLE_INPUT(name) void name(thread_context *thread, GameInput *newInputs, game_memory *memory)
+typedef GAME_HANDLE_INPUT(game_handle_input);
+
+#define GAME_UPDATE_AND_RENDER(name) void name(thread_context *Thread, game_memory *Memory, game_offscreen_buffer *Buffer)
 typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 
 // NOTE(casey): At the moment, this has to be a very fast function, it cannot be

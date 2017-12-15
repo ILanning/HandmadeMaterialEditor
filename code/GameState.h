@@ -3,6 +3,7 @@
 
 #include "drawing\Model.h"
 #include "drawing\ThirdPersonCamera.h"
+#include "input\InputManager.h"
 
 
 struct TestGlobals
@@ -18,6 +19,7 @@ struct TestGlobals
 struct GameState
 {
 	TestGlobals globals;
+	Input::InputManager Input;
 };
 
 #endif

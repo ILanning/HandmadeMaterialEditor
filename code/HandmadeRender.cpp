@@ -94,7 +94,7 @@ void BuildTestObjects(GLuint shaderProgram,  ReadFileFunc *readFile, DebugMessag
 	globals->arrow->Size.z = 3;
 }
 
-GLuint BuildShaderProgram(const GLchar *vertexSource, const GLchar *fragmentSource)
+GLuint BuildShaderProgram(const GLchar *vertexSource, const GLchar *fragmentSource, DebugMessageErrorFunc *messageError)
 {
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertexShader, 1, &vertexSource, NULL);
@@ -116,27 +116,25 @@ GLuint BuildShaderProgram(const GLchar *vertexSource, const GLchar *fragmentSour
 	if (!isLinked)
 	{
 		//TODO(Ian): True diagnostics
-		//MessageBoxA(0, "Shader link failed!", 0, 0);
+		messageError("Shader link failed!");
 	}
 
 	return shaderProgram;
 }
 
-extern "C" GAME_INITIALIZE(GameInitialize)//internal void PrepareScene(ReadFileFunc *readFile)
+extern "C" GAME_INITIALIZE(GameInitialize)
 {
-	//GLState *glState = new GLState();
-
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
-	GLuint shaderProgram = BuildShaderProgram(vertexSourceCode, fragmentSourceCode);
+	GLuint shaderProgram = BuildShaderProgram(vertexSourceCode, fragmentSourceCode, memory->DEBUGMessageError);
 
 	glUseProgram(shaderProgram);
 
-	GameState *state = (GameState*)Memory->PermanentStorage;
+	GameState *state = (GameState*)memory->PermanentStorage;
 
-	BuildTestObjects(shaderProgram, Memory->ReadEntireFile, Memory->DEBUGMessageError, &state->globals);
+	BuildTestObjects(shaderProgram, memory->ReadEntireFile, memory->DEBUGMessageError, &state->globals);
 
 	state->globals.Camera.Projection = Matrix4::CreatePerspective(Pi32 / 2, 16.0f / 9.0f, 1, 1000);
 	state->globals.Camera.Position = { 0, 1, 0 };
@@ -154,12 +152,9 @@ extern "C" GAME_INITIALIZE(GameInitialize)//internal void PrepareScene(ReadFileF
 	state->globals.Camera.zoomLevel = 3.0f;
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-
-	//return glState;
 }
 
-void RenderScene(game_input *input, GameState *state)
+void RenderScene(GameState *state)
 {
 	static real32 sign = 1;
 	static real32 colorTest = 0.0f;

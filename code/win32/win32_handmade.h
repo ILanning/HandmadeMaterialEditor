@@ -56,9 +56,10 @@ struct win32_game_code
     HMODULE GameCodeDLL;
     FILETIME DLLLastWriteTime;
 
-    // IMPORTANT(casey): Either of the callbacks can be 0!  You must
+    // IMPORTANT(casey): Any of the callbacks can be 0!  You must
     // check before calling.
 	game_initialize *Initialize;
+	game_handle_input *HandleInput;
     game_update_and_render *UpdateAndRender;
     game_get_sound_samples *GetSoundSamples;
 

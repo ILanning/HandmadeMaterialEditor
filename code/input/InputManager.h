@@ -11,18 +11,18 @@ namespace Input
 	struct InputManager
 	{
 		//TODO(Ian): Keep a set of frames per registered controller
-		InputFrame[2] frames;
-		InputFrame& OldFrame = &frames[1];
-		InputFrame& NewFrame = &frames[0];
+		InputFrame frames[2];
+		InputFrame& OldFrame = frames[1];
+		InputFrame& NewFrame = frames[0];
 
-		void HandleInput(InputFrame *nextFrame)
+		void HandleInput(GameInput *nextInputs)
 		{
 
 		}
 
 		bool IsReleased(PhysicalInputs input)
 		{
-
+			return false;
 		}
 		/*                  PLATFORM LAYER
 		case WM_MOUSEMOVE:                              //With pointer ballistics, write a custom function for this later to make it platform independent

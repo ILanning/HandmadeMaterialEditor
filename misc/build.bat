@@ -15,6 +15,6 @@ REM cl %CommonCompilerFlags% ..\handmade\code\win32_handmade.cpp /link -subsyste
 
 REM 64-bit build
 del *.pdb > NUL 2> NUL
-cl %CommonCompilerFlags% ..\code\handmade.cpp -Fmhandmade.map -LD /link -incremental:no -opt:ref opengl32.lib "%handmade_folder%code\libraries\glew32.lib" -PDB:handmade_%random%.pdb -EXPORT:GameGetSoundSamples -EXPORT:GameUpdateAndRender -EXPORT:GameInitialize
+cl %CommonCompilerFlags% ..\code\handmade.cpp -Fmhandmade.map -LD /link -incremental:no -opt:ref opengl32.lib "%handmade_folder%code\libraries\glew32.lib" -PDB:handmade_%random%.pdb -EXPORT:GameInitialize -EXPORT:GameHandleInput -EXPORT:GameUpdateAndRender -EXPORT:GameGetSoundSamples
 cl %CommonCompilerFlags% ..\code\win32\win32_handmade.cpp -Fmwin32_handmade.map /link %CommonLinkerFlags%
 popd

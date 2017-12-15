@@ -166,14 +166,14 @@ Win32EndInputPlayBack(win32_state *State)
 }
 
 internal void
-Win32RecordInput(win32_state *State, game_input *NewInput)
+Win32RecordInput(win32_state *State, GameInput *NewInput)
 {
 	DWORD BytesWritten;
 	WriteFile(State->RecordingHandle, NewInput, sizeof(*NewInput), &BytesWritten, 0);
 }
 
 internal void
-Win32PlayBackInput(win32_state *State, game_input *NewInput)
+Win32PlayBackInput(win32_state *State, GameInput *NewInput)
 {
 	DWORD BytesRead = 0;
 	if (ReadFile(State->PlaybackHandle, NewInput, sizeof(*NewInput), &BytesRead, 0))

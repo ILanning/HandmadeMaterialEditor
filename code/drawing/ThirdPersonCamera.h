@@ -4,6 +4,7 @@
 #include "../math/Matrix4.h"
 #include "../math/Quaternion.h"
 #include "../math/Vector3.h"
+#include "../input/InputManager.h"
 
 namespace Drawing
 {
@@ -37,7 +38,7 @@ namespace Drawing
 			rotation = rotation.Normalize();
 		}
 
-		void HandleInput(game_input *input)
+		void HandleInput(GameInput *input)
 		{
 			//TODO(Ian): Use InputManager instead
 			Vector3 rotateDirection = {};

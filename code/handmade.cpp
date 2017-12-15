@@ -102,13 +102,44 @@ RenderPlayer(game_offscreen_buffer *Buffer, int PlayerX, int PlayerY)
 
 DebugMessageErrorFunc *MessageError;
 
-void HandleInput(game_input *input, GameState *state)
+bool InitMemory(thread_context *thread, game_memory *memory)
 {
+	char *filename = __FILE__;
+
+	bool success = false;
+	debug_read_file_result file = memory->DEBUGPlatformReadEntireFile(thread, filename, &success);
+	if (success)
+	{
+		memory->DEBUGPlatformWriteEntireFile(thread, "test.out", file.ContentsSize, file.Contents);
+		memory->DEBUGPlatformFreeFileMemory(thread, file.Contents);
+	}
+
+	// TODO(casey): This may be more appropriate to do in the platform layer
+	// TODO(Ian): Add actual error checking here
+	memory->IsInitialized = true;
+
+	return success && memory->IsInitialized;
+}
+
+extern "C" GAME_HANDLE_INPUT(GameHandleInput)
+{
+	Assert((&newInputs->Controllers[0].Terminator - &newInputs->Controllers[0].Buttons[0]) ==
+		(ArrayCount(newInputs->Controllers[0].Buttons)));
+
+	if (!memory->IsInitialized)
+	{
+		InitMemory(thread, memory);
+	}
+
+	GameState *gameState = (GameState *)memory->PermanentStorage;
+
+	gameState->Input.HandleInput(newInputs);
+
 	for (int ControllerIndex = 0;
-		ControllerIndex < ArrayCount(input->Controllers);
+		ControllerIndex < ArrayCount(newInputs->Controllers);
 		++ControllerIndex)
 	{
-		game_controller_input *Controller = GetController(input, ControllerIndex);
+		game_controller_input *Controller = GetController(newInputs, ControllerIndex);
 		if (Controller->IsAnalog)
 		{
 			// NOTE(casey): Use analog movement tuning
@@ -144,44 +175,23 @@ void HandleInput(game_input *input, GameState *state)
 		}
 		GameState->tJump -= 0.033f;*/
 	}
-	state->globals.Camera.HandleInput(input);
+	gameState->globals.Camera.HandleInput(newInputs);
 }
 
 extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 {
-    Assert((&Input->Controllers[0].Terminator - &Input->Controllers[0].Buttons[0]) ==
-           (ArrayCount(Input->Controllers[0].Buttons)));
     Assert(sizeof(GameState) <= Memory->PermanentStorageSize);
     
 	GameState *gameState = (GameState *)Memory->PermanentStorage;
     if(!Memory->IsInitialized)
     {
-        char *Filename = __FILE__;
-        
-		bool success = false;
-        debug_read_file_result File = Memory->DEBUGPlatformReadEntireFile(Thread, Filename, &success);
-        if(success)
-        {
-            Memory->DEBUGPlatformWriteEntireFile(Thread, "test.out", File.ContentsSize, File.Contents);
-            Memory->DEBUGPlatformFreeFileMemory(Thread, File.Contents);
-        }
-       
-        /*GameState->ToneHz = 512;
-        GameState->tSine = 0.0f;
-
-        GameState->PlayerX = 100;
-        GameState->PlayerY = 100;*/
-
-        // TODO(casey): This may be more appropriate to do in the platform layer
-        Memory->IsInitialized = true;
+		InitMemory(Thread, Memory);
     }
 
 	if (!MessageError)
 		MessageError = Memory->DEBUGMessageError;    
-
-	HandleInput(Input, gameState);
-    
-	RenderScene(Input, gameState);
+	    
+	RenderScene(gameState);
     /*RenderWeirdGradient(Buffer, GameState->BlueOffset, GameState->GreenOffset);
     RenderPlayer(Buffer, GameState->PlayerX, GameState->PlayerY);
 
