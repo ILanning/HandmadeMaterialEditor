@@ -38,31 +38,32 @@ namespace Drawing
 			rotation = rotation.Normalize();
 		}
 
-		void HandleInput(GameInput *input)
+		void HandleInput(Input::InputManager *manager)
 		{
 			//TODO(Ian): Use InputManager instead
+			using Keys = Input::PhysicalInputs;
 			Vector3 rotateDirection = {};
-			if (input->Controllers[0].MoveDown.EndedDown)
+			if (manager->IsDown(Keys::S))
 			{
 				rotateDirection.x++;
 			}
-			if (input->Controllers[0].MoveUp.EndedDown)
+			if (manager->IsDown(Keys::W))
 			{
 				rotateDirection.x--;
 			}
-			if (input->Controllers[0].MoveLeft.EndedDown) //About Y axis
+			if (manager->IsDown(Keys::A)) //About Y axis
 			{
 				rotateDirection.y--;
 			}
-			if (input->Controllers[0].MoveRight.EndedDown)
+			if (manager->IsDown(Keys::D))
 			{
 				rotateDirection.y++;
 			}
-			if (input->Controllers[0].RightShoulder.EndedDown) //About Z Axis
+			if (manager->IsDown(Keys::E)) //About Z Axis
 			{
 				rotateDirection.z--;
 			}
-			if (input->Controllers[0].LeftShoulder.EndedDown)
+			if (manager->IsDown(Keys::Q))
 			{
 				rotateDirection.z++;
 			}
@@ -74,34 +75,39 @@ namespace Drawing
 				Rotate(Quaternion::CreateFromAxisAngle(rotateDirection, rotateSpeed));
 			}
 
+			if (manager->IsDown(Keys::R))
+			{
+				rotation = Quaternion::Identity();
+			}
+
 			Vector3 moveDirection = {};
-			if (input->Controllers[0].ActionRight.EndedDown)
+			if (manager->IsDown(Keys::Right))
 			{
 				moveDirection.x++;
 			}
-			if (input->Controllers[0].ActionLeft.EndedDown)
+			if (manager->IsDown(Keys::Left))
 			{
 				moveDirection.x--;
 			}
-			if (input->Controllers[0].ActionUp.EndedDown)
+			if (manager->IsDown(Keys::Up))
 			{
 				moveDirection.z--;
 			}
-			if (input->Controllers[0].ActionDown.EndedDown)
+			if (manager->IsDown(Keys::Down))
 			{
 				moveDirection.z++;
 			}
-			if (input->Controllers[0].Start.EndedDown)
+			if (manager->IsDown(Keys::PageUp))
 			{
 				moveDirection.y++;
 			}
-			if (input->Controllers[0].Back.EndedDown)
+			if (manager->IsDown(Keys::PageDown))
 			{
 				moveDirection.y--;
 			}
 
 			real32 moveSpeed = 0.03f;
-			if (rotateDirection.MagnitudeSquared() != 0)
+			if (moveDirection.MagnitudeSquared() != 0)
 			{
 				moveDirection = moveDirection.Normalize() * moveSpeed;
 			}

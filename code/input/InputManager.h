@@ -11,69 +11,46 @@ namespace Input
 	struct InputManager
 	{
 		//TODO(Ian): Keep a set of frames per registered controller
-		InputFrame frames[2];
-		InputFrame& OldFrame = frames[1];
-		InputFrame& NewFrame = frames[0];
+		//TODO(Ian): Provide a way to check whether or not an Action (Gesture?) was completed, as opposed to a PhysicalInput
+		//           Actions could be associated with zero or more keys, or even a more complex input sequence that occurs over several frames
+		InputFrame OldFrame = {};
+		InputFrame NewFrame = {};
 
 		void HandleInput(GameInput *nextInputs)
 		{
+			OldFrame = NewFrame;
+			NewFrame = nextInputs->newFrame;
+		}
 
+		bool IsDown(PhysicalInputs input)
+		{
+			return NewFrame.GetKey(input);
+		}
+
+		bool IsUp(PhysicalInputs input)
+		{
+			return !IsDown(input);
+		}
+
+		bool IsTriggered(PhysicalInputs input)
+		{
+			return NewFrame.GetKey(input) && !OldFrame.GetKey(input);
 		}
 
 		bool IsReleased(PhysicalInputs input)
 		{
-			return false;
+			return !NewFrame.GetKey(input) && OldFrame.GetKey(input);
 		}
-		/*                  PLATFORM LAYER
-		case WM_MOUSEMOVE:                              //With pointer ballistics, write a custom function for this later to make it platform independent
-    {
-        int xPosAbsolute = GET_X_PARAM(lParam); 
-        int yPosAbsolute = GET_Y_PARAM(lParam);
-        // ...
-        break;
-    }
-		
-		
-		#ifndef HID_USAGE_PAGE_GENERIC                  //Without, not really needed for this project
-    #define HID_USAGE_PAGE_GENERIC         ((USHORT) 0x01)
-    #endif
-    #ifndef HID_USAGE_GENERIC_MOUSE
-    #define HID_USAGE_GENERIC_MOUSE        ((USHORT) 0x02)
-    #endif
 
-    RAWINPUTDEVICE Rid[1];
-    Rid[0].usUsagePage = HID_USAGE_PAGE_GENERIC; 
-    Rid[0].usUsage = HID_USAGE_GENERIC_MOUSE; 
-    Rid[0].dwFlags = RIDEV_INPUTSINK;   
-    Rid[0].hwndTarget = hWnd;
-    RegisterRawInputDevices(Rid, 1, sizeof(Rid[0]);
+		Vector2 GetMousePosition()
+		{
+			return NewFrame.MousePos;
+		}
 
-	...
-
-	case WM_INPUT:
-	{
-	UINT dwSize = 40;
-	static BYTE lpb[40];
-
-	GetRawInputData((HRAWINPUT)lParam, RID_INPUT,
-	lpb, &dwSize, sizeof(RAWINPUTHEADER));
-
-	RAWINPUT* raw = (RAWINPUT*)lpb;
-
-	if (raw->header.dwType == RIM_TYPEMOUSE)
-	{
-	int xPosRelative = raw->data.mouse.lLastX;
-	int yPosRelative = raw->data.mouse.lLastY;
-	}
-	break;
-	}
-	//https://msdn.microsoft.com/en-us/library/windows/desktop/ms645536(v=vs.85).aspx
-	//https://msdn.microsoft.com/en-us/library/windows/desktop/ms645546(v=vs.85).aspx
-
-		*/
-
-
-
+		Vector2 GetMouseMovement()
+		{
+			return NewFrame.MousePos - OldFrame.MousePos;
+		}
 	};
 }
 

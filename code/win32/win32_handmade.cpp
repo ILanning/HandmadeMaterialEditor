@@ -575,7 +575,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
                     }
 
                     Win32ProcessPendingMessages(&Win32State, NewKeyboardController, &inputProcessor);
-
+					NewInput->newFrame = inputProcessor.GenerateFrame();
 		//END KEYBOARD
 		//START MOUSE
 

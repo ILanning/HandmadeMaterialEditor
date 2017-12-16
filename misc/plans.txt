@@ -37,23 +37,23 @@ Core Goals:
 	Convert GLState into a controllable camera class												   - Done
 	Cleanup Pass - Formalize GLState, PrepareScene, and GLRender									   - Done
 	Cleanup Pass - Move rendering code out of platform layer (where appropriate)					   - Done
-	Cleanup Pass - Organize everything into sensible namespaces										   - Done
-	Cleanup Pass - Ensure Doxygen support															   - Done
-	Cleanup Pass - Ensure robust unit tests exist for anything that they'd be sensible for			   - Done
-	Cleanup Pass - Reexamine TODOs and CONSIDERs													   - Done
+	Cleanup Pass - Organize everything into sensible namespaces										   - DELAYED (Low priority)
+	Cleanup Pass - Ensure Doxygen support															   - DELAYED (Low priority)
+	Cleanup Pass - Ensure robust unit tests exist for anything that they'd be sensible for			   - DELAYED (Low priority)
+	Cleanup Pass - Reexamine TODOs and CONSIDERs													   - DELAYED (Low priority)
 
 	Update build.bat to automatically hand the .cpp files in certain directories to MSVC			   - DELAYED (Low priority)
 	Edit includes to be something more standard, compare compile times								   - DELAYED (Low priority)
 
 	Finish Quaternion class                                                                            - Done (Enough for now, at least)
-	Write StretchArrayIterator class																   - DELAYED (Low priority)
+	Write StretchyArrayIterator class																   - DELAYED (Low priority)
 	Write HandmadeString class																		   - DELAYED (Low priority)
-	Write InputManager class																		   
-	Add input control function to ThirdPersonCamera													   
-	Write a spherical coordinates based camera
-	Write MemoryArena class
-	Write ContentManager class
-	Write ShaderManager class
+	Write InputManager class																		   - Done (15/12/17)
+	Add input control function to ThirdPersonCamera													   - 
+	Write a spherical coordinates based camera														   - 
+	Write MemoryArena class																			   - 
+	Write ContentManager class																		   - 
+	Write ShaderManager class																		   - 
 	Cleanup Pass - Examine all uses of new, VirtualAlloc(), etc. and ensure that there aren't any memory leaks
 	Cleanup Pass - Ensure Doxygen support
 	Cleanup Pass - Ensure robust unit tests exist for anything that they'd be sensible for
@@ -73,6 +73,9 @@ Core Goals:
 	Render text to a button sprite
 	Support UI rendering in the render engine
 	Make the button clickable
+
+	Due to time constraints, build demo here with button to reload .mtl from file on the fly
+
 	Make an editable text box
 	Display the material data on the screen with sensible components editable
 	Allow saving of the file

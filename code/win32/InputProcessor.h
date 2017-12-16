@@ -18,14 +18,16 @@ struct InputProcessor
 	{
 		RAWINPUTDEVICE Rid[2];
 
+		//HID Mouse
 		Rid[0].usUsagePage = 0x01;
 		Rid[0].usUsage = 0x02;
-		Rid[0].dwFlags = 0;// RIDEV_NOLEGACY;   // adds HID mouse and also ignores legacy mouse messages
+		Rid[0].dwFlags = 0;
 		Rid[0].hwndTarget = 0;
 
+		//HID Keyboard
 		Rid[1].usUsagePage = 0x01;
 		Rid[1].usUsage = 0x06;
-		Rid[1].dwFlags = 0;// RIDEV_NOLEGACY;   // adds HID keyboard and also ignores legacy keyboard messages
+		Rid[1].dwFlags = 0;
 		Rid[1].hwndTarget = 0;
 
 		if (RegisterRawInputDevices(Rid, 2, sizeof(Rid[0])) == FALSE) {
@@ -68,10 +70,79 @@ struct InputProcessor
 				// TODO: write error handler
 			}
 			OutputDebugString(szTempOutput);
-			nextFrame.SetKey((Input::PhysicalInputs)raw->data.keyboard.VKey, raw->data.keyboard.Flags == RI_KEY_MAKE);
+			nextFrame.SetKey((Input::PhysicalInputs)raw->data.keyboard.VKey, (raw->data.keyboard.Flags & RI_KEY_BREAK) == 0);
+			if (nextFrame.GetKey(Input::PhysicalInputs::Right))
+			{
+				int b = 0;
+				b++;
+			}
 		}
 		else if (raw->header.dwType == RIM_TYPEMOUSE)
 		{
+			RAWMOUSE& mouse = raw->data.mouse;
+
+			if ((mouse.usFlags & MOUSE_MOVE_ABSOLUTE) == true)
+			{
+				nextFrame.MousePos = { (real32)mouse.lLastX, (real32)mouse.lLastY };
+			}
+			else
+			{
+				nextFrame.MousePos += { (real32)mouse.lLastX, (real32)mouse.lLastY };
+			}
+
+			if ((mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN) != 0)
+			{
+				nextFrame.SetKey(Input::PhysicalInputs::LMB, true);
+			}
+			if ((mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_UP) != 0)
+			{
+				nextFrame.SetKey(Input::PhysicalInputs::LMB, false);
+			}
+
+			if ((mouse.usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_DOWN) != 0)
+			{
+				nextFrame.SetKey(Input::PhysicalInputs::MMB, true);
+			}
+			if ((mouse.usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_UP) != 0)
+			{
+				nextFrame.SetKey(Input::PhysicalInputs::MMB, false);
+			}
+
+			if ((mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_DOWN) != 0)
+			{
+				nextFrame.SetKey(Input::PhysicalInputs::RMB, true);
+			}
+			if ((mouse.usButtonFlags & RI_MOUSE_RIGHT_BUTTON_UP) != 0)
+			{
+				nextFrame.SetKey(Input::PhysicalInputs::RMB, false);
+			}
+
+			if ((mouse.usButtonFlags & RI_MOUSE_BUTTON_4_DOWN) != 0)
+			{
+				nextFrame.SetKey(Input::PhysicalInputs::XMB1, true);
+			}
+			if ((mouse.usButtonFlags & RI_MOUSE_BUTTON_4_UP) != 0)
+			{
+				nextFrame.SetKey(Input::PhysicalInputs::XMB1, false);
+			}
+
+			if ((mouse.usButtonFlags & RI_MOUSE_BUTTON_5_DOWN) != 0)
+			{
+				nextFrame.SetKey(Input::PhysicalInputs::XMB2, true);
+			}
+			if ((mouse.usButtonFlags & RI_MOUSE_BUTTON_5_DOWN) != 0)
+			{
+				nextFrame.SetKey(Input::PhysicalInputs::XMB2, false);
+			}
+
+
+			if ((mouse.usButtonFlags & RI_MOUSE_WHEEL) != 0)
+			{
+				//TODO(Ian):Fix this
+				//nextFrame.scrollWheelChange = reinterpret_cast<int16>(mouse.usButtonData);
+			}
+
+
 			/*hResult = StringCchPrintf(szTempOutput, STRSAFE_MAX_CCH, TEXT("Mouse: usFlags=%04x ulButtons=%04x usButtonFlags=%04x usButtonData=%04x ulRawButtons=%04x lLastX=%04x lLastY=%04x ulExtraInformation=%04x\r\n"),
 				raw->data.mouse.usFlags,
 				raw->data.mouse.ulButtons,
@@ -96,9 +167,7 @@ struct InputProcessor
 	//TODO(Ian): Have this accept timing information in support of frametime-invariant updating
 	Input::InputFrame GenerateFrame()
 	{
-		Input::InputFrame temp = nextFrame;
-		nextFrame = {};
-		return temp;
+		return nextFrame;
 	}
 };
 

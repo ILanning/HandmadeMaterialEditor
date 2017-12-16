@@ -133,7 +133,8 @@ extern "C" GAME_HANDLE_INPUT(GameHandleInput)
 
 	GameState *gameState = (GameState *)memory->PermanentStorage;
 
-	gameState->Input.HandleInput(newInputs);
+	Input::InputManager &inputManager = gameState->Input;
+	inputManager.HandleInput(newInputs);
 
 	for (int ControllerIndex = 0;
 		ControllerIndex < ArrayCount(newInputs->Controllers);
@@ -159,23 +160,9 @@ extern "C" GAME_HANDLE_INPUT(GameHandleInput)
 				//GameState->BlueOffset += 1;
 			}
 		}
-
-		// Input.AButtonEndedDown;
-		// Input.AButtonHalfTransitionCount;
-
-		/*GameState->PlayerX += (int)(4.0f*Controller->StickAverageX);
-		GameState->PlayerY -= (int)(4.0f*Controller->StickAverageY);
-		if(GameState->tJump > 0)
-		{
-		GameState->PlayerY += (int)(5.0f*sinf(0.5f*Pi32*GameState->tJump));
-		}
-		if(Controller->ActionDown.EndedDown)
-		{
-		GameState->tJump = 4.0;
-		}
-		GameState->tJump -= 0.033f;*/
 	}
-	gameState->globals.Camera.HandleInput(newInputs);
+
+	gameState->globals.Camera.HandleInput(&inputManager);
 }
 
 extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
