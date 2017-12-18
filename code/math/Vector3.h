@@ -25,15 +25,17 @@ struct Vector3
 		real32 elements[ElementCount];
 	};
 
-	Vector3 Normalize();
-	real32 Dot(const Vector3 &b);
-	Vector3 Cross(const Vector3 &b);
-	real32 Magnitude();
-	real32 MagnitudeSquared();
+	Vector3 Normalize() const;
+	real32 Dot(const Vector3 &b) const;
+	Vector3 Cross(const Vector3 &b) const;
+	real32 Magnitude() const;
+	real32 MagnitudeSquared() const;
+	bool CloseTo(const Vector3 &other, real32 margin) const;
 
-	static Vector3 Lerp(const Vector3 &start, const Vector3 &end, const real32 &fraction);
-	static Vector3 CosInterpolate(const Vector3 &start, const Vector3 &end, const real32 &fraction);
+	static Vector3 Lerp(const Vector3 &start, const Vector3 &end, real32 fraction);
+	static Vector3 CosInterpolate(const Vector3 &start, const Vector3 &end, real32 fraction);
 
+	friend Vector3 operator-(Vector3 a);
 	friend Vector3 operator+(const Vector3 &a, const Vector3 &b);
 	friend Vector3 operator+(const Vector3 &a, const real32 &b);
 	friend Vector3 operator-(const Vector3 &a, const Vector3 &b);

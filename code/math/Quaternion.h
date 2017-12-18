@@ -79,10 +79,10 @@ struct Quaternion
 
 	Matrix4 ToRotationMatrix() const;
 
-	Quaternion Normalize();
-	real32 Magnitude();
-	real32 MagnitudeSquared();
-	Quaternion Inverse();
+	Quaternion Normalize() const;
+	real32 Magnitude() const;
+	real32 MagnitudeSquared() const;
+	Quaternion Inverse() const;
 	Vector3 Transform(const Vector3 &b) const;
 
 	static Quaternion Identity()
@@ -93,6 +93,7 @@ struct Quaternion
 	static Quaternion Lerp(const Quaternion &start, const Quaternion &end, const real32 &fraction);
 	static Quaternion CosInterpolate(const Quaternion &start, const Quaternion &end, const real32 &fraction);
 
+	friend Vector3 operator*(const Quaternion &a, const Vector3 &b);
 	friend Quaternion operator*(const Quaternion &a, const Quaternion &b);
 	friend Quaternion operator*(const Quaternion &a, const real32 &b);
 	//TODO(Why does this give an unresolved external error when actually used elsewhere?)

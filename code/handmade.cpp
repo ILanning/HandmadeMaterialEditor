@@ -10,12 +10,13 @@
 #include "GameState.h"
 #include "HandmadeRender.cpp"
 #include "drawing\Model.h"
-#include "drawing\ThirdPersonCamera.h"
+#include "drawing\cameras\FreeRotateCamera.h"
 #include "math\Vector2.h"
 #include "math\Vector3.h"
 #include "math\Quaternion.h"
 #include "math\Matrix3.h"
 #include "math\Matrix4.h"
+#include "general\Assert.h"
 
 /*internal void GameOutputSound(game_state *GameState, game_sound_output_buffer *SoundBuffer, int ToneHz)
 {
@@ -161,8 +162,6 @@ extern "C" GAME_HANDLE_INPUT(GameHandleInput)
 			}
 		}
 	}
-
-	gameState->globals.Camera.HandleInput(&inputManager);
 }
 
 extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
@@ -170,6 +169,7 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     Assert(sizeof(GameState) <= Memory->PermanentStorageSize);
     
 	GameState *gameState = (GameState *)Memory->PermanentStorage;
+	gameState->globals.Camera->HandleInput(gameState->Input);
     if(!Memory->IsInitialized)
     {
 		InitMemory(Thread, Memory);
@@ -179,20 +179,6 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 		MessageError = Memory->DEBUGMessageError;    
 	    
 	RenderScene(gameState);
-    /*RenderWeirdGradient(Buffer, GameState->BlueOffset, GameState->GreenOffset);
-    RenderPlayer(Buffer, GameState->PlayerX, GameState->PlayerY);
-
-    RenderPlayer(Buffer, Input->MouseX, Input->MouseY);
-
-    for(int ButtonIndex = 0;
-        ButtonIndex < ArrayCount(Input->MouseButtons);
-        ++ButtonIndex)
-    {
-        if(Input->MouseButtons[ButtonIndex].EndedDown)
-        {
-            RenderPlayer(Buffer, 10 + 20*ButtonIndex, 10);
-        }
-    }*/
 }
 
 extern "C" GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)

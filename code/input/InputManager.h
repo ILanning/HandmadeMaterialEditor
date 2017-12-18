@@ -16,40 +16,45 @@ namespace Input
 		InputFrame OldFrame = {};
 		InputFrame NewFrame = {};
 
-		void HandleInput(GameInput *nextInputs)
+		void HandleInput(const GameInput *nextInputs)
 		{
 			OldFrame = NewFrame;
 			NewFrame = nextInputs->newFrame;
 		}
 
-		bool IsDown(PhysicalInputs input)
+		bool IsDown(PhysicalInputs input) const
 		{
 			return NewFrame.GetKey(input);
 		}
 
-		bool IsUp(PhysicalInputs input)
+		bool IsUp(PhysicalInputs input) const
 		{
 			return !IsDown(input);
 		}
 
-		bool IsTriggered(PhysicalInputs input)
+		bool IsTriggered(PhysicalInputs input) const
 		{
 			return NewFrame.GetKey(input) && !OldFrame.GetKey(input);
 		}
 
-		bool IsReleased(PhysicalInputs input)
+		bool IsReleased(PhysicalInputs input) const
 		{
 			return !NewFrame.GetKey(input) && OldFrame.GetKey(input);
 		}
 
-		Vector2 GetMousePosition()
+		Vector2 GetMousePosition() const
 		{
 			return NewFrame.MousePos;
 		}
 
-		Vector2 GetMouseMovement()
+		Vector2 GetMouseMovement() const
 		{
 			return NewFrame.MousePos - OldFrame.MousePos;
+		}
+
+		int32 GetScrollValue() const
+		{
+			return NewFrame.scrollWheelChange;
 		}
 	};
 }

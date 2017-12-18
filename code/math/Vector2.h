@@ -21,10 +21,11 @@ struct Vector2
 		real32 elements[ElementCount];
 	};
 
-	Vector2 Normalize();
-	real32 Dot(const Vector2 &b);
-	real32 Magnitude();
-	real32 MagnitudeSquared();
+	Vector2 Normalize() const;
+	real32 Dot(const Vector2 &b) const;
+	real32 Magnitude() const;
+	real32 MagnitudeSquared() const;
+	bool CloseTo(const Vector2 &other, real32 margin) const;
 
 	static Vector2 Lerp(const Vector2 &start, const Vector2 &end, const real32 &fraction);
 	static Vector2 CosInterpolate(const Vector2 &start, const Vector2 &end, const real32 &fraction);

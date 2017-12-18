@@ -18,7 +18,9 @@
 #include "drawing\Geometry.h"
 #include "drawing\Model.h"
 #include "drawing\Vertex.h"
-#include "drawing\ThirdPersonCamera.h"
+#include "drawing\cameras\Camera.h"
+#include "drawing\cameras\FreeRotateCamera.h"
+#include "drawing\cameras\SphericalCamera.h"
 #include "drawing\GeometryHelpers.cpp"
 #include "content\OBJLoader.h"
 #include "general\StringHelpers.cpp"
@@ -79,7 +81,7 @@ void BuildTestObjects(GLuint shaderProgram,  ReadFileFunc *readFile, DebugMessag
 	};
 
 	Geometry *virtMesh = Content::ParseOBJ("Assets/virt/Virt.obj", 21, shaderProgram, readFile);
-	DebugOutputGLErrors(messageError);
+	//DebugOutputGLErrors(messageError);
 	globals->Virt = new Model(virtMesh);
 
 	Material *enterMaterial = new Material("EnterMaterial", 14, enterTexture);
@@ -87,11 +89,27 @@ void BuildTestObjects(GLuint shaderProgram,  ReadFileFunc *readFile, DebugMessag
 	Geometry *enterGeo = new Geometry(enterMesh, 1);
 	globals->enterButton = new Model(enterGeo, { 0, 0, 0 }, { (real32)1, (real32)1, 1 });
 	globals->enter2 = new Model(enterGeo, { 0, 1, 0 }, { (real32)1, (real32)1, 1 });
-	globals->arrow = MakeArrow({ 1, 1, 1 }, 16, shaderProgram);
 
+	globals->arrow = MakeArrow({ 1, 1, 1 }, 16, shaderProgram);
 	globals->arrow->Rotation = Matrix4::CreateRotationX(Pi32 / 2);
+
+	globals->Camera = new Drawing::SphericalCamera();
+	globals->Camera->SetProjection(Matrix4::CreatePerspective(Pi32 / 2, 16.0f / 9.0f, 1, 1000));
+	globals->Camera->SetLookAtPosition({ 0, 1, 0 });
+	/*state->globals.Camera.Projection = Matrix4::CreateOrthographic(1280, 720, 0.1f, 1000);
+	globals->Camera->Position = { 0, 0, -200 };
+	globals->arrow->Size *= 100;
+	globals->enterButton->Size *= 100;
+	globals->enter2->Size *= 100;
+	globals->enter2->Position *= 100;
+	globals->Virt->Size *= 20;
+	globals->Virt->Position = { 0, -125, 0 };
+	globals->Virt->Pivot = { 0, -10, 0 };*/
+	//globals->Camera->Rotate(Quaternion::CreateFromAxisAngle(Vector3::Left(), 0.3f));
+	globals->Camera->SetZoom(3.0f);
 	globals->arrow->Position.y = 3;
 	globals->arrow->Size.z = 3;
+	globals->Virt->Size /= 10;
 }
 
 GLuint BuildShaderProgram(const GLchar *vertexSource, const GLchar *fragmentSource, DebugMessageErrorFunc *messageError)
@@ -136,21 +154,6 @@ extern "C" GAME_INITIALIZE(GameInitialize)
 
 	BuildTestObjects(shaderProgram, memory->ReadEntireFile, memory->DEBUGMessageError, &state->globals);
 
-	state->globals.Camera.Projection = Matrix4::CreatePerspective(Pi32 / 2, 16.0f / 9.0f, 1, 1000);
-	state->globals.Camera.Position = { 0, 1, 0 };
-	state->globals.Virt->Size /= 10;
-	/*state->globals.Camera.Projection = Matrix4::CreateOrthographic(1280, 720, 0.1f, 1000);
-	state->globals.arrow->Size *= 100;
-	state->globals.enterButton->Size *= 100;
-	state->globals.enter2->Size *= 100;
-	state->globals.enter2->Position *= 100;
-	state->globals.Virt->Size *= 20;
-	state->globals.Virt->Position = { 0, -125, 0 };
-	state->globals.Virt->Pivot = { 0, -10, 0 };
-	state->globals.Camera.Position = { 0, 0, -200 };*/
-	state->globals.Camera.rotation = Quaternion::CreateFromAxisAngle(Vector3::Left(), 0.3f);
-	state->globals.Camera.zoomLevel = 3.0f;
-
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
@@ -164,10 +167,11 @@ void RenderScene(GameState *state)
 	glClearColor(colorTest, colorTest, colorTest, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	state->globals.Virt->Draw(state->globals.Camera.GetView(), state->globals.Camera.Projection);
-	state->globals.enterButton->Draw(state->globals.Camera.GetView(), state->globals.Camera.Projection);
-	state->globals.enter2->Draw(state->globals.Camera.GetView(), state->globals.Camera.Projection);
-	state->globals.arrow->Draw(state->globals.Camera.GetView(), state->globals.Camera.Projection);
+	Matrix4 viewProjection = state->globals.Camera->GetViewProjection();
+	state->globals.Virt->Draw(viewProjection);
+	state->globals.enterButton->Draw(viewProjection);
+	state->globals.enter2->Draw(viewProjection);
+	state->globals.arrow->Draw(viewProjection);
 }
 
 #endif

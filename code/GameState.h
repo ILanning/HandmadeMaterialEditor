@@ -2,7 +2,7 @@
 #define HANDMADE_GAMESTATE
 
 #include "drawing\Model.h"
-#include "drawing\ThirdPersonCamera.h"
+#include "drawing\cameras\SphericalCamera.h"
 #include "input\InputManager.h"
 
 
@@ -13,7 +13,7 @@ struct TestGlobals
 	Model *enter2;
 	Model *Virt;
 
-	Drawing::ThirdPersonCamera Camera;
+	Drawing::SphericalCamera *Camera;
 };
 
 struct GameState

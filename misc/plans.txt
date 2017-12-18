@@ -1,6 +1,6 @@
 Memory Allocation:
 	The memory which will not change depending on the model and images loaded will be allocated as a single chunk and handled in the way shown on the Handmade Hero stream.
-	The memory required for the images and models will be allocated on a file-by-file basis, with each file being its own object.
+	The memory required for the images and models will be allocated on a file-by-file basis, with each file being its own object/allocation.
 
 	Arena Types:
 		StackArena:
@@ -20,6 +20,16 @@ Memory Allocation:
 			-If it finds a space of the right size or greater, it fills that spot in and subtracts the space it used from the size of the entry
 			-Prone to fragmentation over time if some entries are long lived and others are not
 
+Input Actions:
+	The purpose of the Actions system is to seperate the consumers of input from the actual keys/buttons being pressed.
+	A user of the Actions system will call a function on the InputManager that takes an action (or an identifier for one) and optionally a player or numbered input device, and get back an independent value
+		Basic return types (and example sources): 
+			bool:    Key presses, key press combos
+			real32:  Scroll wheel values, partial button depressions, key pairs
+			Vector2  Mouse location, mouse movement, four key 2D directional controls, post-deadzone joystick output
+			Vector3  Six key 3D directional controls
+	Example call:  Vector2 cameraMovement = inputManager.ReadAction("SpinCamera", 1);
+	Actions are likely stored by the InputManager in dictionaries, with one per return type
 
 Core Goals:
 
@@ -49,7 +59,7 @@ Core Goals:
 	Write StretchyArrayIterator class																   - DELAYED (Low priority)
 	Write HandmadeString class																		   - DELAYED (Low priority)
 	Write InputManager class																		   - Done (15/12/17)
-	Add input control function to ThirdPersonCamera													   - 
+	Add input control function to ThirdPersonCamera													   - Done (15/12/17)
 	Write a spherical coordinates based camera														   - 
 	Write MemoryArena class																			   - 
 	Write ContentManager class																		   - 
@@ -82,6 +92,11 @@ Core Goals:
 	Cleanup Pass - Ensure Doxygen support
 	Cleanup Pass - Ensure robust unit tests exist for anything that they'd be sensible for
 	Cleanup Pass - Reexamine TODOs and CONSIDERs
+
+	Actions/Gestures - Update InputManager to manage a set of actions that may be associated with keys.  
+			Functions like IsDown() will accept an action, see what key it's linked with, and return the status of that key.
+	Actions/Gestures - Actions may contain many keys, any of which can be hit, or a set of keys that all must be hit, or both, or neither
+	Actions/Gestures - Bound actions may be written to and read from a file
 
 	Replace UI code and platform layer with a C#/WPF application, using the same handmade.dll for both
 

@@ -26,15 +26,15 @@ struct Model
 
 	}
 
-	Matrix4 GetModelMatrix()
+	Matrix4 GetModelMatrix() const
 	{
 		Matrix4 result = Matrix4::CreateTranslation(Position) * Rotation * Matrix4::CreateScale(Size) * Matrix4::CreateTranslation(Pivot);
 		return result;
 	}
 
-	void Draw(const Matrix4 &view, const Matrix4 &projection)
+	void Draw(const Matrix4 &viewProjection) const
 	{
-		Matrix4 mvp = projection * view * GetModelMatrix();
+		Matrix4 mvp = viewProjection * GetModelMatrix();
 		MeshData->Draw(mvp, Color);
 	}
 };

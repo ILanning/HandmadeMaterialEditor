@@ -1,19 +1,19 @@
-Quaternion Quaternion::Normalize()
+Quaternion Quaternion::Normalize() const
 {
 	return *this / this->Magnitude();
 }
 
-real32 Quaternion::Magnitude()
+real32 Quaternion::Magnitude() const
 {
 	return sqrtf(MagnitudeSquared());
 }
 
-real32 Quaternion::MagnitudeSquared()
+real32 Quaternion::MagnitudeSquared() const
 {
 	return this->x * this->x + this->y * this->y + this->z * this->z + this->w * this->w;
 }
 
-Quaternion Quaternion::Inverse()
+Quaternion Quaternion::Inverse() const
 {
 	Quaternion result = { -(this->x), -(this->y), -(this->z), this->w };
 	return result / this->Magnitude();
@@ -63,6 +63,16 @@ Vector3 Quaternion::Transform(const Vector3 &b) const
 	uuv = qvec.Cross(uv);
 
 	return b + uv * w + uuv;
+}
+
+Vector3 operator*(const Quaternion &a, const Vector3 &b)
+{
+	Vector3 uv, uuv;
+	Vector3 qvec = { a.x, a.y, a.z };
+	uv = qvec.Cross(b) * 2.0f;
+	uuv = qvec.Cross(uv);
+
+	return b + uv * a.w + uuv;
 }
 
 Quaternion operator*(const Quaternion &a, const Quaternion &b)

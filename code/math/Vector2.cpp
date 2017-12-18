@@ -1,26 +1,42 @@
-Vector2 Vector2::Normalize()
+Vector2 Vector2::Normalize() const
 {
 	real32 mag = Magnitude();
 	if (mag == 0)
 	{
-		return *this;
+		return { 0, 0 };
 	}
 	return *this / mag;
 }
 
-real32 Vector2::Dot(const Vector2 &b)
+real32 Vector2::Dot(const Vector2 &b) const
 {
-	return sqrtf(this->x * b.x + this->y * b.y);
+	return sqrtf(x * b.x + y * b.y);
 }
 
-real32 Vector2::Magnitude()
+real32 Vector2::Magnitude() const
 {
 	return sqrtf(MagnitudeSquared());
 }
 
-real32 Vector2::MagnitudeSquared()
+real32 Vector2::MagnitudeSquared() const
 {
-	return this->x * this->x + this->y * this->y;
+	return x * x + y * y;
+}
+
+bool Vector2::CloseTo(const Vector2 &other, real32 margin) const
+{
+	for (int32 i = 0; i < Vector2::ElementCount; i++)
+	{
+		real32 diff = elements[i] - other.elements[i];
+		diff = diff < 0 ? -diff : diff;
+		
+		if (diff > margin)
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 Vector2 Vector2::Lerp(const Vector2 &start, const Vector2 &end, const real32 &fraction)

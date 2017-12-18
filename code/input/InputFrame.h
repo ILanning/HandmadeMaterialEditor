@@ -16,7 +16,7 @@ namespace Input
 		int32 scrollWheelChange = 0;
 		Vector2 BallisticsMousePos = {0};
 
-		bool GetKey(PhysicalInputs key)
+		bool GetKey(PhysicalInputs key) const
 		{
 			return (PressedKeys[(int32)key / 32] & 1 << ((int32)key % 32)) != 0;
 		}
