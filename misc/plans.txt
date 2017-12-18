@@ -60,7 +60,7 @@ Core Goals:
 	Write HandmadeString class																		   - DELAYED (Low priority)
 	Write InputManager class																		   - Done (15/12/17)
 	Add input control function to ThirdPersonCamera													   - Done (15/12/17)
-	Write a spherical coordinates based camera														   - 
+	Write a spherical coordinates based camera														   - Done (18/12/17)
 	Write MemoryArena class																			   - 
 	Write ContentManager class																		   - 
 	Write ShaderManager class																		   - 

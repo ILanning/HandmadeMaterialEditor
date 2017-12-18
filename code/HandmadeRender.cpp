@@ -96,6 +96,7 @@ void BuildTestObjects(GLuint shaderProgram,  ReadFileFunc *readFile, DebugMessag
 	globals->Camera = new Drawing::SphericalCamera();
 	globals->Camera->SetProjection(Matrix4::CreatePerspective(Pi32 / 2, 16.0f / 9.0f, 1, 1000));
 	globals->Camera->SetLookAtPosition({ 0, 1, 0 });
+	globals->Camera->SetCameraPosition({ 0, 2, 3 });
 	/*state->globals.Camera.Projection = Matrix4::CreateOrthographic(1280, 720, 0.1f, 1000);
 	globals->Camera->Position = { 0, 0, -200 };
 	globals->arrow->Size *= 100;

@@ -27,12 +27,8 @@ namespace Math
 
 	SphericalCoord SphericalCoord::FromCartesian(const Vector3 &coords)
 	{
-		if (coords.x == 0 && coords.y == 0)
-		{
-			return{ 0, 0, 0 };
-		}
 		SphericalCoord result = { coords.Magnitude(), 0, 0, 0 };
-		result.direction = atan2f(coords.z, coords.x);
+		result.direction = atan2f(coords.x, coords.z);
 		result.elevation = asinf(coords.y / result.radius);
 		return result;
 	}

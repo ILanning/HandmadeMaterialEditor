@@ -29,7 +29,7 @@ namespace Drawing
 
 		real32 rotateSpeed = 0.12f;
 		real32 moveSpeed = 0.07f;
-		real32 zoomSpeed = 0.1f;
+		real32 zoomSpeed = 0.08f;
 		real32 catchUpRate = 0.55f;
 
 		virtual Vector3 GetLookAtPosition() const
@@ -69,7 +69,7 @@ namespace Drawing
 
 		Matrix4 GetView() const
 		{
-			Matrix4 rotation = Matrix4::CreateRotationZ(roll) * Matrix4::CreateRotationX(elevation) * Matrix4::CreateRotationY(-direction);
+			Matrix4 rotation = Matrix4::CreateRotationZ(roll) * Matrix4::CreateRotationX(-elevation) * Matrix4::CreateRotationY(-direction);
 			return Matrix4::CreateTranslation({ 0, 0, -radius }) * rotation * Matrix4::CreateTranslation(lookAtPosition * -1);
 		}
 
@@ -101,26 +101,17 @@ namespace Drawing
 		{
 			using Keys = Input::PhysicalInputs;
 
-			int32 scroll = manager.GetScrollValue();
-			if (scroll > 0 || manager.IsDown(Keys::U)) //Zoom level
-			{
-				targetCamPos.radius -= zoomSpeed;
-			}
-			if (scroll < 0 || manager.IsDown(Keys::J))
-			{
-				targetCamPos.radius += zoomSpeed;
-			}
 			if (manager.IsDown(Keys::S)) //About X axis
 			{
 				targetCamPos.elevation += rotateSpeed;
 			}
 			if (manager.IsDown(Keys::W))
 			{
-				targetCamPos.elevation -= rotateSpeed;
+				targetCamPos.elevation += rotateSpeed;
 			}
 			if (manager.IsDown(Keys::A)) //About Y axis
 			{
-				targetCamPos.direction += rotateSpeed;
+				targetCamPos.direction -= rotateSpeed;
 			}
 			if (manager.IsDown(Keys::D))
 			{
@@ -135,13 +126,29 @@ namespace Drawing
 				targetCamPos.roll -= rotateSpeed;
 			}
 
+			int32 scroll = manager.GetScrollValue();
+			if (scroll > 0 || manager.IsDown(Keys::U)) //Zoom level
+			{
+				targetCamPos.radius -= zoomSpeed * radius;
+			}
+			if (scroll < 0 || manager.IsDown(Keys::J))
+			{
+				targetCamPos.radius += zoomSpeed * radius;
+			}
+			if (manager.IsDown(Keys::RMB))
+			{
+				Vector2 mouseMove = manager.GetMouseMovement() * rotateSpeed / 6;
+				targetCamPos.elevation += mouseMove.y;
+				targetCamPos.direction += mouseMove.x;
+			}
+
 			Math::SphericalCoord normalizedTarget = targetCamPos.Simplify();
 			cameraPos -= targetCamPos - normalizedTarget;
 			targetCamPos = normalizedTarget;
 
 			if (manager.IsDown(Keys::R))
 			{
-				targetCamPos = { 3, 0, 0, 0 };
+				targetCamPos = { 3, 0, Pi32 / 8, 0 };
 			}
 
 			if (cameraPos != targetCamPos)
@@ -180,11 +187,6 @@ namespace Drawing
 			if (manager.IsDown(Keys::PageDown))
 			{
 				moveDirection.y--;
-			}
-
-			if (manager.IsDown(Keys::RMB))
-			{
-
 			}
 
 			if (moveDirection.MagnitudeSquared() != 0)

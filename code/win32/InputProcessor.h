@@ -51,14 +51,13 @@ struct InputProcessor
 			OutputDebugString(TEXT("GetRawInputData does not return correct size !\n"));
 
 		RAWINPUT* raw = (RAWINPUT*)lpb;
-		HRESULT hResult;
+		//HRESULT hResult;
 		wchar_t *charArray[100];
 		STRSAFE_LPSTR szTempOutput = (STRSAFE_LPSTR)(void *)charArray;
 
 		if (raw->header.dwType == RIM_TYPEKEYBOARD)
-		{
-			
-			hResult = StringCchPrintf(szTempOutput, STRSAFE_MAX_CCH, TEXT(" Kbd: make=%04x Flags:%04x Reserved:%04x ExtraInformation:%08x, msg=%04x VK=%04x \n"),
+		{			
+			/*hResult = StringCchPrintf(szTempOutput, STRSAFE_MAX_CCH, TEXT(" Kbd: make=%04x Flags:%04x Reserved:%04x ExtraInformation:%08x, msg=%04x VK=%04x \n"),
 				raw->data.keyboard.MakeCode,
 				raw->data.keyboard.Flags,
 				raw->data.keyboard.Reserved,
@@ -69,25 +68,24 @@ struct InputProcessor
 			{
 				// TODO: write error handler
 			}
-			OutputDebugString(szTempOutput);
+			OutputDebugString(szTempOutput);*/
 			nextFrame.SetKey((Input::PhysicalInputs)raw->data.keyboard.VKey, (raw->data.keyboard.Flags & RI_KEY_BREAK) == 0);
-			if (nextFrame.GetKey(Input::PhysicalInputs::Right))
-			{
-				int b = 0;
-				b++;
-			}
 		}
 		else if (raw->header.dwType == RIM_TYPEMOUSE)
 		{
 			RAWMOUSE& mouse = raw->data.mouse;
 
-			if ((mouse.usFlags & MOUSE_MOVE_ABSOLUTE) == true)
+			if ((mouse.usFlags & MOUSE_MOVE_ABSOLUTE) == true) //NOTE(Ian): Appears to never be true?
 			{
 				nextFrame.MousePos = { (real32)mouse.lLastX, (real32)mouse.lLastY };
+				//StringCchPrintf(szTempOutput, STRSAFE_MAX_CCH, TEXT("Mouse: {%d, %d} (Abs)\r\n"), mouse.lLastX, mouse.lLastY);
+				//OutputDebugString(szTempOutput);
 			}
-			else
+			else if(mouse.lLastX != 0 && mouse.lLastY != 0)
 			{
-				nextFrame.MousePos += { (real32)mouse.lLastX, (real32)mouse.lLastY };
+				nextFrame.TrueMouseMovement = { (real32)mouse.lLastX, (real32)mouse.lLastY };
+				//StringCchPrintf(szTempOutput, STRSAFE_MAX_CCH, TEXT("Mouse: {%d, %d} (Rel), {%f, %f}\r\n"), mouse.lLastX, mouse.lLastY, nextFrame.MousePos.x, nextFrame.MousePos.y);
+				//OutputDebugString(szTempOutput);
 			}
 
 			if ((mouse.usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN) != 0)
@@ -138,36 +136,24 @@ struct InputProcessor
 
 			if ((mouse.usButtonFlags & RI_MOUSE_WHEEL) != 0)
 			{
-				//TODO(Ian):Fix this
-				//nextFrame.scrollWheelChange = reinterpret_cast<int16>(mouse.usButtonData);
+				int16 correctedScroll = mouse.usButtonData & MaxInt16;
+				if (mouse.usButtonData > MaxInt16)
+				{
+					correctedScroll = -correctedScroll;
+				}
+				nextFrame.scrollWheelChange = correctedScroll;
 			}
-
-
-			/*hResult = StringCchPrintf(szTempOutput, STRSAFE_MAX_CCH, TEXT("Mouse: usFlags=%04x ulButtons=%04x usButtonFlags=%04x usButtonData=%04x ulRawButtons=%04x lLastX=%04x lLastY=%04x ulExtraInformation=%04x\r\n"),
-				raw->data.mouse.usFlags,
-				raw->data.mouse.ulButtons,
-				raw->data.mouse.usButtonFlags,
-				raw->data.mouse.usButtonData,
-				raw->data.mouse.ulRawButtons,
-				raw->data.mouse.lLastX,
-				raw->data.mouse.lLastY,
-				raw->data.mouse.ulExtraInformation);
-
-			if (FAILED(hResult))
-			{
-				// TODO: write error handler
-			}
-			OutputDebugString(szTempOutput);*/
 		}
 
 		delete[] lpb;
-		//delete[] szTempOutput;
 	}
 
 	//TODO(Ian): Have this accept timing information in support of frametime-invariant updating
 	Input::InputFrame GenerateFrame()
 	{
-		return nextFrame;
+		Input::InputFrame clone = nextFrame;
+		nextFrame.scrollWheelChange = 0;
+		return clone;
 	}
 };
 
