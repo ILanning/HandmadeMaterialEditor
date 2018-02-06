@@ -2,6 +2,7 @@
 #define HANDMADE_STRETCHY_ARRAY
 
 #include "../handmade_typedefs.h"
+#include "Assert.h"
 
 template <class T>
 
@@ -23,7 +24,6 @@ class StretchyArray
 	StretchyArrayNode<T> *last = nullptr;
 	int32 lastSection = 0;
 	int32 nextEmpty = 0;
-
 
 public:
 	StretchyArray()

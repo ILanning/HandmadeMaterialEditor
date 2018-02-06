@@ -2,6 +2,7 @@
 #define HANDMADE_INPUTMANAGER_H
 
 #include "../handmade_typedefs.h"
+#include "../handmade.h"
 #include "PhysicalInputs.h"
 #include "InputFrame.h"
 #include "../math/Vector2.h"

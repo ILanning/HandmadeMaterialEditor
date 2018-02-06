@@ -27,7 +27,7 @@ namespace Drawing
 		real32 &elevation = cameraPos.elevation;
 		real32 &roll = cameraPos.roll;
 
-		real32 rotateSpeed = 0.12f;
+		real32 rotateSpeed = 0.10f;
 		real32 moveSpeed = 0.07f;
 		real32 zoomSpeed = 0.08f;
 		real32 catchUpRate = 0.55f;
@@ -103,7 +103,7 @@ namespace Drawing
 
 			if (manager.IsDown(Keys::S)) //About X axis
 			{
-				targetCamPos.elevation += rotateSpeed;
+				targetCamPos.elevation -= rotateSpeed;
 			}
 			if (manager.IsDown(Keys::W))
 			{
@@ -115,7 +115,7 @@ namespace Drawing
 			}
 			if (manager.IsDown(Keys::D))
 			{
-				targetCamPos.direction -= rotateSpeed;
+				targetCamPos.direction += rotateSpeed;
 			}
 			if (manager.IsDown(Keys::E)) //About Z Axis
 			{

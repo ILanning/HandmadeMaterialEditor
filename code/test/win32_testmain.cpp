@@ -18,10 +18,12 @@ TEST_SUITE_BEGIN("general");
 
 #include "general/test_stringhelpers.cpp"
 #include "general/test_pathhelpers.cpp"
+#include "general/test_stackarena.cpp"
+#include "general/test_fixedsizearena.cpp"
 
 TEST_SUITE_END();
 
-#include "drawing/test_thirdpersoncamera.cpp"
+//#include "drawing/test_thirdpersoncamera.cpp"
 
 //-lts list test suites
 //-tc=*x*

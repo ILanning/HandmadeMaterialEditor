@@ -1,0 +1,4 @@
+#ifndef HANDMADE_HEAP_H
+#define HANDMADE_HEAP_H
+
+#endif // !HANDMADE_HEAP_H

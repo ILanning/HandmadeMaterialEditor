@@ -20,6 +20,8 @@ Memory Allocation:
 			-If it finds a space of the right size or greater, it fills that spot in and subtracts the space it used from the size of the entry
 			-Prone to fragmentation over time if some entries are long lived and others are not
 
+			Replace this with LinkedBlockArena; contains a pointer to the next block instead of a size int, splits the first small-enough block it finds
+
 Input Actions:
 	The purpose of the Actions system is to seperate the consumers of input from the actual keys/buttons being pressed.
 	A user of the Actions system will call a function on the InputManager that takes an action (or an identifier for one) and optionally a player or numbered input device, and get back an independent value
@@ -61,9 +63,12 @@ Core Goals:
 	Write InputManager class																		   - Done (15/12/17)
 	Add input control function to ThirdPersonCamera													   - Done (15/12/17)
 	Write a spherical coordinates based camera														   - Done (18/12/17)
-	Write MemoryArena class																			   - 
+	Write MemoryArena class																			   - Done (StackArena) (11/1/18)
+	Write ArrayList class																			   - 
+	Write HaspMap/Dictionary class																	   - 
 	Write ContentManager class																		   - 
 	Write ShaderManager class																		   - 
+
 	Cleanup Pass - Examine all uses of new, VirtualAlloc(), etc. and ensure that there aren't any memory leaks
 	Cleanup Pass - Ensure Doxygen support
 	Cleanup Pass - Ensure robust unit tests exist for anything that they'd be sensible for
