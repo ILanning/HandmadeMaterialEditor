@@ -49,10 +49,11 @@
 #include "win32_graphics.cpp"
 #include "win32_debug.cpp"
 #include "InputProcessor.h"
+#include "../GameState.h"
 
 internal win32_game_code Win32LoadGameCode(char *SourceDLLName, char *TempDLLName)
 {
-    win32_game_code Result = {};
+	win32_game_code Result = {};
 
     Result.DLLLastWriteTime = Win32GetLastWriteTime(SourceDLLName);
 
@@ -140,6 +141,12 @@ internal LRESULT CALLBACK Win32MainWindowCallback(HWND Window,
 #endif
         } break;
 
+		case WM_MOVE:
+		{
+			upcomingSettings.WindowPosition.x = LOWORD(LParam);
+			upcomingSettings.WindowPosition.y = HIWORD(LParam);
+		} break;
+
         case WM_SYSKEYDOWN:
         case WM_SYSKEYUP:
         case WM_KEYDOWN:
@@ -148,17 +155,6 @@ internal LRESULT CALLBACK Win32MainWindowCallback(HWND Window,
         {
             Assert(!"Keyboard input came in through a non-dispatch message!");
         } break;
-        
-        /*case WM_PAINT:
-        {
-			//TODO(Ian): Does this need to pull in a new HDC, or should it use the global one?
-            PAINTSTRUCT Paint;
-            HDC DeviceContext = BeginPaint(Window, &Paint);
-            win32_window_dimension Dimension = Win32GetWindowDimension(Window);
-            Win32DisplayBufferInWindow(&GlobalBackbuffer, DeviceContext,
-                                       Dimension.Width, Dimension.Height);
-            EndPaint(Window, &Paint);
-        } break;*/
 
         default:
         {
@@ -170,21 +166,29 @@ internal LRESULT CALLBACK Win32MainWindowCallback(HWND Window,
     return(Result);
 }
 
-internal void Win32ProcessPendingMessages(win32_state *State, game_controller_input *KeyboardController, InputProcessor *inputProcessor)
+internal void Win32ProcessPendingMessages(win32_state *State, game_controller_input *KeyboardController, InputProcessor *inputProcessor, PlatformGameSettings *changesFromWindows)
 {
-    MSG Message;
-    while(PeekMessage(&Message, 0, 0, 0, PM_REMOVE))
+    MSG message;
+    while(PeekMessage(&message, 0, 0, 0, PM_REMOVE))
     {
-        switch(Message.message)
+        switch(message.message)
         {
             case WM_QUIT:
             {
                 GlobalRunning = false;
             } break;
 
+			//TODO(Ian):  Handle WM_MOVE, WM_RESIZE, WM_DEVICECHANGE, WM_ACTIVATEAPP, etc.
+
+			case WM_MOVE:
+			{
+				changesFromWindows->WindowPosition.x = LOWORD(message.lParam);
+				changesFromWindows->WindowPosition.y = HIWORD(message.lParam);
+			} break;
+
 			case WM_INPUT:
 			{
-				inputProcessor->HandleRawInputMessages(Message);
+				inputProcessor->HandleRawInputMessages(message);
 			} break;
 
             case WM_SYSKEYDOWN:
@@ -192,63 +196,7 @@ internal void Win32ProcessPendingMessages(win32_state *State, game_controller_in
             case WM_KEYDOWN:
             case WM_KEYUP:
             {
-                /*uint32 VKCode = (uint32)Message.wParam;
-
-                // NOTE(casey): Since we are comparing WasDown to IsDown,
-                // we MUST use == and != to convert these bit tests to actual
-                // 0 or 1 values.
-                bool32 WasDown = ((Message.lParam & (1 << 30)) != 0);
-                bool32 IsDown = ((Message.lParam & (1 << 31)) == 0);
-                if(WasDown != IsDown)
-                {
-                    if(VKCode == 'W')
-                    {
-                        Win32ProcessKeyboardMessage(&KeyboardController->MoveUp, IsDown);
-                    }
-                    else if(VKCode == 'A')
-                    {
-                        Win32ProcessKeyboardMessage(&KeyboardController->MoveLeft, IsDown);
-                    }
-                    else if(VKCode == 'S')
-                    {
-                        Win32ProcessKeyboardMessage(&KeyboardController->MoveDown, IsDown);
-                    }
-                    else if(VKCode == 'D')
-                    {
-                        Win32ProcessKeyboardMessage(&KeyboardController->MoveRight, IsDown);
-                    }
-                    else if(VKCode == 'Q')
-                    {
-                        Win32ProcessKeyboardMessage(&KeyboardController->LeftShoulder, IsDown);
-                    }
-                    else if(VKCode == 'E')
-                    {
-                        Win32ProcessKeyboardMessage(&KeyboardController->RightShoulder, IsDown);
-                    }
-                    else if(VKCode == VK_UP)
-                    {
-                        Win32ProcessKeyboardMessage(&KeyboardController->ActionUp, IsDown);
-                    }
-                    else if(VKCode == VK_LEFT)
-                    {
-                        Win32ProcessKeyboardMessage(&KeyboardController->ActionLeft, IsDown);
-                    }
-                    else if(VKCode == VK_DOWN)
-                    {
-                        Win32ProcessKeyboardMessage(&KeyboardController->ActionDown, IsDown);
-                    }
-                    else if(VKCode == VK_RIGHT)
-                    {
-                        Win32ProcessKeyboardMessage(&KeyboardController->ActionRight, IsDown);
-                    }
-                    else if(VKCode == VK_ESCAPE)
-                    {
-                        Win32ProcessKeyboardMessage(&KeyboardController->Start, IsDown);
-                    }
-                    else if(VKCode == VK_SPACE)
-                    {
-                        Win32ProcessKeyboardMessage(&KeyboardController->Back, IsDown);
-                    }
+                /*
 #if HANDMADE_INTERNAL
                     else if(VKCode == 'P')
                     {
@@ -282,7 +230,7 @@ internal void Win32ProcessPendingMessages(win32_state *State, game_controller_in
 #endif
                 }
 
-                bool32 AltKeyWasDown = (Message.lParam & (1 << 29));
+                bool32 AltKeyWasDown = (message.lParam & (1 << 29));
                 if((VKCode == VK_F4) && AltKeyWasDown)
                 {
                     GlobalRunning = false;
@@ -291,8 +239,8 @@ internal void Win32ProcessPendingMessages(win32_state *State, game_controller_in
 
             default:
             {
-                TranslateMessage(&Message);
-                DispatchMessageA(&Message);
+                TranslateMessage(&message);
+                DispatchMessageA(&message);
             } break;
         }
     }
@@ -353,6 +301,11 @@ HGLRC InitializeOpenGL()
 	return glContext;
 }
 
+void CommitSettingsChanges(win32_state &state, const PlatformGameSettings &newSettings)
+{
+	state.Settings = newSettings;
+}
+
 int CALLBACK WinMain(HINSTANCE Instance,
 					 HINSTANCE PrevInstance,
 					 LPSTR CommandLine,
@@ -405,6 +358,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
                 0,
                 Instance,
                 0);
+
         if(Window)
         {
             //win32_sound_output SoundOutput = {};
@@ -481,6 +435,17 @@ int CALLBACK WinMain(HINSTANCE Instance,
             GameMemory.PermanentStorage = Win32State.GameMemoryBlock;
             GameMemory.TransientStorage = ((uint8 *)GameMemory.PermanentStorage +
                                            GameMemory.PermanentStorageSize);
+
+			//SetProcessDPIAware
+
+			Win32State.Settings.SetWindowTitle("Handmade Material Editor", 25);
+			Win32State.Settings.Focused = true;
+			POINT clientPos = { 0, 0 };
+			ClientToScreen(Window, &clientPos);
+			Win32State.Settings.WindowPosition = { (real32)clientPos.x , (real32)clientPos.y };
+			RECT clientBounds = {};
+			GetClientRect(Window, &clientBounds);
+			Win32State.Settings.WindowSize = { (real32)clientBounds.right, (real32)clientBounds.bottom };
 
             for(int ReplayIndex = 0;
                 ReplayIndex < ArrayCount(Win32State.ReplayBuffers);
@@ -559,9 +524,6 @@ int CALLBACK WinMain(HINSTANCE Instance,
 
 					//START KEYBOARD
 
-					// TODO(casey): Zeroing macro
-					// TODO(casey): We can't zero everything because the up/down state will
-					// be wrong!!!
 					game_controller_input *OldKeyboardController = GetController(OldInput, 0);
 					game_controller_input *NewKeyboardController = GetController(NewInput, 0);
 					*NewKeyboardController = {};
@@ -574,12 +536,12 @@ int CALLBACK WinMain(HINSTANCE Instance,
 							OldKeyboardController->Buttons[ButtonIndex].EndedDown;
 					}
 
-					Win32ProcessPendingMessages(&Win32State, NewKeyboardController, &inputProcessor);
+					upcomingSettings = PlatformGameSettings(Win32State.Settings);
+					Win32ProcessPendingMessages(&Win32State, NewKeyboardController, &inputProcessor, &upcomingSettings);
+
 					//END KEYBOARD
 					//START MOUSE
 
-								//if(!GlobalPause)
-								//{
 					POINT MouseP;
 					GetCursorPos(&MouseP);
 					ScreenToClient(Window, &MouseP);
@@ -587,22 +549,9 @@ int CALLBACK WinMain(HINSTANCE Instance,
 					inputProcessor.nextFrame.MousePos = { (real32)MouseP.x, (real32)MouseP.y };
 
 					NewInput->newFrame = inputProcessor.GenerateFrame();
-					/*NewInput->MouseX = MouseP.x;
-					NewInput->MouseY = MouseP.y;
-					NewInput->MouseZ = 0; // TODO(casey): Support mousewheel?
-					Win32ProcessKeyboardMessage(&NewInput->MouseButtons[0],
-												GetKeyState(VK_LBUTTON) & (1 << 15));
-					Win32ProcessKeyboardMessage(&NewInput->MouseButtons[1],
-												GetKeyState(VK_MBUTTON) & (1 << 15));
-					Win32ProcessKeyboardMessage(&NewInput->MouseButtons[2],
-												GetKeyState(VK_RBUTTON) & (1 << 15));
-					Win32ProcessKeyboardMessage(&NewInput->MouseButtons[3],
-												GetKeyState(VK_XBUTTON1) & (1 << 15));
-					Win32ProcessKeyboardMessage(&NewInput->MouseButtons[4],
-												GetKeyState(VK_XBUTTON2) & (1 << 15));*/
 
-												//END MOUSE
-												//START CONTROLLER
+					//END MOUSE
+					//START CONTROLLER
 
 					// TODO(casey): Need to not poll disconnected controllers to avoid
 					// xinput frame rate hit on older libraries...
@@ -723,12 +672,14 @@ int CALLBACK WinMain(HINSTANCE Instance,
 
 					thread_context Thread = {};
 
+					/*win32_window_dimension Dimension = Win32GetWindowDimension(Window);
+
 					game_offscreen_buffer Buffer = {};
 					Buffer.Memory = GlobalBackbuffer.Memory;
-					Buffer.Width = GlobalBackbuffer.Width;
-					Buffer.Height = GlobalBackbuffer.Height;
+					Buffer.Width = Dimension.Width;
+					Buffer.Height = Dimension.Height;
 					Buffer.Pitch = GlobalBackbuffer.Pitch;
-					Buffer.BytesPerPixel = GlobalBackbuffer.BytesPerPixel;
+					Buffer.BytesPerPixel = GlobalBackbuffer.BytesPerPixel;*/
 
 					if (Win32State.InputRecordingIndex)
 					{
@@ -741,11 +692,11 @@ int CALLBACK WinMain(HINSTANCE Instance,
 					}
 					if (Game.HandleInput)
 					{
-						Game.HandleInput(&Thread, NewInput, &GameMemory);
+						Game.HandleInput(&Thread, NewInput, &GameMemory, &upcomingSettings);
 					}
 					if (Game.UpdateAndRender)
 					{
-						Game.UpdateAndRender(&Thread, &GameMemory, &Buffer);
+						Game.UpdateAndRender(&Thread, &GameMemory, nullptr); //&Buffer);
 					}
 					SwapBuffers(GlobalDeviceContext);
 
@@ -874,6 +825,12 @@ int CALLBACK WinMain(HINSTANCE Instance,
 						{
 							SoundIsValid = false;
 						}*/
+
+					PlatformGameSettings *frameFinalSettings = &((GameState *)GameMemory.PermanentStorage)->WindowSettings;
+					if (Win32State.Settings != *frameFinalSettings)
+					{
+						CommitSettingsChanges(Win32State, *frameFinalSettings);
+					}
 
 					LARGE_INTEGER WorkCounter = Win32GetWallClock();
 					real32 WorkSecondsElapsed = Win32GetSecondsElapsed(LastCounter, WorkCounter);

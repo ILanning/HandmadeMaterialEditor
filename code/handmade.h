@@ -31,6 +31,7 @@
 #include "handmade_typedefs.h"
 #include "input\InputFrame.h"
 #include "general\Assert.h"
+#include "PlatformGameSettings.h"
 
 #define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
 // TODO(casey): swap, min, max ... macros???
@@ -199,7 +200,7 @@ struct game_memory
 #define GAME_INITIALIZE(name) void name(thread_context *thread, game_memory *memory)
 typedef GAME_INITIALIZE(game_initialize);
 
-#define GAME_HANDLE_INPUT(name) void name(thread_context *thread, GameInput *newInputs, game_memory *memory)
+#define GAME_HANDLE_INPUT(name) void name(thread_context *thread, GameInput *newInputs, game_memory *memory, PlatformGameSettings *updatedSettings)
 typedef GAME_HANDLE_INPUT(game_handle_input);
 
 #define GAME_UPDATE_AND_RENDER(name) void name(thread_context *Thread, game_memory *Memory, game_offscreen_buffer *Buffer)

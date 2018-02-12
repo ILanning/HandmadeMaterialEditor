@@ -9,6 +9,7 @@
    ======================================================================== */
 
 #include "InputProcessor.h"
+#include "../PlatformGameSettings.cpp"
 
 struct win32_offscreen_buffer
 {
@@ -76,26 +77,29 @@ struct win32_replay_buffer
 };
 struct win32_state
 {
-    uint64 TotalSize;
-    void *GameMemoryBlock;
-    win32_replay_buffer ReplayBuffers[4];
+    uint64 TotalSize = 0;
+    void *GameMemoryBlock = nullptr;
+	win32_replay_buffer ReplayBuffers[4] = {};
     
-    HANDLE RecordingHandle;
-    int InputRecordingIndex;
+    HANDLE RecordingHandle = nullptr;
+    int InputRecordingIndex = 0;
 
-    HANDLE PlaybackHandle;
-    int InputPlayingIndex;
+    HANDLE PlaybackHandle = nullptr;
+    int InputPlayingIndex = 0;
     
-    char EXEFileName[WIN32_STATE_FILE_NAME_COUNT];
-    char *OnePastLastEXEFileNameSlash;
+	char EXEFileName[WIN32_STATE_FILE_NAME_COUNT] = {};
+    char *OnePastLastEXEFileNameSlash = nullptr;
+
+	PlatformGameSettings Settings;
 };
 
 // TODO(casey): This is a global for now.
 global_variable bool32 GlobalRunning;
 global_variable bool32 GlobalPause;
-global_variable win32_offscreen_buffer GlobalBackbuffer;
-global_variable LPDIRECTSOUNDBUFFER GlobalSecondaryBuffer;
+//global_variable win32_offscreen_buffer GlobalBackbuffer;
+//global_variable LPDIRECTSOUNDBUFFER GlobalSecondaryBuffer;
 global_variable int64 GlobalPerfCountFrequency;
 global_variable HDC GlobalDeviceContext;
+global_variable PlatformGameSettings upcomingSettings;
 
 #endif

@@ -4,6 +4,7 @@
 #include "drawing\Model.h"
 #include "drawing\cameras\SphericalCamera.h"
 #include "input\InputManager.h"
+#include "PlatformGameSettings.h"
 
 
 struct TestGlobals
@@ -20,6 +21,7 @@ struct GameState
 {
 	TestGlobals globals;
 	Input::InputManager Input;
+	PlatformGameSettings WindowSettings;
 };
 
 #endif

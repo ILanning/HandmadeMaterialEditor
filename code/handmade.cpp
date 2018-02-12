@@ -17,6 +17,7 @@
 #include "math\Matrix3.h"
 #include "math\Matrix4.h"
 #include "general\Assert.h"
+#include "PlatformGameSettings.cpp"
 
 /*internal void GameOutputSound(game_state *GameState, game_sound_output_buffer *SoundBuffer, int ToneHz)
 {
@@ -132,9 +133,14 @@ extern "C" GAME_HANDLE_INPUT(GameHandleInput)
 		InitMemory(thread, memory);
 	}
 
-	GameState *gameState = (GameState *)memory->PermanentStorage;
+	GameState &gameState = *(GameState *)memory->PermanentStorage;
 
-	Input::InputManager &inputManager = gameState->Input;
+	if (gameState.WindowSettings != *updatedSettings)
+	{
+		gameState.WindowSettings = *updatedSettings;
+	}
+
+	Input::InputManager &inputManager = gameState.Input;
 	inputManager.HandleInput(newInputs);
 
 	for (int ControllerIndex = 0;
