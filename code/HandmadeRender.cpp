@@ -59,8 +59,10 @@ const GLchar *fragmentSourceCode = R"glsl(
     }
 )glsl";
 
-void BuildTestObjects(GLuint shaderProgram,  ReadFileFunc *readFile, DebugMessageErrorFunc *messageError, TestGlobals *globals)
+void BuildTestObjects(GLuint shaderProgram,  ReadFileFunc *readFile, DebugMessageErrorFunc *messageError, GameState *gameState)
 {
+	TestGlobals *globals = &(gameState->globals);
+
 	int32 width, height, components;
 	uint8 *image = stbi_load("EnterButton.png", &width, &height, &components, 4);
 	real32 imageRatio = ((real32)width) / height;
@@ -95,6 +97,7 @@ void BuildTestObjects(GLuint shaderProgram,  ReadFileFunc *readFile, DebugMessag
 
 	globals->Camera = new Drawing::SphericalCamera();
 	globals->Camera->SetProjection(Matrix4::CreatePerspective(Pi32 / 2, 16.0f / 9.0f, 1, 1000));
+	gameState->Rescalers.RegisterObject(&(globals->Camera->projection), Matrix4::RescalePerspective);
 	globals->Camera->SetLookAtPosition({ 0, 1, 0 });
 	globals->Camera->SetCameraPosition({ 0, 2, 3 });
 	/*state->globals.Camera.Projection = Matrix4::CreateOrthographic(1280, 720, 0.1f, 1000);
@@ -153,7 +156,7 @@ extern "C" GAME_INITIALIZE(GameInitialize)
 
 	GameState *state = (GameState*)memory->PermanentStorage;
 
-	BuildTestObjects(shaderProgram, memory->ReadEntireFile, memory->DEBUGMessageError, &state->globals);
+	BuildTestObjects(shaderProgram, memory->ReadEntireFile, memory->DEBUGMessageError, state);
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }

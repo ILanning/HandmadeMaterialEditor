@@ -147,6 +147,13 @@ internal LRESULT CALLBACK Win32MainWindowCallback(HWND Window,
 			upcomingSettings.WindowPosition.y = HIWORD(LParam);
 		} break;
 
+		case WM_SIZE:
+		{
+			//TODO(Ian): Respect fullscreen/maximization
+			upcomingSettings.WindowSize.x = LOWORD(LParam);
+			upcomingSettings.WindowSize.y = HIWORD(LParam);
+		} break;
+
         case WM_SYSKEYDOWN:
         case WM_SYSKEYUP:
         case WM_KEYDOWN:

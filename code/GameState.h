@@ -5,6 +5,7 @@
 #include "drawing\cameras\SphericalCamera.h"
 #include "input\InputManager.h"
 #include "PlatformGameSettings.h"
+#include "RescalerManager.h"
 
 
 struct TestGlobals
@@ -19,9 +20,10 @@ struct TestGlobals
 
 struct GameState
 {
-	TestGlobals globals;
-	Input::InputManager Input;
 	PlatformGameSettings WindowSettings;
+	Input::InputManager Input;
+	RescalerManager Rescalers;
+	TestGlobals globals;
 };
 
 #endif

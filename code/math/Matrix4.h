@@ -143,6 +143,19 @@ struct Matrix4
 		return result;
 	}
 
+	static void RescalePerspective(void *rawMatrixPointer, Vector2 oldSize, Vector2 newSize)
+	{
+		if (oldSize.x != 0 || oldSize.y != 0)
+		{
+			Matrix4 &matrix = *(Matrix4 *)rawMatrixPointer;
+			real32 oldAspect, newAspect;
+			oldAspect = oldSize.x / oldSize.y;
+			matrix.m00 *= oldAspect;
+			newAspect = newSize.x / newSize.y;
+			matrix.m00 /= newAspect;
+		}
+	}
+
 	static Matrix4 CreateOrthographic(real32 screenWidth, real32 screenHeight, real32 nearPlane, real32 farPlane)
 	{
 		real32 depth = nearPlane - farPlane;
