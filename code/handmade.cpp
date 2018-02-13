@@ -142,11 +142,17 @@ extern "C" GAME_HANDLE_INPUT(GameHandleInput)
 			gameState.Rescalers.RescaleGraphics(gameState.WindowSettings.WindowSize, updatedSettings->WindowSize);
 			glViewport(0, 0, (GLsizei)updatedSettings->WindowSize.x, (GLsizei)updatedSettings->WindowSize.y);
 		}
-		gameState.WindowSettings = *updatedSettings;
+		gameState.WindowSettings = PlatformGameSettings(*updatedSettings);
 	}
 
 	Input::InputManager &inputManager = gameState.Input;
 	inputManager.HandleInput(newInputs);
+
+	if ((inputManager.IsTriggered(Input::Alt) && inputManager.IsDown(Input::Enter)) ||
+		(inputManager.IsDown(Input::Alt) && inputManager.IsTriggered(Input::Enter)))
+	{
+		gameState.WindowSettings.Fullscreen = !gameState.WindowSettings.Fullscreen;
+	}
 
 	for (int ControllerIndex = 0;
 		ControllerIndex < ArrayCount(newInputs->Controllers);

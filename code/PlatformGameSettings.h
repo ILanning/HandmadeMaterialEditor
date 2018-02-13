@@ -13,8 +13,10 @@ private:
 	bool titleChanged = false;
 
 public:
-	Vector2 WindowPosition = {0, 0};
-	Vector2 WindowSize = {0, 0};
+	Vector2 WindowPosition = { 0, 0 };
+	Vector2 cachedPosition = { 0, 0 };
+	Vector2 WindowSize = { 0, 0 };
+	Vector2 cachedSize = { 0, 0 };
 	bool Fullscreen = false;
 	bool MouseVisible = true; 
 	bool Focused = false;

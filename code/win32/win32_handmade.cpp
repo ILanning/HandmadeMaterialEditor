@@ -308,9 +308,47 @@ HGLRC InitializeOpenGL()
 	return glContext;
 }
 
-void CommitSettingsChanges(win32_state &state, const PlatformGameSettings &newSettings)
+void ReconcileSettingsChanges(PlatformGameSettings &futureSettings, PlatformGameSettings &win32Settings, PlatformGameSettings &gameSettings, HWND window)
 {
-	state.Settings = newSettings;
+	if (futureSettings.Fullscreen != gameSettings.Fullscreen)
+	{
+		if (gameSettings.Fullscreen)
+		{
+			HMONITOR monitor = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
+			MONITORINFO monitorInfo = {sizeof(MONITORINFO)};
+			GetMonitorInfo(monitor, &monitorInfo);
+			int32 x = monitorInfo.rcMonitor.left;
+			int32 y = monitorInfo.rcMonitor.top;
+			int32 width = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
+			int32 height = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
+
+			futureSettings.cachedPosition = gameSettings.WindowPosition;
+			futureSettings.cachedSize = gameSettings.WindowSize;
+			futureSettings.WindowPosition = { (real32)x, (real32)y };
+			futureSettings.WindowSize = { (real32)width, (real32)height };
+
+			SetWindowLongPtr(window, GWL_STYLE,
+				WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE);
+			MoveWindow(window, x, y, width, height, TRUE);
+		}
+		else
+		{
+			RECT rect;
+			rect.left = (int32)gameSettings.cachedPosition.x;
+			rect.top = (int32)gameSettings.cachedPosition.y;
+			rect.right = (int32)gameSettings.cachedSize.x + rect.left;
+			rect.bottom = (int32)gameSettings.cachedSize.y + rect.top;
+
+			futureSettings.WindowPosition = gameSettings.cachedPosition;
+			futureSettings.WindowSize = gameSettings.cachedSize;
+
+			SetWindowLongPtr(window, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
+			AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+			MoveWindow(window, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, TRUE);
+		}
+		futureSettings.Fullscreen = gameSettings.Fullscreen;
+	}
+	win32Settings = futureSettings;
 }
 
 int CALLBACK WinMain(HINSTANCE Instance,
@@ -442,9 +480,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
             GameMemory.PermanentStorage = Win32State.GameMemoryBlock;
             GameMemory.TransientStorage = ((uint8 *)GameMemory.PermanentStorage +
                                            GameMemory.PermanentStorageSize);
-
-			//SetProcessDPIAware
-
+			
 			Win32State.Settings.SetWindowTitle("Handmade Material Editor", 25);
 			Win32State.Settings.Focused = true;
 			POINT clientPos = { 0, 0 };
@@ -453,6 +489,8 @@ int CALLBACK WinMain(HINSTANCE Instance,
 			RECT clientBounds = {};
 			GetClientRect(Window, &clientBounds);
 			Win32State.Settings.WindowSize = { (real32)clientBounds.right, (real32)clientBounds.bottom };
+
+			upcomingSettings = PlatformGameSettings(Win32State.Settings);
 
             for(int ReplayIndex = 0;
                 ReplayIndex < ArrayCount(Win32State.ReplayBuffers);
@@ -518,6 +556,9 @@ int CALLBACK WinMain(HINSTANCE Instance,
 				}
 
                 uint64 LastCycleCount = __rdtsc();
+
+				//BEGIN MAIN GAME LOOP
+
 				while (GlobalRunning)
 				{
 					FILETIME NewDLLWriteTime = Win32GetLastWriteTime(SourceGameCodeDLLFullPath);
@@ -543,7 +584,6 @@ int CALLBACK WinMain(HINSTANCE Instance,
 							OldKeyboardController->Buttons[ButtonIndex].EndedDown;
 					}
 
-					upcomingSettings = PlatformGameSettings(Win32State.Settings);
 					Win32ProcessPendingMessages(&Win32State, NewKeyboardController, &inputProcessor, &upcomingSettings);
 
 					//END KEYBOARD
@@ -679,15 +719,6 @@ int CALLBACK WinMain(HINSTANCE Instance,
 
 					thread_context Thread = {};
 
-					/*win32_window_dimension Dimension = Win32GetWindowDimension(Window);
-
-					game_offscreen_buffer Buffer = {};
-					Buffer.Memory = GlobalBackbuffer.Memory;
-					Buffer.Width = Dimension.Width;
-					Buffer.Height = Dimension.Height;
-					Buffer.Pitch = GlobalBackbuffer.Pitch;
-					Buffer.BytesPerPixel = GlobalBackbuffer.BytesPerPixel;*/
-
 					if (Win32State.InputRecordingIndex)
 					{
 						Win32RecordInput(&Win32State, NewInput);
@@ -703,7 +734,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
 					}
 					if (Game.UpdateAndRender)
 					{
-						Game.UpdateAndRender(&Thread, &GameMemory, nullptr); //&Buffer);
+						Game.UpdateAndRender(&Thread, &GameMemory, nullptr);
 					}
 					SwapBuffers(GlobalDeviceContext);
 
@@ -833,10 +864,10 @@ int CALLBACK WinMain(HINSTANCE Instance,
 							SoundIsValid = false;
 						}*/
 
-					PlatformGameSettings *frameFinalSettings = &((GameState *)GameMemory.PermanentStorage)->WindowSettings;
-					if (Win32State.Settings != *frameFinalSettings)
+					PlatformGameSettings &frameFinalSettings = ((GameState *)GameMemory.PermanentStorage)->WindowSettings;
+					if (Win32State.Settings != frameFinalSettings)
 					{
-						CommitSettingsChanges(Win32State, *frameFinalSettings);
+						ReconcileSettingsChanges(upcomingSettings, Win32State.Settings, frameFinalSettings, Window);
 					}
 
 					LARGE_INTEGER WorkCounter = Win32GetWallClock();
@@ -930,7 +961,9 @@ int CALLBACK WinMain(HINSTANCE Instance,
 #endif
 					//}
 				}
-            }
+            
+				//END MAIN GAME LOOP
+}
             else
             {
                 // TODO(casey): Logging
