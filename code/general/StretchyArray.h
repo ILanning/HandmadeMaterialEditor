@@ -9,9 +9,10 @@ template <class T>
 struct StretchyArrayNode
 {
 	//Fits each node near exactly into the standard page size for Windows/Linux/OSX
-	static const int32 Capacity = (4096 - sizeof(StretchyArrayNode*)) / sizeof(T);
+	static const int32 Capacity = (4096 - sizeof(StretchyArrayNode*) * 2) / sizeof(T);
 	T Items[Capacity];
 	StretchyArrayNode *Next = nullptr;
+	StretchyArrayNode *Prev = nullptr;
 };
 
 template <class T>
@@ -82,6 +83,7 @@ public:
 			else
 			{
 				last->Next = new StretchyArrayNode<T>();
+				last->Next->Prev = last;
 				last = last->Next;
 			}
 			lastSection++;
@@ -90,6 +92,40 @@ public:
 		nextEmpty++;
 
 		return nextEmpty - 1;
+	}
+
+	void PopBack()
+	{
+		if (nextEmpty > 0)
+		{
+			nextEmpty--;
+			//TODO(Ian): Add hysterisis of some sort, probably just allowing for an empty node
+			if (nextEmpty < (lastSection - 1) * StretchyArrayNode<T>::Capacity)
+			{
+				lastSection--;
+				StretchyArrayNode<T> *toDelete = last;
+				last = last->Prev;
+				last->Next = nullptr;
+				delete toDelete;
+			}
+		}
+	}
+
+	void PopBackMany(int32 count)
+	{
+		if (nextEmpty > count - 1)
+		{
+			nextEmpty -= count;
+			int32 sectionDeletes = lastSection - (nextEmpty - count) / StretchyArrayNode<T>::Capacity;
+			for (; sectionDeletes > 0; sectionDeletes--)
+			{
+				lastSection--;
+				StretchyArrayNode<T> *toDelete = last;
+				last = last->Prev;
+				last->Next = nullptr;
+				delete toDelete;
+			}
+		}
 	}
 
 	/**

@@ -6,6 +6,12 @@
 
 namespace CString
 {
+	struct LengthString
+	{
+		char *Characters;
+		int64 Length;
+	};
+
 	///Gets the starting index of the specified substring, if it is present.  Returns -1 if it is not.
 	int32 FindSubstring(const char *find, int32 findLength, const char *within, int32 withinLength, int32 startIndex = 0)
 	{
@@ -95,6 +101,16 @@ namespace CString
 	{
 		//                          Covers \f, \t, \r, \n, and \v
 		return character == ' ' || (character >= '\t' && character <= '\r');
+	}
+
+	bool IsQuotation(char character)
+	{
+		return character == '\"' || character == '\'';
+	}
+
+	bool IsBrace(char character)
+	{
+		return character == '{' || character == '}' || character == '[' || character == ']' || character == '(' || character == ')';
 	}
 
 	bool IsDigit(char character)

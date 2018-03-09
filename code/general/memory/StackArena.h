@@ -12,6 +12,8 @@ namespace Memory
 		uint8 *buffer = nullptr;
 		uint8 *bufferNext = nullptr;
 		uint8 *bufferEnd = nullptr;
+		uint32 upcomingSize = 0;
+		bool partialInProgress = false;
 		uint64 size = 0;
 		DeallocMemoryFunc *deallocateFunc = nullptr;
 		bool ownsMemory = false;
@@ -46,10 +48,13 @@ namespace Memory
 			return (StackArena*)blockStart;
 		}
 
+		//TODO(Ian): GetRemaining
+
 		/** Allocates a new chunk of space (measured in bytes) from this arena.
 		*/
 		void *Allocate(uint32 allocSize)
 		{
+			Assert(partialInProgress == false); //Close partial allocation before starting a new allocation!
 			if (bufferNext + allocSize + sizeof(uint32) > bufferEnd)
 			{
 				return nullptr;
@@ -62,11 +67,73 @@ namespace Memory
 			return result;
 		}
 
+		/** Creates a new open ended allocation, or expands the existing one.  Returns a pointer to the start of the new memory chunk if successful, or null on failure.
+		*/
+		void *PartialAlloc(uint32 allocSize)
+		{
+			if (!partialInProgress)
+			{
+				if (bufferNext + allocSize + sizeof(uint32) > bufferEnd)
+				{
+					return nullptr;
+				}
+				partialInProgress = true;
+				upcomingSize = allocSize;
+			}
+			else
+			{
+				if (bufferNext + upcomingSize + allocSize + sizeof(uint32) > bufferEnd)
+				{
+					return nullptr;
+				}
+				upcomingSize += allocSize;
+			}
+			bufferNext += allocSize;
+			return bufferNext;
+		}
+
+		uint32 GetPartialAllocCurrentSize()
+		{
+			return upcomingSize;
+		}
+
+		/** Closes out a partial allocation, allowing new allocations and deallocations.
+		*/
+		void ClosePartialAlloc()
+		{
+			*((uint32 *)bufferNext) = upcomingSize;
+			bufferNext += sizeof(uint32);
+			partialInProgress = false;
+		}
+
+		/** Reduces the size of a partial allocation by a certain amount.  Returns the location of the new allocation end.
+		*/
+		void *ReducePartialAllocBy(uint32 deallocAmount)
+		{
+			Assert(deallocAmount <= upcomingSize);
+
+			upcomingSize -= deallocAmount;
+			bufferNext -= deallocAmount;
+			return bufferNext;
+		}
+
+		/** Reduces a partial allocation to a specific size.  Returns the location of the new allocation end.
+		*/
+		void *ReducePartialAllocTo(uint32 newSize)
+		{
+			Assert(newSize <= upcomingSize);
+
+			bufferNext -= upComingSize - newSize;
+			upcomingSize = newSize;
+			return bufferNext;
+		}
+
 		/** Deallocates starting at a certain point.
 			Functionally the same as deallocate last, but here for consistency with other arenas.
 		*/
 		bool Deallocate(uint8 *item)
 		{
+			Assert(partialInProgress == false);
 			Assert(item >= buffer + sizeof(uint32));
 			Assert(item < bufferEnd);
 
@@ -81,6 +148,7 @@ namespace Memory
 		*/
 		bool DeallocateLast()
 		{
+			Assert(partialInProgress == false);
 			if (bufferNext == buffer)
 			{
 				return false;

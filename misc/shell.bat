@@ -13,3 +13,5 @@ set test_path=%handmade_folder%build\win32_testmain.exe
 REM call devenv "%game_path%"
 
 call help.bat
+
+cd "%handmade_folder%\misc"
