@@ -1,5 +1,5 @@
-#ifndef HANDMADE_CONTENTMANAGER
-#define HANDMADE_CONTENTMANAGER
+#ifndef HANDMADE_CONTENTMANAGER_H
+#define HANDMADE_CONTENTMANAGER_H
 
 #include "../handmade_typedefs.h"
 #include "../general/StretchyArray.h"
@@ -47,7 +47,9 @@ public:
 	{
 		Content::OBJ::ObjParser *parser = new Content::OBJ::ObjParser(path, FindSubstring("", 1, path, MaxInt32), reader);
 
-		return 
+		Assert(false); //Not implemented error!
+
+		return nullptr;
 	}
 
 	void Register(void *object, char *name)
@@ -65,4 +67,4 @@ public:
 	}
 };
 
-#endif
+#endif //HANDMADE_CONTENTMANAGER_H

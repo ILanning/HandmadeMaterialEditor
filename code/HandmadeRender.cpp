@@ -22,7 +22,7 @@
 #include "drawing\cameras\FreeRotateCamera.h"
 #include "drawing\cameras\SphericalCamera.h"
 #include "drawing\GeometryHelpers.cpp"
-#include "content\OBJLoader.h"
+#include "content\OBJLoader.cpp"
 #include "general\StringHelpers.cpp"
 
 const GLchar *vertexSourceCode = R"glsl(
