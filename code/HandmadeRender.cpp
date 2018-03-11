@@ -10,9 +10,9 @@
 #endif
 
 #include "handmade_typedefs.h"
-#include "math\Vector2.h"
-#include "math\Vector3.h"
-#include "math\Matrix4.h"
+#include "math\Vector2.cpp"
+#include "math\Vector3.cpp"
+#include "math\Matrix4.cpp"
 #include "drawing\GLState.h"
 #include "drawing\Texture2D.h"
 #include "drawing\Geometry.h"

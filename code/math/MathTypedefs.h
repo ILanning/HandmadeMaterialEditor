@@ -1,5 +1,5 @@
-#ifndef HANDMADE_MATHTYPEDEFS
-#define HANDMADE_MATHTYPEDEFS
+#ifndef HANDMADE_MATHTYPEDEFS_H
+#define HANDMADE_MATHTYPEDEFS_H
 
 #include "..\handmade_typedefs.h"
 
@@ -8,4 +8,4 @@ namespace Math
 	typedef real32 Radian;
 }
 
-#endif // !HANDMADE_MATHTYPEDEFS
+#endif // !HANDMADE_MATHTYPEDEFS_H

@@ -1,7 +1,6 @@
-#ifndef HANDMADE_VECTOR2
-#define HANDMADE_VECTOR2
+#ifndef HANDMADE_VECTOR2_H
+#define HANDMADE_VECTOR2_H
 
-#include <math.h>
 #include "..\handmade_typedefs.h"
 
 struct Vector2
@@ -49,6 +48,4 @@ struct Vector2
 	friend bool operator!=(const Vector2 &a, const Vector2 &b);
 };
 
-#include "Vector2.cpp"
-
-#endif
+#endif //HANDMADE_VECTOR2_H

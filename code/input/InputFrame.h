@@ -3,7 +3,7 @@
 
 #include "../handmade_typedefs.h"
 #include "PhysicalInputs.h"
-#include "../math/Vector2.h"
+#include "../math/Vector2.cpp"
 
 namespace Input
 {

@@ -1,7 +1,6 @@
 #ifndef HANDMADE_SPHERICALCOORD_H
 #define HANDMADE_SPHERICALCOORD_H
 
-#include <math.h>
 #include "MathTypedefs.h"
 #include "..\handmade_typedefs.h"
 #include "Vector3.h"

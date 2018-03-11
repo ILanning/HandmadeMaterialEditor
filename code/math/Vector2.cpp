@@ -1,3 +1,9 @@
+#ifndef HANDMADE_VECTOR2_CPP
+#define HANDMADE_VECTOR2_CPP
+
+#include "Vector2.h"
+#include <math.h>
+
 Vector2 Vector2::Normalize() const
 {
 	real32 mag = Magnitude();
@@ -131,3 +137,5 @@ bool operator!=(const Vector2 &a, const Vector2 &b)
 {
 	return !(a == b);
 }
+
+#endif // !HANDMADE_VECTOR2_CPP

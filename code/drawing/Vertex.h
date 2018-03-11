@@ -2,8 +2,8 @@
 #define HANDMADE_VERTEX
 
 #include "../handmade_typedefs.h"
-#include "../math/Vector2.h"
-#include "../math/Vector3.h"
+#include "../math/Vector2.cpp"
+#include "../math/Vector3.cpp"
 #include "../libraries/glew.h"
 
 //TODO(Ian):  Define a VertexInfo class with one child class for each type of vertex, to 

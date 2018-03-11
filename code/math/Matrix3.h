@@ -1,5 +1,5 @@
-#ifndef HANDMADE_MATRIX3
-#define HANDMADE_MATRIX3
+#ifndef HANDMADE_MATRIX3_H
+#define HANDMADE_MATRIX3_H
 
 #include <math.h>
 #include "..\handmade_typedefs.h"
@@ -92,6 +92,4 @@ struct Matrix3
 	friend bool operator!=(const Matrix3 &a, const Matrix3 &b);
 };
 
-#include "Matrix3.cpp"
-
-#endif
+#endif //HANDMADE_MATRIX3_H

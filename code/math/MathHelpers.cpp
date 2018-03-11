@@ -1,5 +1,5 @@
-#ifndef HANDMADE_MATHHELPERS_H
-#define HANDMADE_MATHHELPERS_H
+#ifndef HANDMADE_MATHHELPERS_CPP
+#define HANDMADE_MATHHELPERS_CPP
 
 #include <math.h>
 #include "MathTypedefs.h"
@@ -80,4 +80,4 @@ namespace Math
 	}
 }
 
-#endif
+#endif //HANDMADE_MATHHELPERS_CPP

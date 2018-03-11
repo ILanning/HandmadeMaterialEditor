@@ -1,7 +1,6 @@
-#ifndef HANDMADE_VECTOR3
-#define HANDMADE_VECTOR3
+#ifndef HANDMADE_VECTOR3_H
+#define HANDMADE_VECTOR3_H
 
-#include <math.h>
 #include "..\handmade_typedefs.h"
 
 struct Vector3
@@ -64,6 +63,4 @@ struct Vector3
 	static Vector3 One() { return{ 1, 1, 1 }; }
 };
 
-#include "Vector3.cpp"
-
-#endif
+#endif //HANDMADE_VECTOR3_H

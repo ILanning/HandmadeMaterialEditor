@@ -2,7 +2,7 @@
 #define HANDMADE_MESH
 
 #include "../handmade_typedefs.h"
-#include "../math/Vector3.h"
+#include "../math/Vector3.cpp"
 #include "../math/Matrix4.h"
 #include "Texture2D.h"
 #include "Vertex.h"

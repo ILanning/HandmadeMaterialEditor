@@ -4,7 +4,7 @@
 #include "handmade_typedefs.h"
 #include "general\Assert.h"
 #include "general\StretchyArray.h"
-#include "math\Vector2.h"
+#include "math\Vector2.cpp"
 
 #define RESCALEFUNC(name) void name(void *object, Vector2 oldSize, Vector2 newSize)
 typedef RESCALEFUNC(RescaleFunc);

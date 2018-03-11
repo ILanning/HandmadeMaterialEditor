@@ -5,7 +5,7 @@
 #include "../handmade.h"
 #include "PhysicalInputs.h"
 #include "InputFrame.h"
-#include "../math/Vector2.h"
+#include "../math/Vector2.cpp"
 
 namespace Input
 {

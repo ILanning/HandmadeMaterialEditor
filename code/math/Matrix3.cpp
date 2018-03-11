@@ -1,3 +1,8 @@
+#ifndef HANDMADE_MATRIX3_CPP
+#define HANDMADE_MATRIX3_CPP
+
+#include "Matrix3.h"
+
 Matrix3 Matrix3::Inverse()
 {
 	//One over determinant, times transpose of cofactor
@@ -236,3 +241,5 @@ bool operator!=(const Matrix3 &a, const Matrix3 &b)
 {
 	return !(a == b);
 }
+
+#endif //HANDMADE_MATRIX3_CPP

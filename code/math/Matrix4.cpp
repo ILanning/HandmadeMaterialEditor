@@ -1,3 +1,8 @@
+#ifndef HANDMADE_MATRIX4_CPP
+#define HANDMADE_MATRIX4_CPP
+
+#include "Matrix4.h"
+
 /*Matrix4 Matrix4::Inverse()
 {
 	//One over determinant, times transpose of cofactor
@@ -256,3 +261,5 @@ bool operator!=(const Matrix4 &a, const Matrix4 &b)
 {
 	return !(a == b);
 }
+
+#endif //HANDMADE_MATRIX4_CPP

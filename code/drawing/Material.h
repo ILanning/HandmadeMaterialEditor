@@ -2,7 +2,7 @@
 #define HANDMADE_MATERIAL
 
 #include "../handmade_typedefs.h"
-#include "../math/Vector3.h"
+#include "../math/Vector3.cpp"
 #include "../general/StringHelpers.cpp"
 #include "Texture2D.h"
 

@@ -1,14 +1,14 @@
 #ifndef HANDMADE_SPHERICALCOORD_CPP
 #define HANDMADE_SPHERICALCOORD_CPP
 
+#include "SphericalCoord.h"
 #include <math.h>
 #include "MathTypedefs.h"
 #include "..\handmade_typedefs.h"
-#include "SphericalCoord.h"
-#include "Vector3.h"
-#include "Quaternion.h"
-#include "Matrix4.h"
-#include "MathHelpers.h"
+#include "Vector3.cpp"
+#include "Quaternion.cpp"
+#include "Matrix4.cpp"
+#include "MathHelpers.cpp"
 
 namespace Math
 {

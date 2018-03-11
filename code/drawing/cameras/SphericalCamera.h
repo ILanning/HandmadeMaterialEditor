@@ -5,7 +5,7 @@
 #include "..\..\general\Assert.h"
 #include "..\..\math\Matrix4.h"
 #include "..\..\math\Quaternion.h"
-#include "..\..\math\Vector3.h"
+#include "..\..\math\Vector3.cpp"
 #include "..\..\math\SphericalCoord.cpp"
 #include "..\..\input\InputManager.h"
 #include "..\..\input\PhysicalInputs.h"

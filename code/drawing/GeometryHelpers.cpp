@@ -3,9 +3,9 @@
 
 #include "../handmade_typedefs.h"
 #include "../handmade.h"
-#include "../math/Vector2.h"
-#include "../math/Vector3.h"
-#include "../math/Matrix4.h"
+#include "../math/Vector2.cpp"
+#include "../math/Vector3.cpp"
+#include "../math/Matrix4.cpp"
 #include "../general/StretchyArray.h"
 #include "../general/StringHelpers.cpp"
 #include "Texture2D.h"

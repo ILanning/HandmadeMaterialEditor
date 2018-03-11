@@ -1,5 +1,5 @@
-#ifndef HANDMADE_MATRIX4
-#define HANDMADE_MATRIX4
+#ifndef HANDMADE_MATRIX4_H
+#define HANDMADE_MATRIX4_H
 
 #include <math.h>
 #include "..\handmade_typedefs.h"
@@ -183,6 +183,4 @@ struct Matrix4
 	}
 };
 
-#include "Matrix4.cpp"
-
-#endif
+#endif //HANDMADE_MATRIX4_H
