@@ -734,7 +734,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
 					}
 					if (Game.UpdateAndRender)
 					{
-						Game.UpdateAndRender(&Thread, &GameMemory, nullptr);
+						Game.UpdateAndRender(&Thread, &GameMemory);
 					}
 					SwapBuffers(GlobalDeviceContext);
 

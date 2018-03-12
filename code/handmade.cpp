@@ -1,3 +1,5 @@
+#ifndef HANDMADE_CPP
+#define HANDMADE_CPP
 /* ========================================================================
    $File: $
    $Date: $
@@ -203,3 +205,5 @@ extern "C" GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
 	GameState *gameState = (GameState *)Memory->PermanentStorage;
     //GameOutputSound(gameState, SoundBuffer, gameState->ToneHz);
 }
+
+#endif //HANDMADE_CPP

@@ -1,5 +1,5 @@
-#ifndef HANDMADE_RENDER
-#define HANDMADE_RENDER
+#ifndef HANDMADE_RENDER_CPP
+#define HANDMADE_RENDER_CPP
 
 //Purely for getting Visual Studio Intellisense hints
 #ifndef GLEW_IMPORTED
@@ -158,7 +158,7 @@ extern "C" GAME_INITIALIZE(GameInitialize)
 
 	BuildTestObjects(shaderProgram, memory->ReadEntireFile, memory->DEBUGMessageError, state);
 
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  //Uncomment to get a wireframe view
 }
 
 void RenderScene(GameState *state)
@@ -178,4 +178,4 @@ void RenderScene(GameState *state)
 	state->globals.arrow->Draw(viewProjection);
 }
 
-#endif
+#endif //HANDMADE_RENDER_CPP

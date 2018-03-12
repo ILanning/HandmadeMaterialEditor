@@ -1,4 +1,5 @@
 #ifndef HANDMADE_FUNCDEFS_H
+#define HANDMADE_FUNCDEFS_H
 
 #include "handmade_typedefs.h"
 #include "PlatformGameSettings.h"

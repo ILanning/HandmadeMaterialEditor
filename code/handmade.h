@@ -1,4 +1,4 @@
-#if !defined(HANDMADE_H)
+#ifndef HANDMADE_H
 #define HANDMADE_H
 /* ========================================================================
    $File: $
@@ -20,21 +20,23 @@
     1 - Slow code welcome.
 */
 
+#include "handmade_typedefs.h"
+#include "input\InputFrame.h"
+#include "general\Assert.h"
+#include "PlatformGameSettings.h"
+
 #include <math.h>
-#include <stdint.h>
 #include "libraries\glew.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "libraries\stb_image.h"
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "libraries\stb_truetype.h"
 
-#include "handmade_typedefs.h"
-#include "input\InputFrame.h"
-#include "general\Assert.h"
-#include "PlatformGameSettings.h"
-
 #define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
 // TODO(casey): swap, min, max ... macros???
+
+//TODO(Ian): Split the things in this file off as they become more certain
+
 
 inline uint32
 SafeTruncateUInt64(uint64 Value)
@@ -52,10 +54,10 @@ struct thread_context
 
 struct FileData
 {
+	bool IsLoaded;
 	int32 PathSize;
 	char* Path;
 	uint32 FileSize;
-	bool IsLoaded;
 	void *File;
 
 	/**
@@ -69,9 +71,7 @@ struct FileData
 #define PLATFORM_READ_FILE(name) FileData name(char *path, int32 pathLength, bool *outSuccess)
 typedef PLATFORM_READ_FILE(ReadFileFunc);
 
-/*
-  NOTE(casey): Services that the platform layer provides to the game
-*/
+//NOTE(casey): Services that the platform layer provides to the game
 #if HANDMADE_INTERNAL
 /* IMPORTANT(casey):
 
@@ -103,18 +103,9 @@ typedef DEBUG_PLATFORM_MESSAGE_ERROR_FUNC(DebugMessageErrorFunc);
   (this may expand in the future - sound on separate thread, etc.)
 */
 
-// FOUR THINGS - timing, controller/keyboard input, bitmap buffer to use, sound buffer to use
+// THREE THINGS - timing, controller/keyboard input, sound buffer to use
 
-// TODO(casey): In the future, rendering _specifically_ will become a three-tiered abstraction!!!
-struct game_offscreen_buffer
-{
-    // NOTE(casey): Pixels are alwasy 32-bits wide, Memory Order BB GG RR XX
-    void *Memory;
-    int Width;
-    int Height;
-    int Pitch;
-    int BytesPerPixel;
-};
+//NOTE(Ian): Game now directly tied to OpenGL, pixel buffer no longer needed
 
 struct game_sound_output_buffer
 {
@@ -164,14 +155,17 @@ struct game_controller_input
     };
 };
 
+//TODO(Ian): Rework this, probably needs to have info on what devices we got input from (array of InputFrames?)
+//           Plus info on device changes
 struct GameInput
 {
     game_button_state MouseButtons[5];
     int32 MouseX, MouseY, MouseZ;
 	Input::InputFrame newFrame;
-    // TODO(casey): Insert clock values here.    
+    // TODO(Ian): Insert clock values here, delta from last frame and total time since program start.    
     game_controller_input Controllers[5];
 };
+
 inline game_controller_input *GetController(GameInput *Input, int unsigned ControllerIndex)
 {
     Assert(ControllerIndex < ArrayCount(Input->Controllers));
@@ -203,7 +197,7 @@ typedef GAME_INITIALIZE(game_initialize);
 #define GAME_HANDLE_INPUT(name) void name(thread_context *thread, GameInput *newInputs, game_memory *memory, PlatformGameSettings *updatedSettings)
 typedef GAME_HANDLE_INPUT(game_handle_input);
 
-#define GAME_UPDATE_AND_RENDER(name) void name(thread_context *Thread, game_memory *Memory, game_offscreen_buffer *Buffer)
+#define GAME_UPDATE_AND_RENDER(name) void name(thread_context *Thread, game_memory *Memory)
 typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 
 // NOTE(casey): At the moment, this has to be a very fast function, it cannot be
@@ -213,4 +207,4 @@ typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 #define GAME_GET_SOUND_SAMPLES(name) void name(thread_context *Thread, game_memory *Memory, game_sound_output_buffer *SoundBuffer)
 typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
 
-#endif
+#endif //HANDMADE_H

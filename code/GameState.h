@@ -1,5 +1,5 @@
-#ifndef HANDMADE_GAMESTATE
-#define HANDMADE_GAMESTATE
+#ifndef HANDMADE_GAMESTATE_H
+#define HANDMADE_GAMESTATE_H
 
 #include "drawing\Model.h"
 #include "drawing\cameras\SphericalCamera.h"
@@ -26,4 +26,4 @@ struct GameState
 	TestGlobals globals;
 };
 
-#endif
+#endif //HANDMADE_GAMESTATE_H

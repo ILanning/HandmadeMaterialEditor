@@ -1,7 +1,6 @@
 #ifndef HANDMADE_PLATFORMGAMESETTINGS_H
 #define HANDMADE_PLATFORMGAMESETTINGS_H
 
-#include "general\StringHelpers.cpp"
 #include "handmade_typedefs.h"
 #include "math\Vector2.h"
 
@@ -21,21 +20,11 @@ public:
 	bool MouseVisible = true; 
 	bool Focused = false;
 	
-	void Swap(PlatformGameSettings &other)
-	{
-		char tempBuffer[sizeof(PlatformGameSettings)];
-		memcpy(tempBuffer, this, sizeof(PlatformGameSettings));
-		memcpy(this, &other, sizeof(PlatformGameSettings));
-		memcpy(&other, tempBuffer, sizeof(PlatformGameSettings));
-	}
+	void Swap(PlatformGameSettings &other);
 
 	PlatformGameSettings() {};
 
-	PlatformGameSettings(const PlatformGameSettings &other)
-	{
-		memcpy(this, &other, sizeof(PlatformGameSettings));
-		windowTitle = CString::CopySubstring(other.windowTitle, other.windowTitleLength);
-	}
+	PlatformGameSettings(const PlatformGameSettings &other);
 
 	PlatformGameSettings& operator=(PlatformGameSettings arg)
 	{

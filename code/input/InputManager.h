@@ -60,4 +60,4 @@ namespace Input
 	};
 }
 
-#endif
+#endif //HANDMADE_INPUTMANAGER_H
