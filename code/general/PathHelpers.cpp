@@ -1,5 +1,5 @@
-#ifndef HANDMADE_PATHHELPERS
-#define HANDMADE_PATHHELPERS
+#ifndef HANDMADE_PATHHELPERS_CPP
+#define HANDMADE_PATHHELPERS_CPP
 
 #include "../handmade.h"
 #include "StringHelpers.cpp"
@@ -133,4 +133,4 @@ namespace Path
 	}
 }
 
-#endif
+#endif //HANDMADE_PATHHELPERS_CPP

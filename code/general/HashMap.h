@@ -1,27 +1,24 @@
-#ifndef HANDMADE_HASHMAP
-#define HANDMADE_HASHMAP
+#ifndef HANDMADE_HASHMAP_H
+#define HANDMADE_HASHMAP_H
 
 #include "../handmade_typedefs.h"
-#include "../drawing/Vertex.h"
 
-struct HashNode
-{
-	int32 Key;
-	VertexNormalTexture *Value;
-
-private:
-	HashNode *Next;
-};
-
-struct HashMap
+template<class KeyType, class ValueType>
+class HashMap
 {
 	//Arranged as array of linked lists
-private:
-	HashNode *[]buckets;
+	struct HashNode
+	{
+		KeyType Key;
+		ValueType Value;
+		HashNode *Next;
+	};
+
+	HashNode *buckets;
 	int32 bucketCount;
 	int32 occupied;
 
-
+public:
 	HashMap(int32 capacity)
 	{
 		bucketCount = capacity;
@@ -33,4 +30,4 @@ private:
 
 //template KeyValuePair <K key, V value>
 
-#endif
+#endif //HANDMADE_HASHMAP_H

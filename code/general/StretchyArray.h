@@ -1,19 +1,8 @@
-#ifndef HANDMADE_STRETCHY_ARRAY
-#define HANDMADE_STRETCHY_ARRAY
+#ifndef HANDMADE_STRETCHYARRAY_H
+#define HANDMADE_STRETCHYARRAY_H
 
 #include "../handmade_typedefs.h"
 #include "Assert.h"
-
-template <class T>
-
-struct StretchyArrayNode
-{
-	//Fits each node near exactly into the standard page size for Windows/Linux/OSX
-	static const int32 Capacity = (4096 - sizeof(StretchyArrayNode*) * 2) / sizeof(T);
-	T Items[Capacity];
-	StretchyArrayNode *Next = nullptr;
-	StretchyArrayNode *Prev = nullptr;
-};
 
 template <class T>
 /**
@@ -21,6 +10,16 @@ template <class T>
 */
 class StretchyArray
 {
+
+	struct StretchyArrayNode
+	{
+		//Fits each node near exactly into the standard page size for Windows/Linux/OSX
+		static const int32 Capacity = (4096 - sizeof(StretchyArrayNode*) * 2) / sizeof(T);
+		T Items[Capacity];
+		StretchyArrayNode *Next = nullptr;
+		StretchyArrayNode *Prev = nullptr;
+	};
+
 	StretchyArrayNode<T> *head = nullptr;
 	StretchyArrayNode<T> *last = nullptr;
 	int32 lastSection = 0;
@@ -115,6 +114,7 @@ public:
 	{
 		if (nextEmpty > count - 1)
 		{
+			//TODO(Ian): Fix bug - this function will not destroy objects at the expected time
 			nextEmpty -= count;
 			int32 sectionDeletes = lastSection - (nextEmpty - count) / StretchyArrayNode<T>::Capacity;
 			for (; sectionDeletes > 0; sectionDeletes--)
@@ -156,7 +156,6 @@ public:
 			PushBack(items[i]);
 		}
 		return nextEmpty - 1;
-
 	}
 
 	int32 Length()
@@ -166,18 +165,8 @@ public:
 
 	T *ToArray()
 	{
+		//CONSIDER(Ian): Can't use memcpy() due to move semantics, maybe make an alternate class/template specializatiosn for that?
 		T *result = new T[nextEmpty];
-
-		//NOTE(Ian): Can't use memcpy() due to move semantics
-		/*
-		int32 sectionSize = StretchyArrayNode<T>::Capacity;
-		StretchyArrayNode<T> *curr = head;
-		for (int i = 0; i < lastSection - 1; i++)
-		{
-			memcpy(result + i * sectionSize, curr, sectionSize * sizeof(T));
-			curr = curr->Next;
-		}
-		memcpy(result + (lastSection - 1) * sectionSize, curr, (nextEmpty % sectionSize) * sizeof(T));*/
 
 		int32 sectionSize = StretchyArrayNode<T>::Capacity;
 		StretchyArrayNode<T> *curr = head;
@@ -218,4 +207,4 @@ public:
 	}
 };
 
-#endif
+#endif //HANDMADE_STRETCHYARRAY_H

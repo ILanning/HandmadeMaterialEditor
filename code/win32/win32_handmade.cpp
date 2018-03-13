@@ -48,7 +48,7 @@
 #include "win32_input.cpp"
 #include "win32_graphics.cpp"
 #include "win32_debug.cpp"
-#include "InputProcessor.h"
+#include "InputProcessor.cpp"
 #include "../GameState.h"
 
 internal win32_game_code Win32LoadGameCode(char *SourceDLLName, char *TempDLLName)

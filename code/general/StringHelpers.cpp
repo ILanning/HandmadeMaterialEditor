@@ -1,5 +1,5 @@
-#ifndef HANDMADE_STRING_HELPERS
-#define HANDMADE_STRING_HELPERS
+#ifndef HANDMADE_STRINGHELPERS_CPP
+#define HANDMADE_STRINGHELPERS_CPP
 
 #include "../handmade_typedefs.h"
 #include "../handmade.h"
@@ -371,4 +371,4 @@ namespace CString
 	}
 }
 
-#endif
+#endif //HANDMADE_STRINGHELPERS_CPP
