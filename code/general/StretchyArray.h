@@ -10,7 +10,7 @@ template <class T>
 */
 class StretchyArray
 {
-
+	template <class T>
 	struct StretchyArrayNode
 	{
 		//Fits each node near exactly into the standard page size for Windows/Linux/OSX

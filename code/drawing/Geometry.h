@@ -5,29 +5,32 @@
 #include "../libraries/glew.h"
 #include "Mesh.h"
 
-struct Geometry
+namespace Drawing
 {
-	//CONSIDER(Ian): Maybe this should be an array of pointers
-	Mesh *Meshes = nullptr;
-	int32 MeshCount = 0;
-
-	Geometry(Mesh *meshes, int32 meshCount) : Meshes(meshes), MeshCount(meshCount)
+	struct Geometry
 	{
+		//CONSIDER(Ian): Maybe this should be an array of pointers
+		Mesh *Meshes = nullptr;
+		int32 MeshCount = 0;
 
-	}
-
-	void Draw(const Matrix4 &mvp, const Vector3 &color)
-	{
-		for (int32 i = 0; i < MeshCount; i++)
+		Geometry(Mesh *meshes, int32 meshCount) : Meshes(meshes), MeshCount(meshCount)
 		{
-			Meshes[i].Draw(mvp, color);
-		}
-	}
 
-	~Geometry()
-	{
-		delete[] Meshes;
-	}
-};
+		}
+
+		void Draw(const Matrix4 &mvp, const Vector3 &color)
+		{
+			for (int32 i = 0; i < MeshCount; i++)
+			{
+				Meshes[i].Draw(mvp, color);
+			}
+		}
+
+		~Geometry()
+		{
+			delete[] Meshes;
+		}
+	};
+}
 
 #endif

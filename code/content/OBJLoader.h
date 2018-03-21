@@ -16,6 +16,8 @@ namespace Content
 {
 	namespace OBJ
 	{
+		using namespace Drawing;
+
 		class ObjParser
 		{
 			/*
@@ -68,12 +70,12 @@ namespace Content
 			};
 
 
-			StretchyArray<Mesh *> meshes;
-			StretchyArray<Material> materials;
-			StretchyArray<Texture2D *> textures;
+			StretchyArray<Drawing::Mesh *> meshes;
+			StretchyArray<Drawing::Material> materials;
+			StretchyArray<Drawing::Texture2D *> textures;
 
 			StretchyArray<ObjVertexNode> vertexBlueprints;
-			StretchyArray<VertexNormalTexture> builtVertices;
+			StretchyArray<Drawing::VertexNormalTexture> builtVertices;
 			StretchyArray<GLuint> elements;
 			StretchyArray<Vector3> positions;
 			StretchyArray<Vector3> normals;
@@ -83,13 +85,13 @@ namespace Content
 
 			int32 FindOrCreate(const ObjVertexNode &node);
 
-			void PushMesh(GLuint shaderProgram, Material *mat);
+			void PushMesh(GLuint shaderProgram, Drawing::Material *mat);
 
 			ObjParser(FileData toLoad, ReadFileFunc *readFile, GLuint shaderProgram);
 
-			Geometry *ExportGeometry();
+			Drawing::Geometry *ExportGeometry();
 
-			Material *ExportMaterials(int32 &outCount);
+			Drawing::Material *ExportMaterials(int32 &outCount);
 
 			~ObjParser()
 			{
@@ -102,7 +104,7 @@ namespace Content
 		};
 	}
 
-	Geometry *ParseOBJ(char *path, const int32 pathLength, GLuint shaderProgram, ReadFileFunc *readFile);
+	Drawing::Geometry *ParseOBJ(char *path, const int32 pathLength, GLuint shaderProgram, ReadFileFunc *readFile);
 }
 
 #endif //HANDMADE_OBJLOADER_H

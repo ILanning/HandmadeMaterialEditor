@@ -141,7 +141,7 @@ extern "C" GAME_HANDLE_INPUT(GameHandleInput)
 	{
 		if (gameState.WindowSettings.WindowSize != updatedSettings->WindowSize)
 		{
-			gameState.Rescalers.RescaleGraphics(gameState.WindowSettings.WindowSize, updatedSettings->WindowSize);
+			gameState.Rescalers.RescaleGraphics(gameState.WindowSettings.WindowSize, updatedSettings->WindowSize, 1);
 			glViewport(0, 0, (GLsizei)updatedSettings->WindowSize.x, (GLsizei)updatedSettings->WindowSize.y);
 		}
 		gameState.WindowSettings = PlatformGameSettings(*updatedSettings);

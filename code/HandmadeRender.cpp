@@ -67,9 +67,9 @@ void BuildTestObjects(GLuint shaderProgram,  ReadFileFunc *readFile, DebugMessag
 	uint8 *image = stbi_load("EnterButton.png", &width, &height, &components, 4);
 	real32 imageRatio = ((real32)width) / height;
 
-	Texture2D *enterTexture = new Texture2D(image, width, height, GL_RGBA, GL_RGBA, CString::CopySubstring("EnterButton.png", 15), 16);
+	Drawing::Texture2D *enterTexture = new Drawing::Texture2D(image, width, height, GL_RGBA, GL_RGBA, CString::CopySubstring("EnterButton.png", 15), 16);
 
-	VertexColorTexture *vertices = new VertexColorTexture[4];
+	Drawing::VertexColorTexture *vertices = new Drawing::VertexColorTexture[4];
 	//Position                   Color                   Texcoords
 	vertices[0] = { -0.5f * imageRatio,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f }; // Top-left
 	vertices[1] = { 0.5f * imageRatio,  0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f }; // Top-right
@@ -82,17 +82,17 @@ void BuildTestObjects(GLuint shaderProgram,  ReadFileFunc *readFile, DebugMessag
 		0, 3, 2
 	};
 
-	Geometry *virtMesh = Content::ParseOBJ("Assets/virt/Virt.obj", 21, shaderProgram, readFile);
+	Drawing::Geometry *virtMesh = Content::ParseOBJ("Assets/virt/Virt.obj", 21, shaderProgram, readFile);
 	//DebugOutputGLErrors(messageError);
-	globals->Virt = new Model(virtMesh);
+	globals->Virt = new Drawing::Model(virtMesh);
 
-	Material *enterMaterial = new Material("EnterMaterial", 14, enterTexture);
-	Mesh *enterMesh = new Mesh(new VertexColorTextureArray(vertices, 4), elements, 6, shaderProgram, enterMaterial);
-	Geometry *enterGeo = new Geometry(enterMesh, 1);
-	globals->enterButton = new Model(enterGeo, { 0, 0, 0 }, { (real32)1, (real32)1, 1 });
-	globals->enter2 = new Model(enterGeo, { 0, 1, 0 }, { (real32)1, (real32)1, 1 });
+	Drawing::Material *enterMaterial = new Drawing::Material("EnterMaterial", 14, enterTexture);
+	Drawing::Mesh *enterMesh = new Drawing::Mesh(new Drawing::VertexColorTextureArray(vertices, 4), elements, 6, shaderProgram, enterMaterial);
+	Drawing::Geometry *enterGeo = new Drawing::Geometry(enterMesh, 1);
+	globals->enterButton = new Drawing::Model(enterGeo, { 0, 0, 0 }, { (real32)1, (real32)1, 1 });
+	globals->enter2 = new Drawing::Model(enterGeo, { 0, 1, 0 }, { (real32)1, (real32)1, 1 });
 
-	globals->arrow = MakeArrow({ 1, 1, 1 }, 16, shaderProgram);
+	globals->arrow = Drawing::MakeArrow({ 1, 1, 1 }, 16, shaderProgram);
 	globals->arrow->Rotation = Matrix4::CreateRotationX(Pi32 / 2);
 
 	globals->Camera = new Drawing::SphericalCamera();

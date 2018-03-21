@@ -11,6 +11,8 @@ namespace Content
 {
 	namespace OBJ
 	{
+		using namespace Drawing;
+
 		Vector3 ParseMTLVec3(char *string, int32 length, int32 offset, Vector3 defaultValue = {}, int32 *readFinishIndex = nullptr)
 		{
 			Vector3 result = defaultValue;
@@ -227,8 +229,9 @@ namespace Content
 			return options;
 		}
 
-		StretchyArray<Material> *ParseMTL(FileData toLoad, StretchyArray<Material> *materialList = nullptr)
+		StretchyArray<Drawing::Material> *ParseMTL(FileData toLoad, StretchyArray<Drawing::Material> *materialList = nullptr)
 		{
+
 			bool endOfFile = false;
 			bool materialFound = false;
 			char *file = (char *)toLoad.File;
@@ -398,8 +401,10 @@ namespace Content
 			}
 		}
 
-		Material *ParseMTL(FileData file, int32 &outMaterialCount)
+		Drawing::Material *ParseMTL(FileData file, int32 &outMaterialCount)
 		{
+			using namespace Drawing;
+
 			StretchyArray<Material> *mats = ParseMTL(file);
 			if (mats)
 			{
@@ -416,7 +421,7 @@ namespace Content
 			}
 		}
 
-		StretchyArray<Material> *ParseMTL(char *path, int32 pathLength, ReadFileFunc *readFile, StretchyArray<Material> *materialList = nullptr)
+		StretchyArray<Drawing::Material> *ParseMTL(char *path, int32 pathLength, ReadFileFunc *readFile, StretchyArray<Drawing::Material> *materialList = nullptr)
 		{
 			bool success = false;
 			FileData file = readFile(path, pathLength, &success);
@@ -431,8 +436,10 @@ namespace Content
 			}
 		}
 
-		Material *ParseMTL(char *path, int32 pathLength, ReadFileFunc *readFile, int32 &outMaterialCount)
+		Drawing::Material *ParseMTL(char *path, int32 pathLength, ReadFileFunc *readFile, int32 &outMaterialCount)
 		{
+			using namespace Drawing;
+
 			StretchyArray<Material> *mats = ParseMTL(path, pathLength, readFile);
 			if (mats)
 			{

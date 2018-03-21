@@ -10,10 +10,10 @@
 
 struct TestGlobals
 {
-	Model *arrow;
-	Model *enterButton;
-	Model *enter2;
-	Model *Virt;
+	Drawing::Model *arrow;
+	Drawing::Model *enterButton;
+	Drawing::Model *enter2;
+	Drawing::Model *Virt;
 
 	Drawing::SphericalCamera *Camera;
 };

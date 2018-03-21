@@ -1,0 +1,9 @@
+#ifndef HANDMADE_STACKARENA_CPP
+#define HANDMADE_STACKARENA_CPP
+
+namespace Memory
+{
+
+}
+
+#endif //HANDMADE_STACKARENA_CPP

@@ -12,6 +12,8 @@ namespace Content
 {
 	namespace OBJ
 	{
+		using namespace Drawing;
+
 		//TODO(Ian):  This function is not very resilient against malformed definitions, find a way to improve that
 		bool ObjParser::ObjVertexNode::TryParse(const char *string, int32 length, ObjVertexNode &outResult, int32 offset = 0, int32 *readFinishIndex = nullptr)
 		{
@@ -75,7 +77,8 @@ namespace Content
 
 		ObjParser::ObjParser(FileData toLoad, ReadFileFunc *readFile, GLuint shaderProgram)
 		{
-			builtVertices = StretchyArray<VertexNormalTexture>();
+
+			builtVertices = StretchyArray<Drawing::VertexNormalTexture>();
 			elements = StretchyArray<GLuint>();
 
 			//Lists start at 1 in the file, so 0 is filled with a default value
@@ -372,7 +375,7 @@ namespace Content
 		}
 	}
 
-	Geometry *ParseOBJ(char *path, const int32 pathLength, GLuint shaderProgram, ReadFileFunc *readFile)
+	Drawing::Geometry *ParseOBJ(char *path, const int32 pathLength, GLuint shaderProgram, ReadFileFunc *readFile)
 	{
 		bool success = false;
 		FileData file = readFile(path, pathLength, &success);

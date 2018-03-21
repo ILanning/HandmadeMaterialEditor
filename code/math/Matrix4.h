@@ -143,7 +143,7 @@ struct Matrix4
 		return result;
 	}
 
-	static void RescalePerspective(void *rawMatrixPointer, Vector2 oldSize, Vector2 newSize)
+	static void RescalePerspective(void *rawMatrixPointer, Vector2 oldSize, Vector2 newSize, real32 zoomFactor)
 	{
 		if (oldSize.x != 0 || oldSize.y != 0)
 		{

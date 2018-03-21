@@ -22,13 +22,13 @@ namespace Content
 
 		MTLTextureOptions ParseMapLineOptions(char *line, int32 lineLength, int32 offset, char *folder, bool isScalar, int32 *readFinishIndex);
 
-		StretchyArray<Material> *ParseMTL(FileData toLoad, StretchyArray<Material> *materialList);
+		StretchyArray<Drawing::Material> *ParseMTL(FileData toLoad, StretchyArray<Drawing::Material> *materialList);
 
-		Material *ParseMTL(FileData file, int32 &outMaterialCount);
+		Drawing::Material *ParseMTL(FileData file, int32 &outMaterialCount);
 
-		StretchyArray<Material> *ParseMTL(char *path, int32 pathLength, ReadFileFunc *readFile, StretchyArray<Material> *materialList);
+		StretchyArray<Drawing::Material> *ParseMTL(char *path, int32 pathLength, ReadFileFunc *readFile, StretchyArray<Drawing::Material> *materialList);
 
-		Material *ParseMTL(char *path, int32 pathLength, ReadFileFunc *readFile, int32 &outMaterialCount);
+		Drawing::Material *ParseMTL(char *path, int32 pathLength, ReadFileFunc *readFile, int32 &outMaterialCount);
 	}
 }
 

@@ -1,6 +1,3 @@
-/*
-List that owns its own memory and resizes as needed
-*/
 #ifndef HANDMADE_ARRAYLIST_H
 #define HANDMADE_ARRAYLIST_H
 
@@ -9,6 +6,9 @@ List that owns its own memory and resizes as needed
 #include "Assert.h"
 
 template <class T>
+/*
+List that owns its own memory and resizes as needed
+*/
 struct ArrayList
 {
 	T *internalArray = nullptr;

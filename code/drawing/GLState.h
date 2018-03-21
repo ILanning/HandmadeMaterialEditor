@@ -5,31 +5,34 @@
 #include "../handmade_typedefs.h"
 #include "../libraries/glew.h"
 
-struct GLState
+namespace Drawing
 {
-	Matrix4 View;
-	Matrix4 Projection;
+	struct GLState
+	{
+		Matrix4 View;
+		Matrix4 Projection;
 
-	GLState();
+		GLState();
 
-	void SetView(const Matrix4 &view);
-	void SetProjection(const Matrix4 &projection);
-};
+		void SetView(const Matrix4 &view);
+		void SetProjection(const Matrix4 &projection);
+	};
 
-GLState::GLState()
-{
-	View = Matrix4::Identity();
-	Projection = Matrix4::Identity();
-}
+	GLState::GLState()
+	{
+		View = Matrix4::Identity();
+		Projection = Matrix4::Identity();
+	}
 
-void GLState::SetView(const Matrix4 &view)
-{
-	this->View = view;
-}
+	void GLState::SetView(const Matrix4 &view)
+	{
+		this->View = view;
+	}
 
-void GLState::SetProjection(const Matrix4 &projection)
-{
-	this->Projection = projection;
+	void GLState::SetProjection(const Matrix4 &projection)
+	{
+		this->Projection = projection;
+	}
 }
 
 #endif

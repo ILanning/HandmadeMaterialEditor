@@ -62,8 +62,8 @@ namespace Memory
 
 		bool Deallocate(void *item)
 		{
+			Assert(deletedListEnd - 1 >= bufferNext + binSize); //Deleted list collided with data!
 			deletedListEnd--;
-			Assert(deletedListEnd >= bufferNext + binSize);
 			*deletedListEnd = (uint8*)item;
 		}
 
