@@ -150,8 +150,9 @@ extern "C" GAME_HANDLE_INPUT(GameHandleInput)
 	Input::InputManager &inputManager = gameState.Input;
 	inputManager.HandleInput(newInputs);
 
-	if ((inputManager.IsTriggered(Input::Alt) && inputManager.IsDown(Input::Enter)) ||
-		(inputManager.IsDown(Input::Alt) && inputManager.IsTriggered(Input::Enter)))
+	//if ((inputManager.IsTriggered(Input::Alt) && inputManager.IsDown(Input::Enter)) ||
+	//	(inputManager.IsDown(Input::Alt) && inputManager.IsTriggered(Input::Enter)))
+	if(inputManager.ComboTriggered(Input::Alt, Input::Enter))
 	{
 		gameState.WindowSettings.Fullscreen = !gameState.WindowSettings.Fullscreen;
 	}

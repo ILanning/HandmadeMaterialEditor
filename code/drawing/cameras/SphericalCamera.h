@@ -197,7 +197,9 @@ namespace Drawing
 			}
 		}
 
-		void Update() {}
+		void Update() 
+		{
+		}
 	};
 }
 
