@@ -8,6 +8,10 @@ pushd ..\build
 
 IF NOT EXIST glew32.dll xcopy ..\code\libraries\glew32.dll
 
+echo.
+echo == Robocopying data TO build ==
+robocopy ..\data ..\build /e /xo /njh /ns /nc /nfl /ndl
+
 REM 32-bit build
 REM cl %CommonCompilerFlags% ..\handmade\code\win32_handmade.cpp /link -subsystem:windows,5.1 %CommonLinkerFlags%
 

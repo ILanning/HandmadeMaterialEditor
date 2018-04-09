@@ -10,6 +10,7 @@
 #endif
 
 #include "handmade_typedefs.h"
+#include "handmade_funcdefs.h"
 #include "math\Vector2.cpp"
 #include "math\Vector3.cpp"
 #include "math\Matrix4.cpp"
@@ -26,40 +27,6 @@
 #include "drawing\GeometryHelpers.cpp"
 #include "content\OBJLoader.cpp"
 #include "general\StringHelpers.cpp"
-
-const GLchar *vertexSourceCode = R"glsl(
-    #version 150 core
-    in vec3 position;
-    in vec3 color;
-    in vec2 texcoord;
-	uniform mat4 mvp;
-	uniform vec3 meshColor;
-    out vec3 Color;
-    out vec2 Texcoord;
-    void main()
-    {
-        Color = meshColor;
-        Texcoord = vec2(texcoord.x, -texcoord.y);
-        gl_Position = mvp * vec4(position, 1.0);
-    }
-)glsl";
-
-const GLchar *fragmentSourceCode = R"glsl(
-    #version 150 core
-    in vec3 Color;
-    in vec2 Texcoord;
-    out vec4 outColor;
-    uniform sampler2D tex;
-    void main()
-    {
-		vec4 texColor = texture(tex, Texcoord);
-		if(texColor.w < 0.5)
-		{
-			discard;
-		}
-        outColor = texColor * vec4(Color, 1.0);
-    }
-)glsl";
 
 void BuildTestObjects(GLuint shaderProgram, ReadFileFunc *readFile, DebugMessageErrorFunc *messageError, GameState *gameState)
 {
@@ -104,14 +71,16 @@ void BuildTestObjects(GLuint shaderProgram, ReadFileFunc *readFile, DebugMessage
 	globals->Virt->Size *= 20;
 }
 
-GLuint BuildShaderProgram(const GLchar *vertexSource, const GLchar *fragmentSource, DebugMessageErrorFunc *messageError)
+GLuint BuildShaderProgram(char *vertexSourcePath, char *fragmentSourcePath, ReadFileFunc *readFile, DebugMessageErrorFunc *messageError)
 {
+	FileData vertexResult = readFile(vertexSourcePath, CString::GetLength(vertexSourcePath), nullptr);
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexSource, NULL);
+	glShaderSource(vertexShader, 1, &(GLchar *)vertexResult.File, NULL);
 	glCompileShader(vertexShader);
 
+	FileData fragResult = readFile(fragmentSourcePath, CString::GetLength(vertexSourcePath), nullptr);
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
+	glShaderSource(fragmentShader, 1, &(GLchar *)fragResult.File, NULL);
 	glCompileShader(fragmentShader);
 
 	GLuint shaderProgram = glCreateProgram();

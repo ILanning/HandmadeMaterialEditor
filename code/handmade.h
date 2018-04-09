@@ -21,6 +21,7 @@
 */
 
 #include "handmade_typedefs.h"
+#include "handmade_funcdefs.h"
 #include "input\InputFrame.h"
 #include "general\Assert.h"
 #include "PlatformGameSettings.h"
@@ -51,25 +52,6 @@ struct thread_context
 {
     int Placeholder;
 };
-
-struct FileData
-{
-	bool IsLoaded;
-	int32 PathSize;
-	char* Path;
-	uint32 FileSize;
-	void *File;
-
-	/**
-	\brief Loads the contents of the file into *File if they have not already been loaded.
-
-	\readFile The function to use to load this file.
-	\reload Set to true to force this file to be loaded fresh
-	*/
-};
-
-#define PLATFORM_READ_FILE(name) FileData name(char *path, int32 pathLength, bool *outSuccess)
-typedef PLATFORM_READ_FILE(ReadFileFunc);
 
 //NOTE(casey): Services that the platform layer provides to the game
 #if HANDMADE_INTERNAL

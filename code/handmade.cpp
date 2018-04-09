@@ -131,7 +131,7 @@ extern "C" GAME_INITIALIZE(GameInitialize)
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
-	GLuint shaderProgram = BuildShaderProgram(vertexSourceCode, fragmentSourceCode, memory->DEBUGMessageError);
+	GLuint shaderProgram = BuildShaderProgram("Shaders\\Basic.vert", "Shaders\\Basic.frag", memory->ReadEntireFile, memory->DEBUGMessageError);
 
 	glUseProgram(shaderProgram);
 
