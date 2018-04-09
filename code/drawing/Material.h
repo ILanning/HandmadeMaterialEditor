@@ -160,7 +160,7 @@ namespace Drawing
 		/**
 			/brief Prepares the GL to draw meshes using this material
 		*/
-		void Use()
+		void Use() const
 		{
 			DiffuseMap->Bind();
 		}

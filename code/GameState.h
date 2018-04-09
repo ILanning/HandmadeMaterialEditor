@@ -2,7 +2,8 @@
 #define HANDMADE_GAMESTATE_H
 
 #include "drawing\Model.h"
-#include "drawing\cameras\SphericalCamera.h"
+#include "drawing\Sprite.h"
+#include "drawing\cameras\Camera2D.h"
 #include "input\InputManager.h"
 #include "PlatformGameSettings.h"
 #include "RescalerManager.h"
@@ -11,11 +12,10 @@
 struct TestGlobals
 {
 	Drawing::Model *arrow;
-	Drawing::Model *enterButton;
-	Drawing::Model *enter2;
+	Drawing::Sprite *enterButton;
 	Drawing::Model *Virt;
 
-	Drawing::SphericalCamera *Camera;
+	Drawing::Camera2D *Camera;
 };
 
 struct GameState

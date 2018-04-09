@@ -129,7 +129,7 @@ namespace CString
 	}
 
 	/*
-		\bried Gets the lengths of the passed in string, including the null terminator.
+		\brief Gets the lengths of the passed in string, including the null terminator.
 	*/
 	int32 GetLength(const char *string, int32 offset = 0)
 	{

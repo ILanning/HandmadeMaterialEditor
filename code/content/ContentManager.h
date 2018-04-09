@@ -22,6 +22,7 @@ public:
 
 	template<class T> T* Load(char *path)
 	{
+		Assert(false); //This type is not supported!
 		return nullptr;
 	}
 
@@ -38,7 +39,8 @@ public:
 		int32 x, y, components = 0;
 		uint8 *data = stbi_load(path, &x, &y, &components, 4);
 		Texture2D *tex = new Texture2D(data, x, y, GL_RGBA, GL_RGBA);
-		items.PushBack(tex);
+
+		Register(tex, path);
 
 		return tex;
 	}

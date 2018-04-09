@@ -13,7 +13,7 @@ namespace Drawing
 {
 	namespace Defaults
 	{
-		Texture2D *BlankTexture = new Texture2D(new uint8[4]{ 255, 255, 255, 255 }, 1, 1, GL_RGBA, GL_RGBA, CString::CopySubstring("White1x1", 8), 9);
+		Texture2D *BlankTexture = new Texture2D(new uint8[4]{ 255, 255, 255, 255 }, 1, 1, GL_RGBA, GL_RGBA, GL_REPEAT, CString::CopySubstring("White1x1", 8), 9);
 		Material *BlankMaterial = new Material("BlankFlat", 10, BlankTexture);
 	}
 }

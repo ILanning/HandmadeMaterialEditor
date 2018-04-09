@@ -15,7 +15,7 @@ namespace Drawing
 {
 	struct SphericalCamera
 	{
-		Matrix4 projection;
+		Matrix4 Projection;
 		Vector3 lookAtPosition = { 0, 0, 0 };
 		Math::SphericalCoord upperBound = { NAN, NAN, Pi32 / 4 - 0.01f, NAN };
 		Math::SphericalCoord lowerBound = { NAN, NAN, -(Pi32 / 4 - 0.01f), NAN };
@@ -77,19 +77,19 @@ namespace Drawing
 		*/
 		Matrix4 GetProjection() const
 		{
-			return projection;
+			return Projection;
 		}
 		/** Sets the projection matrix for this camera.
 		*/
 		void SetProjection(const Matrix4 &newProjection)
 		{
-			projection = newProjection;
+			Projection = newProjection;
 		}
 		/** Returns the view matrix multiplied by the projection matrix.
 		*/
 		Matrix4 GetViewProjection() const
 		{
-			return projection * GetView();
+			return Projection * GetView();
 		}
 
 		void Rotate(const Quaternion &spin)
@@ -97,47 +97,47 @@ namespace Drawing
 			Assert(false); //Not implemented error
 		}
 
-		void HandleInput(const Input::InputManager &manager)
+		void HandleInput(const Input::InputManager &input)
 		{
 			using Keys = Input::PhysicalInputs;
 
-			if (manager.IsDown(Keys::S)) //About X axis
+			if (input.IsDown(Keys::S)) //About X axis
 			{
 				targetCamPos.elevation -= rotateSpeed;
 			}
-			if (manager.IsDown(Keys::W))
+			if (input.IsDown(Keys::W))
 			{
 				targetCamPos.elevation += rotateSpeed;
 			}
-			if (manager.IsDown(Keys::A)) //About Y axis
+			if (input.IsDown(Keys::A)) //About Y axis
 			{
 				targetCamPos.direction -= rotateSpeed;
 			}
-			if (manager.IsDown(Keys::D))
+			if (input.IsDown(Keys::D))
 			{
 				targetCamPos.direction += rotateSpeed;
 			}
-			if (manager.IsDown(Keys::E)) //About Z Axis
+			if (input.IsDown(Keys::E)) //About Z Axis
 			{
 				targetCamPos.roll += rotateSpeed;
 			}
-			if (manager.IsDown(Keys::Q))
+			if (input.IsDown(Keys::Q))
 			{
 				targetCamPos.roll -= rotateSpeed;
 			}
 
-			int32 scroll = manager.GetScrollValue();
-			if (scroll > 0 || manager.IsDown(Keys::U)) //Zoom level
+			int32 scroll = input.GetScrollValue();
+			if (scroll > 0 || input.IsDown(Keys::U)) //Zoom level
 			{
 				targetCamPos.radius -= zoomSpeed * radius;
 			}
-			if (scroll < 0 || manager.IsDown(Keys::J))
+			if (scroll < 0 || input.IsDown(Keys::J))
 			{
 				targetCamPos.radius += zoomSpeed * radius;
 			}
-			if (manager.IsDown(Keys::RMB))
+			if (input.IsDown(Keys::RMB))
 			{
-				Vector2 mouseMove = manager.GetMouseMovement() * rotateSpeed / 6;
+				Vector2 mouseMove = input.GetMouseMovement() * rotateSpeed / 6;
 				targetCamPos.elevation += mouseMove.y;
 				targetCamPos.direction += mouseMove.x;
 			}
@@ -146,7 +146,7 @@ namespace Drawing
 			cameraPos -= targetCamPos - normalizedTarget;
 			targetCamPos = normalizedTarget;
 
-			if (manager.IsDown(Keys::R))
+			if (input.IsDown(Keys::R))
 			{
 				targetCamPos = { 3, 0, Pi32 / 8, 0 };
 			}
@@ -164,27 +164,27 @@ namespace Drawing
 			}
 
 			Vector3 moveDirection = {};
-			if (manager.IsDown(Keys::Right))
+			if (input.IsDown(Keys::Right))
 			{
 				moveDirection.x++;
 			}
-			if (manager.IsDown(Keys::Left))
+			if (input.IsDown(Keys::Left))
 			{
 				moveDirection.x--;
 			}
-			if (manager.IsDown(Keys::Up))
+			if (input.IsDown(Keys::Up))
 			{
 				moveDirection.z--;
 			}
-			if (manager.IsDown(Keys::Down))
+			if (input.IsDown(Keys::Down))
 			{
 				moveDirection.z++;
 			}
-			if (manager.IsDown(Keys::PageUp))
+			if (input.IsDown(Keys::PageUp))
 			{
 				moveDirection.y++;
 			}
-			if (manager.IsDown(Keys::PageDown))
+			if (input.IsDown(Keys::PageDown))
 			{
 				moveDirection.y--;
 			}

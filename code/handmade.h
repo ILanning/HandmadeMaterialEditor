@@ -159,8 +159,6 @@ struct game_controller_input
 //           Plus info on device changes
 struct GameInput
 {
-    game_button_state MouseButtons[5];
-    int32 MouseX, MouseY, MouseZ;
 	Input::InputFrame newFrame;
     // TODO(Ian): Insert clock values here, delta from last frame and total time since program start.    
     game_controller_input Controllers[5];

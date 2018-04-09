@@ -9,8 +9,11 @@
 
 namespace Drawing
 {
-	struct Texture2D
+	class Texture2D
 	{
+		GLuint GLID = 0;
+
+	public:
 		char *Name = nullptr;
 		int32 NameLength = 0;
 		uint8 *Data = nullptr;
@@ -19,16 +22,13 @@ namespace Drawing
 		GLsizei Height = 0;
 		GLint WrapStyle = 0;
 		GLenum GLFormat = 0;
-		GLuint GLID = 0;
 
-		Texture2D(uint8 *data, GLsizei width, GLsizei height, GLint imageFormat, GLenum glFormat, char *name, int32 nameLength = -1)
-			:Data(data), Width(width), Height(height), ImageFormat(imageFormat), GLFormat(glFormat),
-			Name(name), NameLength(nameLength == -1 ? CString::GetLength(name) : nameLength)
+	private:
+		void textureGLSetup()
 		{
 			glGenTextures(1, &GLID);
 			glBindTexture(GL_TEXTURE_2D, GLID);
 			glTexImage2D(GL_TEXTURE_2D, 0, ImageFormat, Width, Height, 0, GLFormat, GL_UNSIGNED_BYTE, Data);
-			WrapStyle = GL_REPEAT;
 
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, WrapStyle);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, WrapStyle);
@@ -38,12 +38,38 @@ namespace Drawing
 			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 
-		Texture2D(Content::OBJ::MTLTextureOptions options, Content::TextureMapType mapType)
+	public:
+		Texture2D(uint8 *data, GLsizei width, GLsizei height, GLint imageFormat, GLenum glFormat, GLint wrapStyle, char *name, int32 nameLength = -1)
+			:Data(data), Width(width), Height(height), ImageFormat(imageFormat), GLFormat(glFormat), WrapStyle(wrapStyle),
+			Name(name), NameLength(nameLength == -1 ? CString::GetLength(name) : nameLength)
+		{
+			textureGLSetup();
+		}
+
+		Texture2D(char *path, char *name = nullptr, int32 nameLength = -1)
+		{
+			int32 components;
+			Data = stbi_load(path, &Width, &Height, &components, 4);
+			if (name == nullptr)
+			{
+				Name = CString::CopySubstring(path, CString::GetLength(path) - 1, &NameLength);
+			}
+			else
+			{
+				Name = CString::CopySubstring(name, nameLength);
+				NameLength = nameLength;
+			}
+			WrapStyle = GL_REPEAT;
+			ImageFormat = GL_RGBA;
+			GLFormat = GL_RGBA;
+
+			textureGLSetup();
+		}
+
+		Texture2D(const Content::OBJ::MTLTextureOptions &options, const Content::TextureMapType mapType)
 		{
 			Name = CString::CopySubstring(options.TexturePath, options.PathLength - 1, &NameLength);
 
-			glGenTextures(1, &GLID);
-			glBindTexture(GL_TEXTURE_2D, GLID);
 			int32 components;
 			Data = stbi_load(options.TexturePath, &Width, &Height, &components, 4);
 			if (options.Clamp)
@@ -54,23 +80,19 @@ namespace Drawing
 			{
 				WrapStyle = GL_REPEAT;
 			}
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, Data);
+			ImageFormat = GL_RGBA;
+			GLFormat = GL_RGBA;
 
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, WrapStyle);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, WrapStyle);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-			glBindTexture(GL_TEXTURE_2D, 0);
+			textureGLSetup();
 		}
 
-		void Bind(GLenum textureUnit)
+		void Bind(const GLenum textureUnit) const
 		{
 			glActiveTexture(textureUnit);
 			Bind();
 		}
 
-		void Bind()
+		void Bind() const
 		{
 			glBindTexture(GL_TEXTURE_2D, GLID);
 		}

@@ -86,7 +86,7 @@ namespace Drawing
 			}
 		}
 
-		void Draw(const Matrix4 &mvp, const Vector3 &color)
+		void Draw(const Matrix4 &mvp, const Vector3 &color) const
 		{
 			glBindVertexArray(VAO);
 			glUniform3fv(ColorUniform, 1, color.elements);

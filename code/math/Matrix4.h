@@ -145,21 +145,15 @@ struct Matrix4
 
 	static void RescalePerspective(void *rawMatrixPointer, Vector2 oldSize, Vector2 newSize, real32 zoomFactor)
 	{
-		if (oldSize.x != 0 || oldSize.y != 0)
-		{
-			Matrix4 &matrix = *(Matrix4 *)rawMatrixPointer;
-			real32 oldAspect, newAspect;
-			oldAspect = oldSize.x / oldSize.y;
-			matrix.m00 *= oldAspect;
-			newAspect = newSize.x / newSize.y;
-			matrix.m00 /= newAspect;
-		}
+		Matrix4 &matrix = *(Matrix4 *)rawMatrixPointer;
+		real32 newAspect = newSize.x / newSize.y;
+		matrix.m00 = matrix.m11 / newAspect;
 	}
 
 	static Matrix4 CreateOrthographic(real32 screenWidth, real32 screenHeight, real32 nearPlane, real32 farPlane)
 	{
-		real32 depth = nearPlane - farPlane;
-		Matrix4 result = {};
+		real32 negativeDepth = nearPlane - farPlane;
+		/*Matrix4 result = {};
 		result.m00 = 2.0f / screenWidth;
 		//result.M12 = result.M13 = result.M14 = 0.0f;
 		result.m11 = 2.0f / screenHeight;
@@ -168,7 +162,14 @@ struct Matrix4
 		//result.M31 = result.M32 = result.M34 = 0.0f;
 		//result.M41 = result.M42 = 0.0f;
 		result.m32 = nearPlane / depth;
-		result.m33 = 1.0f;
+		result.m33 = 1.0f;*/
+
+		Matrix4 result = {
+			2.0f / screenWidth,  0, 0, 0,
+			0, 2.0f / screenHeight, 0, 0,
+			0, 0, 2.0f / negativeDepth, 0,
+			0, 0, 0, 1
+		};
 
 		return result;
 		/*real32 halfWidth = screenWidth / 2;
@@ -180,6 +181,13 @@ struct Matrix4
 			1, 1, -(2 / depth), 0,
 			0, 0, -((farPlane + nearPlane) / depth), 1 };
 		return result;*/
+	}
+
+	static void RescaleOrthographic(void *rawMatrixPointer, Vector2 oldSize, Vector2 newSize, real32 zoomFactor)
+	{
+		Matrix4 &matrix = *(Matrix4 *)rawMatrixPointer;
+		matrix.m00 = 2.0f / newSize.x;
+		matrix.m11 = 2.0f / newSize.y;
 	}
 };
 

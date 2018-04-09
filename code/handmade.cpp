@@ -9,8 +9,6 @@
    ======================================================================== */
 
 #include "handmade.h"
-#include "GameState.h"
-#include "HandmadeRender.cpp"
 #include "drawing\Model.h"
 #include "drawing\cameras\FreeRotateCamera.h"
 #include "math\Vector2.h"
@@ -20,6 +18,8 @@
 #include "math\Matrix4.h"
 #include "general\Assert.h"
 #include "PlatformGameSettings.cpp"
+#include "GameState.h"
+#include "HandmadeRender.cpp"
 
 /*internal void GameOutputSound(game_state *GameState, game_sound_output_buffer *SoundBuffer, int ToneHz)
 {
@@ -125,6 +125,23 @@ bool InitMemory(thread_context *thread, game_memory *memory)
 	return success && memory->IsInitialized;
 }
 
+extern "C" GAME_INITIALIZE(GameInitialize)
+{
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
+	GLuint shaderProgram = BuildShaderProgram(vertexSourceCode, fragmentSourceCode, memory->DEBUGMessageError);
+
+	glUseProgram(shaderProgram);
+
+	GameState *state = (GameState*)memory->PermanentStorage;
+
+	BuildTestObjects(shaderProgram, memory->ReadEntireFile, memory->DEBUGMessageError, state);
+
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  //Uncomment to get a wireframe view
+}
+
 extern "C" GAME_HANDLE_INPUT(GameHandleInput)
 {
 	Assert((&newInputs->Controllers[0].Terminator - &newInputs->Controllers[0].Buttons[0]) ==
@@ -149,9 +166,7 @@ extern "C" GAME_HANDLE_INPUT(GameHandleInput)
 
 	Input::InputManager &inputManager = gameState.Input;
 	inputManager.HandleInput(newInputs);
-
-	//if ((inputManager.IsTriggered(Input::Alt) && inputManager.IsDown(Input::Enter)) ||
-	//	(inputManager.IsDown(Input::Alt) && inputManager.IsTriggered(Input::Enter)))
+	
 	if(inputManager.ComboTriggered(Input::Alt, Input::Enter))
 	{
 		gameState.WindowSettings.Fullscreen = !gameState.WindowSettings.Fullscreen;
