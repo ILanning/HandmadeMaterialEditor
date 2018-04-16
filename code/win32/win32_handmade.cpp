@@ -65,8 +65,8 @@ internal win32_game_code Win32LoadGameCode(char *SourceDLLName, char *TempDLLNam
 		Result.Initialize = (game_initialize *)
 			GetProcAddress(Result.GameCodeDLL, "GameInitialize");
 
-		Result.HandleInput = (game_handle_input *)
-			GetProcAddress(Result.GameCodeDLL, "GameHandleInput");
+		Result.ProcessInput = (game_process_input *)
+			GetProcAddress(Result.GameCodeDLL, "GameProcessInput");
 
         Result.UpdateAndRender = (game_update_and_render *)
             GetProcAddress(Result.GameCodeDLL, "GameUpdateAndRender");
@@ -75,7 +75,7 @@ internal win32_game_code Win32LoadGameCode(char *SourceDLLName, char *TempDLLNam
             GetProcAddress(Result.GameCodeDLL, "GameGetSoundSamples");
 
         Result.IsValid = (Result.Initialize && 
-						  Result.HandleInput &&
+						  Result.ProcessInput &&
 						  Result.UpdateAndRender &&
                           Result.GetSoundSamples);
     }
@@ -83,7 +83,7 @@ internal win32_game_code Win32LoadGameCode(char *SourceDLLName, char *TempDLLNam
     if(!Result.IsValid)
     {
 		Result.Initialize = nullptr;
-		Result.HandleInput = nullptr;
+		Result.ProcessInput = nullptr;
         Result.UpdateAndRender = nullptr;
         Result.GetSoundSamples = nullptr;
     }
@@ -101,7 +101,7 @@ internal void Win32UnloadGameCode(win32_game_code *GameCode)
 
     GameCode->IsValid = false;
 	GameCode->Initialize = nullptr;
-	GameCode->HandleInput = nullptr;
+	GameCode->ProcessInput = nullptr;
     GameCode->UpdateAndRender = nullptr;
     GameCode->GetSoundSamples = nullptr;
 }
@@ -728,9 +728,9 @@ int CALLBACK WinMain(HINSTANCE Instance,
 					{
 						Win32PlayBackInput(&Win32State, NewInput);
 					}
-					if (Game.HandleInput)
+					if (Game.ProcessInput)
 					{
-						Game.HandleInput(&Thread, NewInput, &GameMemory, &upcomingSettings);
+						Game.ProcessInput(&Thread, NewInput, &GameMemory, &upcomingSettings);
 					}
 					if (Game.UpdateAndRender)
 					{

@@ -9,8 +9,6 @@
    ======================================================================== */
 
 #include "handmade.h"
-#include "drawing\Model.h"
-#include "drawing\cameras\FreeRotateCamera.h"
 #include "math\Vector2.h"
 #include "math\Vector3.h"
 #include "math\Quaternion.h"
@@ -19,7 +17,7 @@
 #include "general\Assert.h"
 #include "PlatformGameSettings.cpp"
 #include "GameState.h"
-#include "HandmadeRender.cpp"
+#include "TestScene.cpp"
 
 /*internal void GameOutputSound(game_state *GameState, game_sound_output_buffer *SoundBuffer, int ToneHz)
 {
@@ -47,63 +45,7 @@
             GameState->tSine -= 2.0f*Pi32;
         }
     }
-}
-
-internal void
-RenderWeirdGradient(game_offscreen_buffer *Buffer, int BlueOffset, int GreenOffset)
-{
-    // TODO(casey): Let's see what the optimizer does
-
-    uint8 *Row = (uint8 *)Buffer->Memory;    
-    for(int Y = 0;
-        Y < Buffer->Height;
-        ++Y)
-    {
-        uint32 *Pixel = (uint32 *)Row;
-        for(int X = 0;
-            X < Buffer->Width;
-            ++X)
-        {
-            uint8 Blue = (uint8)(X + BlueOffset);
-            uint8 Green = (uint8)(Y + GreenOffset);
-
-            *Pixel++ = ((Green << 16) | Blue);
-        }
-        
-        Row += Buffer->Pitch;
-    }
-}
-
-internal void
-RenderPlayer(game_offscreen_buffer *Buffer, int PlayerX, int PlayerY)
-{
-    uint8 *EndOfBuffer = (uint8 *)Buffer->Memory + Buffer->Pitch*Buffer->Height;
-    
-    uint32 Color = 0xFFFFFFFF;
-    int Top = PlayerY;
-    int Bottom = PlayerY+10;
-    for(int X = PlayerX;
-        X < PlayerX+10;
-        ++X)
-    {
-        uint8 *Pixel = ((uint8 *)Buffer->Memory +
-                        X*Buffer->BytesPerPixel +
-                        Top*Buffer->Pitch);
-        for(int Y = Top;
-            Y < Bottom;
-            ++Y)
-        {
-            if((Pixel >= Buffer->Memory) &&
-               ((Pixel + 4) <= EndOfBuffer))
-            {
-                *(uint32 *)Pixel = Color;
-            }
-
-            Pixel += Buffer->Pitch;
-        }
-    }
 }*/
-
 DebugMessageErrorFunc *MessageError;
 
 bool InitMemory(thread_context *thread, game_memory *memory)
@@ -127,22 +69,12 @@ bool InitMemory(thread_context *thread, game_memory *memory)
 
 extern "C" GAME_INITIALIZE(GameInitialize)
 {
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-
-	GLuint shaderProgram = BuildShaderProgram("Shaders\\Basic.vert", "Shaders\\Basic.frag", memory->ReadEntireFile, memory->DEBUGMessageError);
-
-	glUseProgram(shaderProgram);
-
 	GameState *state = (GameState*)memory->PermanentStorage;
 
-	BuildTestObjects(shaderProgram, memory->ReadEntireFile, memory->DEBUGMessageError, state);
-
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  //Uncomment to get a wireframe view
+	state->testScene.Initialize(memory->ReadEntireFile, memory->DEBUGMessageError, state);
 }
 
-extern "C" GAME_HANDLE_INPUT(GameHandleInput)
+extern "C" GAME_PROCESS_INPUT(GameProcessInput)
 {
 	Assert((&newInputs->Controllers[0].Terminator - &newInputs->Controllers[0].Buttons[0]) ==
 		(ArrayCount(newInputs->Controllers[0].Buttons)));
@@ -204,16 +136,18 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     Assert(sizeof(GameState) <= Memory->PermanentStorageSize);
     
 	GameState *gameState = (GameState *)Memory->PermanentStorage;
-	gameState->globals.Camera->HandleInput(gameState->Input);
+
     if(!Memory->IsInitialized)
     {
 		InitMemory(Thread, Memory);
     }
 
 	if (!MessageError)
-		MessageError = Memory->DEBUGMessageError;    
-	    
-	RenderScene(gameState);
+		MessageError = Memory->DEBUGMessageError;
+
+	gameState->testScene.HandleInput(gameState);
+	gameState->testScene.Update(gameState);
+	gameState->testScene.Draw(gameState);
 }
 
 extern "C" GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)

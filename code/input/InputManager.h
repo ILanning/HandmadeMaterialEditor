@@ -9,6 +9,7 @@
 
 namespace Input
 {
+	///Manages the inputs from all devices for the program.
 	class InputManager
 	{
 		//TODO(Ian): Keep a set of frames per registered controller
@@ -19,38 +20,33 @@ namespace Input
 
 	public:
 
-		/**Updates the InputManager's state.
-		*/
+		/// Updates the InputManager's state.
 		void HandleInput(const GameInput *nextInputs)
 		{
 			oldFrame = newFrame;
 			newFrame = nextInputs->newFrame;
 		}
 
-		/**Returns true if the given button is held.
-		*/
+		/// Returns true if the given button is held.
 		bool IsDown(const PhysicalInputs input) const
 		{
 			return newFrame.GetKey(input);
 		}
 
-		/**Returns true if all of the given buttons are held.
-		*/
+		/// Returns true if all of the given buttons are held.
 		template<typename... Args>
 		bool IsDown(const PhysicalInputs a, const Args... args) const
 		{
 			return IsDown(a) && IsDown(args...);
 		}
 
-		/**Returns true if the given button was held last frame.
-		*/
+		/// Returns true if the given button was held last frame.
 		bool WasDown(const PhysicalInputs input) const
 		{
 			return oldFrame.GetKey(input);
 		}
 
-		/**Returns true if all of the given buttons were held last frame.
-		*/
+		/// Returns true if all of the given buttons were held last frame.
 		template<typename... Args>
 		bool WasDown(const PhysicalInputs a, const Args... args) const
 		{
@@ -58,30 +54,26 @@ namespace Input
 		}
 
 
-		/**Returns true if the given button is not held.
-		*/
+		/// Returns true if the given button is not held.
 		bool IsUp(const PhysicalInputs input) const
 		{
 			return !IsDown(input);
 		}
 
-		/**Returns true if all of the given buttons are not held.
-		*/
+		/// Returns true if all of the given buttons are not held.
 		template<typename... Args>
 		bool IsUp(const PhysicalInputs a, const Args... args) const
 		{
 			return IsUp(a) && IsUp(args...);
 		}
 
-		/**Returns true if the given button was not held last frame.
-		*/
+		/// Returns true if the given button was not held last frame.
 		bool WasUp(const PhysicalInputs input) const
 		{
 			return !WasDown(input);
 		}
 
-		/**Returns true if all of the given buttons were not held last frame.
-		*/
+		/// Returns true if all of the given buttons were not held last frame.
 		template<typename... Args>
 		bool WasUp(const PhysicalInputs a, const Args... args) const
 		{
@@ -89,30 +81,26 @@ namespace Input
 		}
 
 
-		/**Returns true if the given button is held this frame, but was not last frame.
-		*/
+		/// Returns true if the given button is held this frame, but was not last frame.
 		bool IsTriggered(const PhysicalInputs input) const
 		{
 			return newFrame.GetKey(input) && !oldFrame.GetKey(input);
 		}
 
-		/**Returns true if at least one of the given inputs was triggered this frame.
-		*/
+		/// Returns true if at least one of the given inputs was triggered this frame.
 		bool AtLeastOneTriggered(PhysicalInputs input) const
 		{
 			return IsTriggered(input);
 		}
 
-		/**Returns true if at least one of the given inputs was triggered this frame.
-		*/
+		/// Returns true if at least one of the given inputs was triggered this frame.
 		template<typename... Args>
 		bool AtLeastOneTriggered(const PhysicalInputs a, const Args... args) const
 		{
 			return IsTriggered(a) || AtLeastOneTriggered(args...);
 		}
 
-		/**Returns true if all the given buttons are held, and at least one was triggered this frame.
-		*/
+		/// Returns true if all the given buttons are held, and at least one was triggered this frame.
 		template<typename... Args>
 		bool ComboTriggered(const Args... args) const
 		{
@@ -120,30 +108,26 @@ namespace Input
 		}
 
 
-		/**Returns true if the given button is up this frame, but was held last frame.
-		*/
+		/// Returns true if the given button is up this frame, but was held last frame.
 		bool IsReleased(const PhysicalInputs input) const
 		{
 			return !newFrame.GetKey(input) && oldFrame.GetKey(input);
 		}
 
-		/**Returns true if at least one of the given inputs was released this frame.
-		*/
+		/// Returns true if at least one of the given inputs was released this frame.
 		bool AtLeastOneReleased(PhysicalInputs input) const
 		{
 			return IsReleased(input);           
 		}
 
-		/**Returns true if at least one of the given inputs was released this frame.
-		*/
+		/// Returns true if at least one of the given inputs was released this frame.
 		template<typename... Args>
 		bool AtLeastOneReleased(const PhysicalInputs a, const Args... args) const
 		{
 			return IsReleased(a) || AtLeastOneReleased(args...);
 		}
 
-		/**Returns true if all the given buttons were held, and at least one was released this frame.
-		*/
+		/// Returns true if all the given buttons were held, and at least one was released this frame.
 		template<typename... Args>
 		bool ComboReleased(const PhysicalInputs a, const Args... args) const
 		{
@@ -154,16 +138,19 @@ namespace Input
 			return false;
 		}
 
+		///Returns the current postion of the mouse, with pointer ballistics.
 		Vector2 GetMousePosition() const
 		{
 			return newFrame.MousePos;
 		}
 
+		///Returns how the mouse moved between this frame and the last, with pointer ballistics.
 		Vector2 GetMouseMovement() const
 		{
 			return newFrame.MousePos - oldFrame.MousePos;
 		}
 
+		///Returns how far the scroll wheel scrolled between this frame and the last.
 		int32 GetScrollValue() const
 		{
 			return newFrame.scrollWheelChange;

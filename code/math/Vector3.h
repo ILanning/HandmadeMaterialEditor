@@ -52,11 +52,17 @@ struct Vector3
 	friend bool operator==(const Vector3 &a, const Vector3 &b);
 	friend bool operator!=(const Vector3 &a, const Vector3 &b);
 
+	///+1 on Y axis.
 	static Vector3 Up() { return{ 0, 1, 0 }; }
+	///-1 on Y axis.
 	static Vector3 Down() { return{ 0, -1, 0 }; }
+	///-1 on X axis.
 	static Vector3 Left() { return{ -1, 0, 0 }; }
+	///+1 on X axis.
 	static Vector3 Right() { return{ 1, 0, 0 }; }
+	///+1 on Z axis.
 	static Vector3 Forward() { return{ 0, 0, 1 }; }
+	///-1 on Z axis.
 	static Vector3 Back() { return{ 0, 0, -1 }; }
 
 	static Vector3 Zero() { return{ 0, 0, 0 }; }

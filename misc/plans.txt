@@ -22,16 +22,23 @@ Memory Allocation:
 
 			Replace this with LinkedBlockArena; contains a pointer to the next block instead of a size int, splits the first small-enough block it finds
 
-Input Actions:
-	The purpose of the Actions system is to seperate the consumers of input from the actual keys/buttons being pressed.
-	A user of the Actions system will call a function on the InputManager that takes an action (or an identifier for one) and optionally a player or numbered input device, and get back an independent value
-		Basic return types (and example sources): 
-			bool:    Key presses, key press combos
-			real32:  Scroll wheel values, partial button depressions, key pairs
-			Vector2  Mouse location, mouse movement, four key 2D directional controls, post-deadzone joystick output
-			Vector3  Six key 3D directional controls
-	Example call:  Vector2 cameraMovement = inputManager.ReadAction("SpinCamera", 1);
-	Actions are likely stored by the InputManager in dictionaries, with one per return type
+Input:
+	Actions:
+		The purpose of the Actions system is to seperate the consumers of input from the actual keys/buttons being pressed.
+		A user of the Actions system will call a function on the InputManager that takes an action (or an identifier for one) and optionally a player or numbered input device, and get back an independent value
+			Basic return types (and example sources): 
+				bool:    Key presses, key press combos
+				real32:  Scroll wheel values, partial button depressions, key pairs
+				Vector2  Mouse location, mouse movement, four key 2D directional controls, post-deadzone joystick output
+				Vector3  Six key 3D directional controls
+		Example call:  Vector2 cameraMovement = inputManager.ReadAction("SpinCamera", 1);
+		Actions are likely stored by the InputManager in dictionaries, with one per return type
+	InputManager:
+		Tracking for what device an input came from, management of devices being added and removed
+		Dealing with checking whether a certain action happened on any input device vs. a specific one, or only checking within a certain set that belong to a specific player/profile
+		Maybe store inputs in two ways:  A simple array for each device with the current and last frame state of the inputs, 
+		 and a linked list (or something) of every change in button state since startup/within a certain distance from present time.
+		 This way, anything that needs a more detailed history would have a way to access it, but most button checks are still near instant.
 
 Core Goals:
 

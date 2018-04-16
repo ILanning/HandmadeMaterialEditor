@@ -4,10 +4,8 @@
 #include "../handmade_typedefs.h"
 #include "Assert.h"
 
+/// An array-accessible data structure that extends itself automatically.
 template <class T>
-/**
- * \brief An array-accessible data structure that extends itself automatically.
-*/
 class StretchyArray
 {
 	template <class T>
@@ -32,6 +30,7 @@ public:
 		StaticAssert(StretchyArrayNode<T>::Capacity > 0);
 	}
 
+	/// Swaps in memory two StretchyArrays.
 	void Swap(StretchyArray &other)
 	{
 		StretchyArrayNode<T> *tempPointer = head;
@@ -49,27 +48,13 @@ public:
 		other.nextEmpty = tempNum;
 	}
 
-	StretchyArray& StretchyArray::operator=(StretchyArray arg)
+	/// Returns the total number of items currently in the StretchyArray.
+	int32 Length()
 	{
-		Swap(arg);
-		return *this;
+		return nextEmpty;
 	}
 
-	T& operator[] (int32 x)
-	{
-		int32 section = 1;
-		StretchyArrayNode<T> *currNode = head;
-		while (x > section * StretchyArrayNode<T>::Capacity - 1 && currNode)
-		{
-			section++;
-			currNode = currNode->Next;
-		}
-
-		Assert(currNode != nullptr);
-
-		return currNode->Items[x % StretchyArrayNode<T>::Capacity];
-	}
-
+	/// Adds a new item to the back of the StretchyArray.
 	int32 PushBack(const T &value)
 	{
 		if (nextEmpty == lastSection * StretchyArrayNode<T>::Capacity)
@@ -93,6 +78,37 @@ public:
 		return nextEmpty - 1;
 	}
 
+	/// Adds `count` objects in the passed-in array to the StretchyArray.
+	int32 PushBackMany(const T *items, int32 count)
+	{
+		for (int32 i = 0; i < count; i++)
+		{
+			PushBack(items[i]);
+		}
+		return nextEmpty - 1;
+	}
+
+	/** Adds all (or optionally `count`) objects in the passed-in StretchyArray to this one.
+	 * @param items The StretchyArray to pull from.
+	 * @param count The number of items to pull.  Pass in -1 to add everything.
+	 * @param offset The position to begin adding items from.
+	*/
+	int32 PushBackMany(StretchyArray<T> items, int32 count = -1, int32 offset = 0)
+	{		
+		Assert(count + offset <= items.Length());
+
+		if (count == -1)
+		{
+			count = items.Length();
+		}
+		for (int32 i = offset; i < count + offset; i++)
+		{
+			PushBack(items[i]);
+		}
+		return nextEmpty - 1;
+	}
+
+	/// Removes an item from the back of the StretchyArray.
 	void PopBack()
 	{
 		if (nextEmpty > 0)
@@ -110,6 +126,7 @@ public:
 		}
 	}
 
+	/// Removes `count` items from the back of the StretchyArray.
 	void PopBackMany(int32 count)
 	{
 		if (nextEmpty > count - 1)
@@ -128,41 +145,7 @@ public:
 		}
 	}
 
-	/**
-		/brief Adds `count` objects in the passed-in array to the StretchyArray.
-	*/
-	int32 PushBackMany(const T *items, int32 count)
-	{
-		for (int32 i = 0; i < count; i++)
-		{
-			PushBack(items[i]);
-		}
-		return nextEmpty - 1;
-	}
-
-	/**
-		/brief Adds all - or optionally `count` - objects in the passed-in StretchyArray to this one.
-	*/
-	int32 PushBackMany(StretchyArray<T> items, int32 count = -1, int32 offset = 0)
-	{		
-		Assert(count + offset <= items.Length());
-
-		if (count == -1)
-		{
-			count = items.Length();
-		}
-		for (int32 i = offset; i < count + offset; i++)
-		{
-			PushBack(items[i]);
-		}
-		return nextEmpty - 1;
-	}
-
-	int32 Length()
-	{
-		return nextEmpty;
-	}
-
+	/// Returns a normal contiguous array containing all items in the StretchyArray.
 	T *ToArray()
 	{
 		//CONSIDER(Ian): Can't use memcpy() due to move semantics, maybe make an alternate class/template specializatiosn for that?
@@ -185,6 +168,27 @@ public:
 		}
 
 		return result;
+	}
+
+	StretchyArray& StretchyArray::operator=(StretchyArray arg)
+	{
+		Swap(arg);
+		return *this;
+	}
+
+	T& operator[] (int32 x)
+	{
+		int32 section = 1;
+		StretchyArrayNode<T> *currNode = head;
+		while (x > section * StretchyArrayNode<T>::Capacity - 1 && currNode)
+		{
+			section++;
+			currNode = currNode->Next;
+		}
+
+		Assert(currNode != nullptr);
+
+		return currNode->Items[x % StretchyArrayNode<T>::Capacity];
 	}
 
 	~StretchyArray()

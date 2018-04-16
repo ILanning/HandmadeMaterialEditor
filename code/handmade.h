@@ -174,8 +174,8 @@ struct game_memory
 #define GAME_INITIALIZE(name) void name(thread_context *thread, game_memory *memory)
 typedef GAME_INITIALIZE(game_initialize);
 
-#define GAME_HANDLE_INPUT(name) void name(thread_context *thread, GameInput *newInputs, game_memory *memory, PlatformGameSettings *updatedSettings)
-typedef GAME_HANDLE_INPUT(game_handle_input);
+#define GAME_PROCESS_INPUT(name) void name(thread_context *thread, GameInput *newInputs, game_memory *memory, PlatformGameSettings *updatedSettings)
+typedef GAME_PROCESS_INPUT(game_process_input);
 
 #define GAME_UPDATE_AND_RENDER(name) void name(thread_context *Thread, game_memory *Memory)
 typedef GAME_UPDATE_AND_RENDER(game_update_and_render);

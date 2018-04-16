@@ -51,6 +51,7 @@ namespace Drawing
 
 	VertexArray::~VertexArray() {}
 
+	//CONSIDER(Ian): This class would work well as a template/macro/code generation thing
 	struct VertexColorTextureArray : VertexArray
 	{
 		VertexColorTexture *Vertices;
@@ -75,6 +76,11 @@ namespace Drawing
 			GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
 			glEnableVertexAttribArray(texAttrib);
 			glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, vertexSize, (void*)(6 * sizeof(GLfloat)));
+		}
+
+		VertexColorTexture &operator[](const int32 index)
+		{
+			return Vertices[index];
 		}
 
 		int32 GetBufferSize()
@@ -114,6 +120,11 @@ namespace Drawing
 			GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
 			glEnableVertexAttribArray(texAttrib);
 			glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, vertexSize, (void*)(6 * sizeof(GLfloat)));
+		}
+
+		VertexNormalTexture &operator[](const int32 index)
+		{
+			return Vertices[index];
 		}
 
 		int32 GetBufferSize()

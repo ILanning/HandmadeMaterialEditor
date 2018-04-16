@@ -17,6 +17,6 @@ REM cl %CommonCompilerFlags% ..\handmade\code\win32_handmade.cpp /link -subsyste
 
 REM 64-bit build
 del *.pdb > NUL 2> NUL
-cl %CommonCompilerFlags% ..\code\handmade.cpp -Fmhandmade.map -LD /link %CommonLinkerFlags% -PDB:handmade_%random%.pdb -EXPORT:GameInitialize -EXPORT:GameHandleInput -EXPORT:GameUpdateAndRender -EXPORT:GameGetSoundSamples
+cl %CommonCompilerFlags% ..\code\handmade.cpp -Fmhandmade.map -LD /link %CommonLinkerFlags% -PDB:handmade_%random%.pdb -EXPORT:GameInitialize -EXPORT:GameProcessInput -EXPORT:GameUpdateAndRender -EXPORT:GameGetSoundSamples
 cl %CommonCompilerFlags% ..\code\win32\win32_handmade.cpp -Fmwin32_handmade.map /link %CommonLinkerFlags% -opt:ref user32.lib gdi32.lib winmm.lib -manifest:embed -manifestinput:"%handmade_folder%code\win32\win32_handmade.exe.manifest" 
 popd
