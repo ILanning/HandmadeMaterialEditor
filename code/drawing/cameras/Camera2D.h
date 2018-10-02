@@ -24,7 +24,7 @@ namespace Drawing
 
 		Camera2D(const Vector2 screenSize, const Vector2 topLeftPos) : Position({ topLeftPos.x, topLeftPos.y, 0.0f })
 		{
-			Projection = Matrix4::CreateOrthographic(screenSize.x, screenSize.y, -100, 100);
+			Projection = Matrix4::CreateOrthographic(screenSize.x, screenSize.y, -1000, 1000);
 		}
 
 		virtual Vector3 GetLookAtPosition() const

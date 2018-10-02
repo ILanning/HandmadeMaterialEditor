@@ -1,7 +1,7 @@
 #ifndef HANDMADE_TEST_VECTOR3
 #define HANDMADE_TEST_VECTOR3
 
-#include "../../math/Vector3.h"
+#include "../../math/Vector3.cpp"
 
 #ifndef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "../libraries/doctest.h"

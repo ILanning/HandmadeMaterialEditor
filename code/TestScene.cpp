@@ -61,9 +61,10 @@ void TestScene::Initialize(ReadFileFunc *readFile, DebugMessageErrorFunc *messag
 
 	//globals->enterButton->SetSampleArea({ 75, 0, 40, 66 });
 
-	Drawing::Geometry *virtMesh = Content::ParseOBJ("Assets/virt/Virt.obj", 21, shaderProgram, readFile);
+	Drawing::Geometry *virtMesh = Content::ParseOBJ("Assets/virt/virt.obj", 21, shaderProgram, readFile);
 	//DebugOutputGLErrors(messageError);
 	Virt = new Drawing::Model(virtMesh);
+	Virt->Size = { 20, 20, 20 };
 
 	arrow = Drawing::MakeArrow({ 1, 1, 1 }, 16, shaderProgram);
 	arrow->Rotation = Matrix4::CreateRotationX(Pi32 / 2);
@@ -89,7 +90,7 @@ void TestScene::Initialize(ReadFileFunc *readFile, DebugMessageErrorFunc *messag
 	arrow->Position.y = 550;
 	arrow->Size.z = 3;
 	arrow->Size *= 50;
-	Virt->Size *= 20;
+	//Virt->Size *= 20;
 }
 
 void TestScene::HandleInput(GameState *state)
@@ -101,6 +102,7 @@ void TestScene::Update(GameState *state)
 {
 	Camera->Update();
 	Virt->Rotation *= Matrix4::CreateRotationY(0.05f);
+	//Virt->Rotation *= Matrix4::CreateRotationX(0.10f);
 }
 
 void TestScene::Draw(GameState *state)

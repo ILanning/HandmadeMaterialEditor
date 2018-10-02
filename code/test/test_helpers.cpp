@@ -3,11 +3,31 @@
 
 #include <stdio.h>
 #include <iostream>
+#include "../handmade_funcdefs.h"
 #include "../math/Vector2.h"
 #include "../math/Vector3.h"
 #include "../math/Matrix3.h"
 #include "../math/Matrix4.h"
 #include "../math/Quaternion.h"
+
+PLATFORM_ALLOC_MEMORY(TestAlloc)
+{
+	uint8 *memBlock = (uint8 *)malloc((size_t)size);
+	if (outSuccess)
+	{
+		*outSuccess = true;
+	}
+	return memBlock;
+}
+
+PLATFORM_DEALLOC_MEMORY(TestDealloc)
+{
+	free(memory);
+	if (outSuccess)
+	{
+		*outSuccess = true;
+	}
+}
 
 //TODO(Ian): Should these really be macros, or is there a better solution?
 

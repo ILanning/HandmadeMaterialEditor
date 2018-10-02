@@ -24,7 +24,7 @@ namespace Content
 			ObjVertexNode result;
 
 			int32 readHead = CString::FindNonWhitespace(string, length, offset);
-			if (readHead == length)
+			if (readHead == length || readHead == -1)
 			{
 				return false;
 			}

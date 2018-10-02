@@ -1,7 +1,7 @@
 #ifndef HANDMADE_TEST_MATRIX3
 #define HANDMADE_TEST_MATRIX3
 
-#include "../../math/Matrix3.h"
+#include "../../math/Matrix3.cpp"
 
 #ifndef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "../../libraries/doctest.h"

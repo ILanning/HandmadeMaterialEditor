@@ -9,14 +9,23 @@ pushd ..\build
 IF NOT EXIST glew32.dll xcopy ..\code\libraries\glew32.dll
 
 echo.
-echo == Robocopying data TO build ==
+echo Phase 1
+echo Robocopying \data to \build...
+echo ==================================
 robocopy ..\data ..\build /e /xo /njh /ns /nc /nfl /ndl
-
-REM 32-bit build
-REM cl %CommonCompilerFlags% ..\handmade\code\win32_handmade.cpp /link -subsystem:windows,5.1 %CommonLinkerFlags%
-
-REM 64-bit build
+echo Phase 2
+echo Compiling Game...
+echo ==================================
 del *.pdb > NUL 2> NUL
 cl %CommonCompilerFlags% ..\code\handmade.cpp -Fmhandmade.map -LD /link %CommonLinkerFlags% -PDB:handmade_%random%.pdb -EXPORT:GameInitialize -EXPORT:GameProcessInput -EXPORT:GameUpdateAndRender -EXPORT:GameGetSoundSamples
 cl %CommonCompilerFlags% ..\code\win32\win32_handmade.cpp -Fmwin32_handmade.map /link %CommonLinkerFlags% -opt:ref user32.lib gdi32.lib winmm.lib -manifest:embed -manifestinput:"%handmade_folder%code\win32\win32_handmade.exe.manifest" 
+
+echo.
+echo Phase 3!
+echo Compiling Tests...
+echo ==================================
+cl %CommonCompilerFlags% /EHsc ..\code\test\win32_testmain.cpp -Fmwin32_testmain.map /link %CommonLinkerFlags%
+
+echo.
+win32_testmain %test_suite_args% %*
 popd

@@ -215,7 +215,12 @@ namespace CString
 	///Gets the index of the next end of line.  Returns -1 if no line break is found.
 	int32 FindLineEnd(const char *string, int32 length = MaxInt32, int32 offset = 0)
 	{
-		return FindCharacter(string, '\n', length, offset);
+		int32 result = FindCharacter(string, '\n', length, offset);
+		if (offset > 0 && string[result - 1] == '\r')
+		{
+			result--;
+		}
+		return result;
 	}
 
 	void EditToLower(char *string, int32 count = MaxInt32, int32 length = MaxInt32, int32 offset = 0)
