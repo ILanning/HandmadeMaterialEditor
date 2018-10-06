@@ -1,5 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #define WIN32_HANDMADE_TEST
+
 #include "../libraries/doctest.h"
 #include <iostream>
 #include "test_helpers.cpp"
@@ -20,6 +21,7 @@ TEST_SUITE_BEGIN("general");
 #include "general/test_pathhelpers.cpp"
 #include "general/test_stackarena.cpp"
 #include "general/test_fixedsizearena.cpp"
+#include "general/test_arraylist.cpp"
 
 TEST_SUITE_END();
 

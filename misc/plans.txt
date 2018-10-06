@@ -72,7 +72,7 @@ Core Goals:
 	Write a spherical coordinates based camera														   - Done (18/12/17)
 	Write MemoryArena class																			   - Done (StackArena) (11/1/18)
 	Write ArrayList class																			   - 
-	Write HaspMap/Dictionary class																	   - 
+	Write HashMap/Dictionary class																	   - 
 	Write ContentManager class																		   - 
 	Write ShaderManager class																		   - 
 

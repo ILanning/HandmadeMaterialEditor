@@ -1,5 +1,5 @@
-#ifndef HANDMADE_FIXEDSIZEARENA_H
-#define HANDMADE_FIXEDSIZEARENA_H
+#ifndef HANDMADE_MEMORY_FIXEDSIZEARENA_H
+#define HANDMADE_MEMORY_FIXEDSIZEARENA_H
 
 #include "..\..\handmade_typedefs.h"
 #include "..\..\handmade_funcdefs.h"
@@ -7,6 +7,7 @@
 
 namespace Memory
 {
+	template <class Allocator = void>
 	///An allocator with a fixed allocation size, set at creation.
 	class FixedSizeArena
 	{
@@ -15,7 +16,7 @@ namespace Memory
 		uint8 *bufferNext = nullptr;
 		uint8 *bufferEnd = nullptr;
 		uint8 **deletedListEnd = nullptr;
-		DeallocMemoryFunc *deallocateFunc = nullptr;
+		Allocator *memoryAllocator = nullptr;
 		uint64 size = 0;
 		uint64 binSize = 0;
 		bool ownsMemory = false;
@@ -29,21 +30,19 @@ namespace Memory
 			Assert(bufferSize >= itemSize && bufferSize >= sizeof(uint8 *));
 		}
 
-		FixedSizeArena(uint64 bufferSize, uint64 itemSize, AllocMemoryFunc *allocator, DeallocMemoryFunc *deallocator)
+		FixedSizeArena(uint64 bufferSize, uint64 itemSize, Allocator *allocator)
 		{
 			Assert(allocator != nullptr);
-			Assert(deallocator != nullptr);
 			Assert(itemSize > 0);
 			Assert(bufferSize >= itemSize && bufferSize >= sizeof(uint8 *));
-			bool success = false;
-			buffer = allocator(bufferSize, &success);
-			Assert(success);
+			buffer = (uint8 *)allocator->Allocate(bufferSize);
+			Assert(buffer != nullptr);
 			if (buffer)
 			{
 				bufferNext = buffer;
 				bufferEnd = buffer + bufferSize;
 				deletedListEnd = (uint8**)bufferEnd;
-				deallocateFunc = deallocator;
+				memoryAllocator = allocator;
 				size = bufferSize;
 				binSize = itemSize;
 				ownsMemory = true;
@@ -67,9 +66,9 @@ namespace Memory
 			deletedListEnd = other.deletedListEnd;
 			other.deletedListEnd = tempPtrPtr;
 
-			DeallocMemoryFunc *tempFunc = deallocateFunc;
-			deallocateFunc = other.deallocateFunc;
-			other.deallocateFunc = tempFunc;
+			Allocator *tempAlloc = memoryAllocator;
+			memoryAllocator = other.memoryAllocator;
+			other.memoryAllocator = tempAlloc;
 
 			uint64 tempInt = binSize;
 			binSize = other.binSize;
@@ -93,8 +92,8 @@ namespace Memory
 			return *this;
 		}
 
-		FixedSizeArena(const FixedSizeArena&) = delete;
-		FixedSizeArena& FixedSizeArena::operator=(const FixedSizeArena& arg) = delete;
+		//FixedSizeArena(const FixedSizeArena&) = delete;
+		//FixedSizeArena& FixedSizeArena::operator=(const FixedSizeArena& arg) = delete;
 
 		/// Creates a FixedSizeArena at the start of the given block of memory, and tells it to manage the remaining memory in the block.
 		static FixedSizeArena *CreateContainedBlock(uint8 *blockStart, uint64 blockSize, uint64 itemSize)
@@ -169,8 +168,7 @@ namespace Memory
 		{
 			if (ownsMemory && buffer)
 			{
-				bool success;
-				deallocateFunc(buffer, size, &success);
+				memoryAllocator->Deallocate(buffer);
 			}
 			buffer = nullptr;
 			bufferEnd = nullptr;
@@ -179,9 +177,22 @@ namespace Memory
 			size = 0;
 			binSize = 0;
 			ownsMemory = false;
-			deallocateFunc = nullptr;
+			memoryAllocator = nullptr;
 		}
 	};
+
+	template<>
+	FixedSizeArena<void>::~FixedSizeArena()
+	{
+		buffer = nullptr;
+		bufferEnd = nullptr;
+		bufferNext = nullptr;
+		deletedListEnd = nullptr;
+		size = 0;
+		binSize = 0;
+		ownsMemory = false;
+		memoryAllocator = nullptr;
+	}
 }
 
 #endif // !HANDMADE_FIXEDSIZEARENA_H

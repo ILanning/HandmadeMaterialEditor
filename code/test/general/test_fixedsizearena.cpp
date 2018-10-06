@@ -1,8 +1,8 @@
 #ifndef HANDMADE_TEST_FIXEDSIZEARENA
 #define HANDMADE_TEST_FIXEDSIZEARENA
 
-
 #include "../../general/memory/FixedSizeArena.h"
+#include "../../general/memory/NewDeleteArena.h"
 
 #ifndef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "../libraries/doctest.h"
@@ -18,7 +18,8 @@ namespace TestFixedSizeArenaHelpers
 		uint16 testMemberD = 0;
 	};
 
-	static void Allocate(Memory::FixedSizeArena *arena)
+	template <class T>
+	static void Allocate(Memory::FixedSizeArena<T> *arena)
 	{
 		TestStruct *structPtrs[4] = {};
 		structPtrs[0] = (TestStruct *)arena->Allocate();
@@ -34,7 +35,8 @@ namespace TestFixedSizeArenaHelpers
 		CHECK(arena->Allocate() == nullptr);
 	}
 
-	static void Deallocate(Memory::FixedSizeArena *arena)
+	template <class T>
+	static void Deallocate(Memory::FixedSizeArena<T> *arena)
 	{
 		TestStruct *structPtrs[4] = {};
 		structPtrs[0] = (TestStruct *)arena->Allocate();
@@ -58,9 +60,9 @@ namespace TestFixedSizeArenaHelpers
 	void ContainedBlock()
 	{
 		uint8 *testBuffer = new uint8[150];
-		Memory::FixedSizeArena *test = Memory::FixedSizeArena::CreateContainedBlock(testBuffer, 150, sizeof(TestStruct));
+		Memory::FixedSizeArena<> *test = Memory::FixedSizeArena<>::CreateContainedBlock(testBuffer, 150, sizeof(TestStruct));
 
-		CHECK(test->buffer == testBuffer + sizeof(Memory::FixedSizeArena));
+		CHECK(test->buffer == testBuffer + sizeof(Memory::FixedSizeArena<>));
 
 		test->~FixedSizeArena();
 
@@ -77,7 +79,7 @@ TEST_CASE("Testing FixedSizeArena")
 	SUBCASE("Allocating") 
 	{
 		uint8 *mem = new uint8[testStrSize * 4];
-		Memory::FixedSizeArena *arena = new Memory::FixedSizeArena(mem, testStrSize * 4, testStrSize);
+		Memory::FixedSizeArena<> *arena = new Memory::FixedSizeArena<>(mem, testStrSize * 4, testStrSize);
 		TestFixedSizeArenaHelpers::Allocate(arena);
 
 		delete[] mem;
@@ -86,13 +88,13 @@ TEST_CASE("Testing FixedSizeArena")
 	SUBCASE("Removing")
 	{
 		uint8 *mem = new uint8[arenaSize];
-		Memory::FixedSizeArena *arena = new Memory::FixedSizeArena(mem, arenaSize, testStrSize);
+		Memory::FixedSizeArena<> *arena = new Memory::FixedSizeArena<>(mem, arenaSize, testStrSize);
 
 		REQUIRE(arena->buffer != nullptr);
 		REQUIRE(arena->size == arenaSize);
 		REQUIRE(arena->bufferEnd == arena->buffer + arenaSize);
 		REQUIRE((arena->bufferNext >= arena->buffer && arena->bufferNext < arena->bufferEnd));
-		TestFixedSizeArenaHelpers::Deallocate(arena);
+		TestFixedSizeArenaHelpers::Deallocate<>(arena);
 
 		delete[] mem;
 		delete arena;
@@ -104,14 +106,15 @@ TEST_CASE("Testing FixedSizeArena")
 
 	SUBCASE("Owns own memory")
 	{
-		Memory::FixedSizeArena *arena = new Memory::FixedSizeArena(arenaSize, testStrSize, TestAlloc, TestDealloc);
+		Memory::NewDeleteArena newDelete = Memory::NewDeleteArena();
+		Memory::FixedSizeArena<Memory::NewDeleteArena> *arena = new Memory::FixedSizeArena<Memory::NewDeleteArena>(arenaSize, testStrSize, &newDelete);
 
 		REQUIRE(arena->buffer != nullptr);
 		REQUIRE(arena->GetRemainingSlots() == arenaSize / testStrSize);
 		REQUIRE(arena->bufferEnd == arena->buffer + arenaSize);
 		REQUIRE((arena->bufferNext >= arena->buffer && arena->bufferNext < arena->bufferEnd));
 
-		TestFixedSizeArenaHelpers::Deallocate(arena);
+		TestFixedSizeArenaHelpers::Deallocate<Memory::NewDeleteArena>(arena);
 
 		delete arena;
 	}

@@ -1,8 +1,8 @@
 #ifndef HANDMADE_TEST_STACKARENA
 #define HANDMADE_TEST_STACKARENA
 
-
 #include "../../general/memory/StackArena.h"
+#include "../../general/memory/NewDeleteArena.h"
 #include "../test_helpers.cpp"
 
 #ifndef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
@@ -10,12 +10,13 @@
 #endif
 namespace TestStackArenaHelpers
 {
-	static void AddingItems(Memory::StackArena *arena)
+	template <class T>
+	static void AddingItems(Memory::StackArena<T> *arena)
 	{
 		uint32 *ints = (uint32 *)arena->Allocate(sizeof(uint32) * 4);
 		CHECK(arena->bufferNext - arena->buffer == sizeof(uint32) * 4 + sizeof(uint64));
 
-		uint16 *shorts = (uint16 *)arena->Allocate(sizeof(uint16) * 9);
+		uint16 *shorts = arena->Allocate<uint16>(9);
 		CHECK((uint64)shorts - (uint64)ints == sizeof(uint32) * 4 + sizeof(uint64));
 		CHECK((uint64)arena->bufferNext - (uint64)shorts == sizeof(uint16) * 9 + sizeof(uint64));
 
@@ -24,14 +25,15 @@ namespace TestStackArenaHelpers
 		CHECK((uint64)arena->bufferNext - (uint64)bytes == sizeof(uint8) * 1163 + sizeof(uint64));
 	}
 
-	static void RemovingItems(Memory::StackArena *arena)
+	template <class T>
+	static void RemovingItems(Memory::StackArena<T> *arena)
 	{
-		uint32 *ints = (uint32 *)arena->Allocate(sizeof(uint32) * 4);
+		uint32 *ints = arena->Allocate<uint32>(4);
 		uint16 *shorts = (uint16 *)arena->Allocate(sizeof(uint16) * 9);
 		uint8 *bytes = (uint8 *)arena->Allocate(sizeof(uint8) * 1163);
 		CHECK(arena->DeallocateLast());
 		CHECK(arena->bufferNext == bytes);
-		char *someString = (char *)arena->Allocate(sizeof(char) * 50);
+		char *someString = arena->Allocate<char>(50);
 		CHECK(arena->bufferNext == (uint8 *)(someString + sizeof(char) * 50 + sizeof(uint64)));
 		CHECK_FALSE(arena->Deallocate(ints)); //Trying to pop from somewhere other than the front of the stack
 		CHECK(arena->Deallocate(someString)); //Popping the last item by pointer value
@@ -40,7 +42,8 @@ namespace TestStackArenaHelpers
 		CHECK_FALSE(arena->DeallocateLast());  //Popping from an empty stack
 	}
 
-	static void PartialAlloc(Memory::StackArena *arena, uint64 arenaSize)
+	template <class T>
+	static void PartialAlloc(Memory::StackArena<T> *arena, uint64 arenaSize)
 	{
 		CHECK(arena->GetRemainingBytes() == arenaSize);
 
@@ -116,9 +119,9 @@ namespace TestStackArenaHelpers
 	void ContainedBlock()
 	{
 		uint8 *testBuffer = new uint8[150];
-		Memory::StackArena *test = Memory::StackArena::CreateContainedBlock(testBuffer, 150);
+		Memory::StackArena<> *test = Memory::StackArena<>::CreateContainedBlock(testBuffer, 150);
 
-		CHECK(test->buffer == testBuffer + sizeof(Memory::StackArena));
+		CHECK(test->buffer == testBuffer + sizeof(Memory::StackArena<>));
 
 		test->~StackArena();
 
@@ -131,7 +134,6 @@ namespace TestStackArenaHelpers
 TEST_CASE("Testing StackArena")
 {
 	uint64 arenaSize = Megabytes(500);
-	Memory::StackArena *arena;
 
 	SUBCASE("Self-contained block")
 	{
@@ -140,7 +142,7 @@ TEST_CASE("Testing StackArena")
 
 	SUBCASE("Given memory")
 	{
-		arena = new Memory::StackArena(new uint8[arenaSize], arenaSize);
+		Memory::StackArena<> *arena = new Memory::StackArena<>(new uint8[arenaSize], arenaSize);
 
 		//TODO(Ian): Doctest didn't seem to like this being moved out to a function, see if anything can be done about that
 		REQUIRE(arena->buffer != nullptr);
@@ -173,7 +175,8 @@ TEST_CASE("Testing StackArena")
 
 	SUBCASE("Owns own memory")
 	{
-		arena = new Memory::StackArena(arenaSize, TestAlloc, TestDealloc);
+		auto newDelete = Memory::NewDeleteArena();
+		auto *arena = new Memory::StackArena<Memory::NewDeleteArena>(&newDelete, arenaSize);
 
 		REQUIRE(arena->buffer != nullptr);
 		REQUIRE(arena->GetRemainingBytes() == arenaSize);

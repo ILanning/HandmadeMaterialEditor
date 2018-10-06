@@ -10,7 +10,7 @@
 #include "../math/Matrix4.h"
 #include "../math/Quaternion.h"
 
-PLATFORM_ALLOC_MEMORY(TestAlloc)
+GENERAL_ALLOC_MEMORY(TestAlloc)
 {
 	uint8 *memBlock = (uint8 *)malloc((size_t)size);
 	if (outSuccess)
@@ -20,7 +20,7 @@ PLATFORM_ALLOC_MEMORY(TestAlloc)
 	return memBlock;
 }
 
-PLATFORM_DEALLOC_MEMORY(TestDealloc)
+GENERAL_DEALLOC_MEMORY(TestDealloc)
 {
 	free(memory);
 	if (outSuccess)

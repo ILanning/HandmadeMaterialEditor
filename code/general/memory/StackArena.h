@@ -1,5 +1,5 @@
- #ifndef HANDMADE_STACKARENA_H
-#define HANDMADE_STACKARENA_H
+ #ifndef HANDMADE_MEMORY_STACKARENA_H
+#define HANDMADE_MEMORY_STACKARENA_H
 
 #include "..\..\handmade_typedefs.h"
 #include "..\..\handmade_funcdefs.h"
@@ -7,6 +7,7 @@
 
 namespace Memory
 {
+	template<class Allocator = void>
 	///A stack-based memory allocator.  Supports resizing the latest allocation without actually moving any data, assuming the allocator still has space.
 	class StackArena
 	{
@@ -14,9 +15,9 @@ namespace Memory
 		uint8 *buffer = nullptr;
 		uint8 *bufferNext = nullptr;
 		uint8 *bufferEnd = nullptr;
+		Allocator *memoryAllocator = nullptr;
 		uint64 upcomingSize = 0;
 		uint64 size = 0;
-		DeallocMemoryFunc *deallocateFunc = nullptr;
 		bool ownsMemory = false;
 		bool partialInProgress = false;
 
@@ -47,9 +48,9 @@ namespace Memory
 			ownsMemory = other.ownsMemory;
 			other.ownsMemory = tempBool;
 
-			DeallocMemoryFunc *tempFunc = deallocateFunc;
-			deallocateFunc = other.deallocateFunc;
-			other.deallocateFunc = tempFunc;
+			Allocator *tempalloc = memoryAllocator;
+			memoryAllocator = other.memoryAllocator;
+			other.memoryAllocator = tempalloc;
 		}
 
 		StackArena(uint8 *bufferStart, uint64 bufferSize)
@@ -60,15 +61,14 @@ namespace Memory
 			Assert(bufferStart != nullptr);
 		}
 
-		StackArena(uint64 bufferSize, AllocMemoryFunc *allocator, DeallocMemoryFunc *deallocator)
+		StackArena(Allocator *allocator, uint64 bufferSize)
 		{
-			bool success = false;
-			buffer = allocator(bufferSize, &success);
-			Assert(success);
+			buffer = (uint8 *)allocator->Allocate(bufferSize);
+			Assert(buffer != nullptr);
 			if (buffer)
 			{
 				bufferNext = buffer;
-				deallocateFunc = deallocator;
+				memoryAllocator = allocator;
 				bufferEnd = buffer + bufferSize;
 				size = bufferSize;
 				ownsMemory = true;
@@ -85,8 +85,8 @@ namespace Memory
 			return *this;
 		}
 
-		StackArena(const StackArena&) = delete;
-		StackArena& StackArena::operator=(const StackArena& arg) = delete;
+		//StackArena(const StackArena&) = delete;
+		//StackArena& StackArena::operator=(const StackArena& arg) = delete;
 
 		/// Creates a StackArena at the start of the given block of memory, and tells it to manage the remaining memory in the block.
 		static StackArena *CreateContainedBlock(uint8 *blockStart, uint64 blockSize)
@@ -109,8 +109,16 @@ namespace Memory
 			return upcomingSize;
 		}
 
+		template <typename T = void>
+		/// Allocates (but does not initialize) a new set of items from this arena.
+		T *Allocate(const uint64 count = 1)
+		{
+			return (T*)Allocate(sizeof(T) * count);
+		}
+
+		template <>
 		/// Allocates a new chunk of space (measured in bytes) from this arena.
-		void *Allocate(const uint64 allocSize)
+		void *Allocate<void>(const uint64 allocSize)
 		{
 			Assert(partialInProgress == false); //Close partial allocation before starting a new allocation!
 
@@ -213,17 +221,27 @@ namespace Memory
 		{
 			if (ownsMemory && buffer)
 			{
-				bool success;
-				deallocateFunc(buffer, size, &success);
+				memoryAllocator->Deallocate(buffer);
 			}
 			buffer = nullptr;
 			bufferEnd = nullptr;
 			bufferNext = nullptr;
 			size = 0;
 			ownsMemory = false;
-			deallocateFunc = nullptr;
+			memoryAllocator = nullptr;
 		}
 	};
+
+	template<>
+	StackArena<void>::~StackArena()
+	{
+		buffer = nullptr;
+		bufferEnd = nullptr;
+		bufferNext = nullptr;
+		size = 0;
+		ownsMemory = false;
+		memoryAllocator = nullptr;
+	}
 }
 
-#endif // !HANDMADE_STACKARENA_H
+#endif // !HANDMADE_MEMORY_STACKARENA_H
