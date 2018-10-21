@@ -22,6 +22,7 @@ TEST_SUITE_BEGIN("general");
 #include "general/test_stackarena.cpp"
 #include "general/test_fixedsizearena.cpp"
 #include "general/test_arraylist.cpp"
+#include "general/test_hashmap.cpp"
 
 TEST_SUITE_END();
 

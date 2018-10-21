@@ -4,13 +4,10 @@
 #include "../../general/ArrayList.h"
 #include "../../general/memory/NewDeleteArena.h"
 
-struct TestStruct
-{
-
-};
-
 TEST_CASE("Testing ArrayList")
 {
+	using Collections::ArrayList;
+
 	const int32 listStartSize = 30;
 	Memory::NewDeleteArena testArena = Memory::NewDeleteArena();
 	auto list = ArrayList<int32, Memory::NewDeleteArena>(&testArena, listStartSize);
@@ -25,6 +22,7 @@ TEST_CASE("Testing ArrayList")
 		CHECK(list[0] == 5);
 		CHECK(list.Count() == 1);
 		CHECK(list.Capacity() == listStartSize);
+
 
 		for (int i = 1; i < 30; i++)
 		{
@@ -102,7 +100,7 @@ TEST_CASE("Testing ArrayList")
 
 		emptyList.Insert(6, 6);
 		CHECK(emptyList[6] == 6);
-		CHECK(emptyList.Capacity() == 6);
+		CHECK(emptyList.Capacity() == 7);
 	}
 
 	SUBCASE("InsertRange")
