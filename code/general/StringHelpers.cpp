@@ -223,6 +223,17 @@ namespace CString
 		return result;
 	}
 
+	///Gets the index of the first character after the next end of line.  Returns -1 if no line break is found.
+	int32 FindNextLineStart(const char *string, int32 length = MaxInt32, int32 offset = 0)
+	{
+		int32 result = FindCharacter(string, '\n', length, offset);
+		if (result != -1)
+		{
+			result++;
+		}
+		return result;
+	}
+
 	void EditToLower(char *string, int32 count = MaxInt32, int32 length = MaxInt32, int32 offset = 0)
 	{
 		int32 finalValue = count + offset;

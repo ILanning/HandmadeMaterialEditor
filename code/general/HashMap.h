@@ -9,6 +9,8 @@
 namespace Collections
 {
 	// TODO (Ian): Set up KeyType as something that must be Hashable
+
+	//A dictionary/unordered map data structure.
 	template <class KeyType, class ValueType, class Allocator>
 	class HashMap
 	{
@@ -29,6 +31,33 @@ namespace Collections
 		int32 bucketCount;
 		int32 occupied = 0;
 
+		void swap(HashMap& other)
+		{
+			real32 tempFloat = other.upsizeFactor;
+			other.upsizeFactor = upsizeFactor;
+			upsizeFactor = tempFloat;
+
+			Allocator* tempMem = other.memory;
+			other.memory = memory;
+			memory = tempMem;
+
+			HashItem* tempItems = other.buckets;
+			other.buckets = buckets;
+			buckets = tempItems;
+
+			int32 tempInt = other.bucketCount;
+			other.bucketCount = bucketCount;
+			bucketCount = tempInt;
+
+			tempInt = other.occupied;
+			other.occupied = occupied;
+			occupied = tempInt;
+
+			tempInt = other.maxAlreadyFilled;
+			other.maxAlreadyFilled = maxAlreadyFilled;
+			maxAlreadyFilled = tempInt;
+		}
+
 	public:
 		HashMap(Allocator *allocator) : bucketCount(baseSize), memory(allocator)
 		{
@@ -48,6 +77,19 @@ namespace Collections
 			{
 				buckets[i].HashCode = -1;
 			}
+		}
+
+		HashMap(HashMap&& other)
+		{
+			swap(other);
+			other.memory = nullptr;
+			other.buckets = nullptr;
+		}
+
+		HashMap& operator=(HashMap other)
+		{
+			swap(other);
+			return *this;
 		}
 
 		ValueType& operator [] (const KeyType key) 
@@ -112,7 +154,7 @@ namespace Collections
 		}
 
 		// Returns the number of items in the HashMap.
-		int32 Count() { return occupied; }
+		int32 Length() { return occupied; }
 		// Returns the number of remaining spaces in the HashMap.
 		int32 Capacity() { return bucketCount; }
 
@@ -200,7 +242,7 @@ namespace Collections
 			int32 foundBucket = -1;
 			int32 modHash = hash % size;
 
-			for (int i = modHash; i < maxAlreadyFilled; i++)
+			for (int i = modHash; i - modHash < maxAlreadyFilled; i++)
 			{
 				if (hash == data[i % size].HashCode)
 				{
@@ -238,7 +280,7 @@ namespace Collections
 		int32 internalFind(int32 hash) const
 		{
 			int32 modHash = hash % bucketCount;
-			for (int i = modHash; i < maxAlreadyFilled; i++)
+			for (int i = modHash; i - modHash < maxAlreadyFilled; i++)
 			{
 				if (hash == buckets[i % bucketCount].HashCode)
 				{

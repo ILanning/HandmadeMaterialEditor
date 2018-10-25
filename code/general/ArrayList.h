@@ -3,6 +3,7 @@
 
 #include "../handmade_typedefs.h"
 #include "../handmade_funcdefs.h"
+#include "StaticArray.h"
 #include "Assert.h"
 
 namespace Collections
@@ -14,8 +15,8 @@ namespace Collections
 	class ArrayList
 	{
 	public:
-		float UpsizeFactor = 2.0f;
-		float DownsizeFactor = 0.0f;
+		real32 UpsizeFactor = 2.0f;
+		real32 DownsizeFactor = 0.0f;
 
 	private:
 		static const int32 baseSize = 4;
@@ -37,15 +38,21 @@ namespace Collections
 			}
 		}
 
-		Item operator [] (int32 i) const
+		ArrayList(ArrayList&& other)
 		{
-			return internalArray[i];
+			swap(other);
+			other.internalArray = nullptr;
+			other.memory = nullptr;
 		}
 
-		Item& operator [] (int32 i)
+		ArrayList& operator =(ArrayList other)
 		{
-			return internalArray[i];
+			swap(&other);
+			return *this;
 		}
+
+		Item& operator [] (int32 i) { return internalArray[i]; }
+		Item operator [] (int32 i) const { return internalArray[i]; }
 
 		bool Add(Item item)
 		{
@@ -70,6 +77,11 @@ namespace Collections
 			count++;
 
 			return true;
+		}
+
+		bool AddRange(StaticArray<Item> items)
+		{
+			return AddRange(items.Data, items.Length);
 		}
 
 		bool AddRange(Item *items, int32 arrayCount)
@@ -143,6 +155,11 @@ namespace Collections
 			count = newCount;
 
 			return true;
+		}
+
+		bool InsertRange(StaticArray<Item> items)
+		{
+			return InsertRange(items.Data, items.Length);
 		}
 
 		bool InsertRange(Item *items, int32 index, int32 arrayCount)
@@ -234,7 +251,7 @@ namespace Collections
 		}
 
 		template <class ArrayAllocator>
-		Item* RangeToArray(ArrayAllocator *alloc, int32 startIndex, int32 arrayCount)
+		Item* RangeToArray(ArrayAllocator& alloc, int32 startIndex, int32 arrayCount)
 		{
 			Assert(startIndex >= 0);
 			Assert(startIndex + arrayCount <= count);
@@ -244,7 +261,7 @@ namespace Collections
 				return nullptr;
 			}
 
-			Item *resultArray = alloc->Allocate<Item>(arrayCount);
+			Item *resultArray = alloc.Allocate<Item>(arrayCount);
 
 			Assert(resultArray != nullptr);
 
@@ -257,12 +274,41 @@ namespace Collections
 		}
 
 		template <class ArrayAllocator>
-		Item* ToArray(ArrayAllocator *alloc)
+		Item* ToArray(ArrayAllocator& alloc)
 		{
 			return RangeToArray(alloc, 0, count);
 		}
 
-		int32 Count() const { return count; }
+		template <class ArrayAllocator>
+		StaticArray<Item> RangeToStaticArray(ArrayAllocator& alloc, int32 startIndex, int32 arrayCount)
+		{
+			Assert(startIndex >= 0);
+			Assert(startIndex + arrayCount <= count);
+
+			if (arrayCount == 0)
+			{
+				return {};
+			}
+
+			Item *resultArray = alloc.Allocate<Item>(arrayCount);
+
+			Assert(resultArray != nullptr);
+
+			for (int32 i = 0; i < arrayCount; i++)
+			{
+				resultArray[i] = internalArray[startIndex + i];
+			}
+
+			return {resultArray, (uint32)count};
+		}
+
+		template <class ArrayAllocator>
+		StaticArray<Item> ToStaticArray(ArrayAllocator& alloc)
+		{
+			return RangeToStaticArray(alloc, 0, count);
+		}
+
+		int32 Length() const { return count; }
 		int32 Capacity() const { return arraySize; }
 
 		~ArrayList()
@@ -278,6 +324,33 @@ namespace Collections
 		}
 
 	private:
+
+		void swap(ArrayList& other)
+		{
+			real32 tempFloat = other.UpsizeFactor;
+			other.UpsizeFactor = UpsizeFactor;
+			UpsizeFactor = tempFloat;
+
+			tempFloat = other.DownsizeFactor;
+			other.DownsizeFactor = DownsizeFactor;
+			DownsizeFactor = tempFloat;
+
+			Allocator* tempMem = other.memory;
+			other.memory = memory;
+			memory = tempMem;
+
+			Item* tempItems = other.internalArray;
+			other.internalArray = internalArray;
+			internalArray = tempItems;
+
+			int32 tempInt = other.arrazySize;
+			other.arraySize = arrazySize;
+			arraySize = tempInt;
+
+			tempInt = other.count;
+			other.count = count;
+			count = tempInt;
+		}
 
 		int32 nextSizeUp(int32 targetCount) const
 		{

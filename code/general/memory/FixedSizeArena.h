@@ -7,6 +7,9 @@
 
 namespace Memory
 {
+
+	// TODO (Ian): Store free space info with a bitflag array?
+
 	template <class Allocator = void>
 	///An allocator with a fixed allocation size, set at creation.
 	class FixedSizeArena

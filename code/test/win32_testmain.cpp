@@ -26,7 +26,11 @@ TEST_SUITE_BEGIN("general");
 
 TEST_SUITE_END();
 
-//#include "drawing/test_thirdpersoncamera.cpp"
+TEST_SUITE_BEGIN("file");
+
+#include "file/test_pairtokenizer.cpp"
+
+TEST_SUITE_END();
 
 //-lts list test suites
 //-tc=*x*
