@@ -1,16 +1,20 @@
 #ifndef HANDMADE_OBJLOADER_H
 #define HANDMADE_OBJLOADER_H
 
-#include "../handmade_typedefs.h"
 #include "../handmade.h"
+#include "../handmade_typedefs.h"
+#include "../drawing/Geometry.h"
+#include "../drawing/Mesh.h"
+#include "../drawing/Texture2D.h"
+#include "../drawing/Vertex.h"
+#include "../general/ArrayList.h"
+#include "../general/HashMap.h"
+#include "../general/HMString.h"
+#include "../general/StretchyArray.h"
+#include "../general/memory/NewDeleteArena.h"
+#include "../libraries/glew.h"
 #include "../math/Vector2.h"
 #include "../math/Vector3.h"
-#include "../general/StretchyArray.h"
-#include "../drawing/Texture2D.h"
-#include "../drawing/Mesh.h"
-#include "../drawing/Geometry.h"
-#include "../drawing/Vertex.h"
-#include "../libraries/glew.h"
 
 namespace Content
 {
@@ -71,7 +75,7 @@ namespace Content
 
 
 			StretchyArray<Drawing::Mesh *> meshes;
-			StretchyArray<Drawing::Material> materials;
+			Collections::HashMap<HMString, Drawing::Material, Memory::NewDeleteArena> materials;
 			StretchyArray<Drawing::Texture2D *> textures;
 
 			StretchyArray<ObjVertexNode> vertexBlueprints;
@@ -80,6 +84,8 @@ namespace Content
 			StretchyArray<Vector3> positions;
 			StretchyArray<Vector3> normals;
 			StretchyArray<Vector2> uvs;
+
+			Memory::NewDeleteArena memory = {};
 
 		public:
 
@@ -91,7 +97,7 @@ namespace Content
 
 			Drawing::Geometry *ExportGeometry();
 
-			Drawing::Material *ExportMaterials(int32 &outCount);
+			Collections::HashMap<HMString, Drawing::Material, Memory::NewDeleteArena> ObjParser::ExportMaterials();
 
 			~ObjParser()
 			{

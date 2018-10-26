@@ -5,7 +5,7 @@
 #include "../math/Vector3.cpp"
 #include "../math/Matrix4.h"
 #include "Texture2D.h"
-#include "Vertex.h"
+#include "VertexArray.h"
 #include "Material.h"
 #include "../libraries/glew.h"
 #include "../general/DebugHelpers.cpp"
@@ -117,6 +117,9 @@ namespace Drawing
 		Mesh(Mesh &&other)
 		{
 			swap(*this, other);
+			other.Vertices = nullptr;
+			other.Elements = nullptr;
+			other.MeshMaterial = nullptr;
 		}
 
 		Mesh &operator=(Mesh other)
@@ -127,12 +130,15 @@ namespace Drawing
 
 		~Mesh()
 		{
+			if (Vertices && Elements)
+			{
+				GLuint buffers[] = { VBO, EBO };
+				glDeleteBuffers(2, buffers);
+				glDeleteVertexArrays(1, &VAO);
+			}
 			delete[] Vertices;
 			delete[] Elements;
 
-			GLuint buffers[] = { VBO, EBO };
-			glDeleteBuffers(2, buffers);
-			glDeleteVertexArrays(1, &VAO);
 			//CONSIDER(Ian):  Eventually a ContentManager will be handling assets, including textures. As a result, we probably don't want to delete the textures this holds.
 			//Should there be something here that tells the ContentManager that the textures held by this object have one less dependency?
 		}

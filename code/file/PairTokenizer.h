@@ -78,7 +78,7 @@ namespace File
 				bool recordLetter = true;
 				if (parseSpecial)
 				{
-					if (string[i] == '\\') //Skip next special character
+					if (string[i] == '\\') //Treat next character as a normal non-whitespace character
 					{
 						parseSpecial = false;
 						recordLetter = false;

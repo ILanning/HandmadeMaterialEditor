@@ -27,6 +27,8 @@ namespace Collections
 		int32 count = 0;
 
 	public:
+		ArrayList() {}
+
 		ArrayList(Allocator *allocator, int starterCapacity = 0)
 			: memory(allocator), arraySize(starterCapacity)
 		{
@@ -313,7 +315,7 @@ namespace Collections
 
 		~ArrayList()
 		{
-			if (internalArray)
+			if (memory && internalArray)
 			{
 				memory->Deallocate(internalArray);
 				internalArray = nullptr;

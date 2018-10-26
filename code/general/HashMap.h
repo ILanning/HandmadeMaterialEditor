@@ -2,6 +2,7 @@
 #define HANDMADE_HASHMAP_H
 
 #include "../handmade_typedefs.h"
+#include "HMPair.h"
 #include "HMString.h"
 #define XXH_PRIVATE_API
 #include "../libraries/xxhash.h"
@@ -26,9 +27,9 @@ namespace Collections
 		real32 upsizeFactor = 2.0f;
 		static const int32 baseSize = 4;
 
-		Allocator *memory;
-		HashItem *buckets;
-		int32 bucketCount;
+		Allocator *memory = nullptr;
+		HashItem *buckets = nullptr;
+		int32 bucketCount = 0;
 		int32 occupied = 0;
 
 		void swap(HashMap& other)
@@ -59,6 +60,8 @@ namespace Collections
 		}
 
 	public:
+		HashMap() {}
+
 		HashMap(Allocator *allocator) : bucketCount(baseSize), memory(allocator)
 		{
 			buckets = memory->Allocate<HashItem>(bucketCount);
@@ -71,7 +74,7 @@ namespace Collections
 
 		HashMap(int32 capacity, Allocator *allocator) : bucketCount(capacity), memory(allocator)
 		{
-			buckets = memory->Allocate<HashItem>(capacity);
+			buckets = memory->Allocate<HashItem>(bucketCount);
 
 			for (int32 i = 0; i < bucketCount; i++)
 			{
@@ -79,11 +82,40 @@ namespace Collections
 			}
 		}
 
-		HashMap(HashMap&& other)
+		HashMap(StaticArray<HMPair<KeyType, ValueType>> pairs, Allocator *allocator) : memory(allocator)
+		{
+			real32 newCount = baseSize;
+			while (newCount < (int32)pairs.Length)
+			{
+				newCount *= upsizeFactor;
+			}
+			bucketCount = (int32)newCount;
+			buckets = memory->Allocate<HashItem>(bucketCount);
+
+			for (int32 i = 0; i < bucketCount; i++)
+			{
+				buckets[i].HashCode = -1;
+			}
+
+			AddMany(pairs);
+		}
+
+		HashMap(HashMap& other)
+		{
+			memory = other.memory;
+			bucketCount = other.bucketCount;
+			occupied = other.occupied;
+			buckets = memory->Allocate<HashItem>(bucketCount);
+
+			for (int32 i = 0; i < bucketCount; i++)
+			{
+				buckets[i] = other.buckets[i];
+			}
+		}
+
+		HashMap(HashMap&& other) : HashMap()
 		{
 			swap(other);
-			other.memory = nullptr;
-			other.buckets = nullptr;
 		}
 
 		HashMap& operator=(HashMap other)
@@ -120,6 +152,27 @@ namespace Collections
 			}
 		}
 
+		// Adds a set of new key/value pairs to the HashMap, overwriting old values if a key already exists.
+		void AddMany(StaticArray<HMPair<KeyType, ValueType>>& pairs)
+		{
+			for (uint32 i = 0; i < pairs.Length; i++)
+			{
+				Add(pairs[i].First, pairs[i].Second);
+			}
+		}
+
+		// Merges the data from another HashMap into this one.  Prefers to keep the argument's value in cases where both contain the same key.
+		void Combine(HashMap& other)
+		{
+			for (int32 i = 0; i < other.bucketCount; i++)
+			{
+				if (other.buckets[i].HashCode > 0)
+				{
+					Add(other.buckets[i].Key, other.buckets[i].Value);
+				}
+			}
+		}
+
 		// Returns a pointer to the value of the given key, or null if the key does not exist.  This pointer does not belong to the caller.
 		ValueType *GetAt(KeyType key) const
 		{
@@ -153,6 +206,24 @@ namespace Collections
 			}
 		}
 
+		template<class ArrayAllocator>
+		StaticArray<HMPair<KeyType, ValueType>> ToArray(ArrayAllocator alloc)
+		{
+			auto resultArray = alloc.Allocate<HMPair<KeyType, ValueType>>(occupied);
+
+			int32 resultIter = 0;
+			for (int32 i = 0; i < bucketCount; i++)
+			{
+				if (buckets[i].HashCode > 0)
+				{
+					resultArray[resultIter].First = buckets[i].Key;
+					resultArray[resultIter].Second = buckets[i].Value;
+					i++;
+				}
+			}
+			return { resultArray, occupied };
+		}
+
 		// Returns the number of items in the HashMap.
 		int32 Length() { return occupied; }
 		// Returns the number of remaining spaces in the HashMap.
@@ -160,7 +231,7 @@ namespace Collections
 
 		~HashMap()
 		{
-			if (buckets)
+			if (memory && buckets)
 			{
 				memory->Deallocate(buckets);
 				buckets = nullptr;

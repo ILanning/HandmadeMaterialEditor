@@ -3,7 +3,7 @@
 
 namespace Drawing
 {
-	enum Channels
+	enum class Channels
 	{
 		Default = 1,
 		Red = 2,

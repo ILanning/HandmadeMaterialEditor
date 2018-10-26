@@ -5,6 +5,7 @@
 #include "../libraries/glew.h"
 #include "../content/TextureMapType.h"
 #include "../content/MTLTextureOptions.h"
+#include "../general/HMString.h"
 #include "../general/StringHelpers.cpp"
 
 namespace Drawing
@@ -14,8 +15,6 @@ namespace Drawing
 		GLuint GLID = 0;
 
 	public:
-		char *Name = nullptr;
-		int32 NameLength = 0;
 		uint8 *Data = nullptr;
 		GLint ImageFormat = 0;
 		GLsizei Width = 0;
@@ -39,26 +38,16 @@ namespace Drawing
 		}
 
 	public:
-		Texture2D(uint8 *data, GLsizei width, GLsizei height, GLint imageFormat, GLenum glFormat, GLint wrapStyle, char *name, int32 nameLength = -1)
-			:Data(data), Width(width), Height(height), ImageFormat(imageFormat), GLFormat(glFormat), WrapStyle(wrapStyle),
-			Name(name), NameLength(nameLength == -1 ? CString::GetLength(name) : nameLength)
+		Texture2D(uint8 *data, GLsizei width, GLsizei height, GLint imageFormat, GLenum glFormat, GLint wrapStyle)
+			:Data(data), Width(width), Height(height), ImageFormat(imageFormat), GLFormat(glFormat), WrapStyle(wrapStyle)
 		{
 			textureGLSetup();
 		}
 
-		Texture2D(char *path, char *name = nullptr, int32 nameLength = -1)
+		Texture2D(char *path)
 		{
 			int32 components;
 			Data = stbi_load(path, &Width, &Height, &components, 4);
-			if (name == nullptr)
-			{
-				Name = CString::CopySubstring(path, CString::GetLength(path) - 1, &NameLength);
-			}
-			else
-			{
-				Name = CString::CopySubstring(name, nameLength);
-				NameLength = nameLength;
-			}
 			WrapStyle = GL_REPEAT;
 			ImageFormat = GL_RGBA;
 			GLFormat = GL_RGBA;
@@ -68,8 +57,6 @@ namespace Drawing
 
 		Texture2D(const Content::OBJ::MTLTextureOptions &options, const Content::TextureMapType mapType)
 		{
-			Name = CString::CopySubstring(options.TexturePath, options.PathLength - 1, &NameLength);
-
 			int32 components;
 			Data = stbi_load(options.TexturePath, &Width, &Height, &components, 4);
 			if (options.Clamp)
@@ -99,8 +86,6 @@ namespace Drawing
 
 		~Texture2D()
 		{
-			delete[] Name;
-			Name = nullptr;
 			delete[] Data;
 			Data = nullptr;
 			glDeleteTextures(1, &GLID);

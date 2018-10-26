@@ -7,6 +7,7 @@
 #include "drawing\GLState.h"
 #include "drawing\Texture2D.h"
 #include "drawing\Geometry.h"
+#include "drawing\Sprite.h"
 #include "drawing\Vertex.h"
 #include "math\Vector2.cpp"
 #include "math\Vector3.cpp"
@@ -15,14 +16,14 @@
 #include "content\OBJLoader.cpp"
 #include "general\StringHelpers.cpp"
 
-GLuint TestScene::BuildShaderProgram(char *vertexSourcePath, char *fragmentSourcePath, ReadFileFunc *readFile, DebugMessageErrorFunc *messageError)
+GLuint TestScene::BuildShaderProgram(HMString vertexSourcePath, HMString fragmentSourcePath, ReadFileFunc *readFile, DebugMessageErrorFunc *messageError)
 {
-	FileData vertexResult = readFile(vertexSourcePath, CString::GetLength(vertexSourcePath), nullptr);
+	FileData vertexResult = readFile(vertexSourcePath.RawCString(), vertexSourcePath.Length(), nullptr);
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertexShader, 1, &(GLchar *)vertexResult.File, NULL);
 	glCompileShader(vertexShader);
 
-	FileData fragResult = readFile(fragmentSourcePath, CString::GetLength(vertexSourcePath), nullptr);
+	FileData fragResult = readFile(fragmentSourcePath.RawCString(), fragmentSourcePath.Length(), nullptr);
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragmentShader, 1, &(GLchar *)fragResult.File, NULL);
 	glCompileShader(fragmentShader);
@@ -47,27 +48,31 @@ GLuint TestScene::BuildShaderProgram(char *vertexSourcePath, char *fragmentSourc
 
 void TestScene::Initialize(ReadFileFunc *readFile, DebugMessageErrorFunc *messageError, GameState *gameState)
 {
+	//DebugOutputGLErrors(messageError);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  //Uncomment to get a wireframe view
 
-	GLuint shaderProgram = BuildShaderProgram("Shaders\\Basic.vert", "Shaders\\Basic.frag", readFile, messageError);
+	GLuint shaderProgram = BuildShaderProgram({ "Shaders\\Basic.vert" }, { "Shaders\\Basic.frag" }, readFile, messageError);
 
 	glUseProgram(shaderProgram);
 
-	Drawing::Material *enterMaterial = new Drawing::Material("EnterMaterial", 14, new Drawing::Texture2D("EnterButton.png"));
-	enterButton = new Drawing::Sprite(enterMaterial, shaderProgram);
+	memory = Memory::NewDeleteArena();
+	content = AssetManager(readFile, memory);
+	content.shaderProgram = shaderProgram;
 
-	//globals->enterButton->SetSampleArea({ 75, 0, 40, 66 });
+	enterButton = new Drawing::Sprite(content.Load<Drawing::Texture2D>("EnterButton.png"), shaderProgram);
+	//enterButton->SetSampleArea({ 75, 0, 40, 66 });
 
-	Drawing::Geometry *virtMesh = Content::ParseOBJ("Assets/virt/virt.obj", 21, shaderProgram, readFile);
-	//DebugOutputGLErrors(messageError);
-	Virt = new Drawing::Model(virtMesh);
+	Virt = new Drawing::Model(content.Load<Drawing::Geometry>({ "Assets/virt/virt.obj" }));
 	Virt->Size = { 20, 20, 20 };
 
 	arrow = Drawing::MakeArrow({ 1, 1, 1 }, 16, shaderProgram);
 	arrow->Rotation = Matrix4::CreateRotationX(Pi32 / 2);
+	arrow->Position.y = 550;
+	arrow->Size.z = 3;
+	arrow->Size *= 50;
 
 	/*Camera = new Drawing::SphericalCamera();
 	Camera->SetProjection(Matrix4::CreatePerspective(Pi32 / 2, 16.0f / 9.0f, 1, 1000));
@@ -86,11 +91,6 @@ void TestScene::Initialize(ReadFileFunc *readFile, DebugMessageErrorFunc *messag
 
 	Camera = new Drawing::Camera2D(gameState->WindowSettings.WindowSize, { 0, 0 });
 	gameState->Rescalers.RegisterObject(&(Camera->Projection), Matrix4::RescaleOrthographic);
-
-	arrow->Position.y = 550;
-	arrow->Size.z = 3;
-	arrow->Size *= 50;
-	//Virt->Size *= 20;
 }
 
 void TestScene::HandleInput(GameState *state)
@@ -102,7 +102,6 @@ void TestScene::Update(GameState *state)
 {
 	Camera->Update();
 	Virt->Rotation *= Matrix4::CreateRotationY(0.05f);
-	//Virt->Rotation *= Matrix4::CreateRotationX(0.10f);
 }
 
 void TestScene::Draw(GameState *state)

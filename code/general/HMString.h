@@ -22,6 +22,12 @@ public:
 	}
 	HMString(char* text, uint32 size) : size(size), text(text) {}
 
+	HMString(const HMString &other)
+	{
+		text = CString::CopySubstring(other.RawCString(), other.Length() - 1);
+		size = other.Length();
+	}
+
 	uint32 Length() const { return size; }
 	char* RawCString() { return text; }
 	char* RawCString() const { return text; }

@@ -3,6 +3,7 @@
 
 #include "../handmade_typedefs.h"
 #include "../math/Vector3.cpp"
+#include "../general/HMString.h"
 #include "../general/StringHelpers.cpp"
 #include "Texture2D.h"
 
@@ -10,8 +11,6 @@ namespace Drawing
 {
 	struct Material
 	{
-		char *Name = nullptr;
-		int32 NameLength = 0;
 		Vector3 AmbientColor = { 1, 1, 1 };
 		Texture2D *AmbientMap = nullptr;
 		Vector3 DiffuseColor = { 1, 1, 1 };
@@ -145,18 +144,18 @@ namespace Drawing
 		}
 
 		Material() {}
-		Material(char *name, int32 nameLength, Texture2D* diffuse) : Name(name), NameLength(nameLength), DiffuseMap(diffuse) { }
+		Material(Texture2D* diffuse) : DiffuseMap(diffuse) { }
 
-		Material(const Material &other) : NameLength(other.NameLength)
+		Material(const Material &other)
 		{
 			memcpy(this, &other, sizeof(Material));
-			Name = CString::CopySubstring(Name, NameLength - 1);
 		}
 
 		Material(Material &&other) : Material()
 		{
 			swap(*this, other);
 		}
+
 		/**
 			/brief Prepares the GL to draw meshes using this material
 		*/
@@ -169,13 +168,6 @@ namespace Drawing
 		{
 			swap(*this, other);
 			return *this;
-		}
-
-		~Material()
-		{
-			delete[] Name;
-			NameLength = 0;
-			Name = nullptr;
 		}
 	};
 }

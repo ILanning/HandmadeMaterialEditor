@@ -2,6 +2,9 @@
 #define HANDMADE_MTLLOADER_CPP
 
 #include "MTLLoader.h"
+#include "../general/StaticArray.h"
+#include "../general/ArrayList.h"
+#include "../general/memory/NewDeleteArena.h"
 #include "../general/StringHelpers.cpp"
 #include "../general/PathHelpers.cpp"
 #include "../drawing/Texture2D.h"
@@ -13,235 +16,236 @@ namespace Content
 	{
 		using namespace Drawing;
 
-		Vector3 ParseMTLVec3(char *string, int32 length, int32 offset, Vector3 defaultValue = {}, int32 *readFinishIndex = nullptr)
+		namespace _OBJInternal
 		{
-			Vector3 result = defaultValue;
-			char *nextFloat = string + offset;
-
-			for (int32 i = 0; i < Vector3::ElementCount; i++)
+			Vector3 ParseMTLVec3(char *string, int32 length, int32 offset, Vector3 defaultValue = {}, int32 *readFinishIndex = nullptr)
 			{
+				Vector3 result = defaultValue;
+				char *nextFloat = string + offset;
+
+				for (int32 i = 0; i < Vector3::ElementCount; i++)
+				{
+					char *readEnd = nullptr;
+					float value = strtof(nextFloat, &readEnd);
+					if (readEnd == nextFloat || (int32)(readEnd - string) > length) //TODO(Ian): Test this with whitespace
+					{
+						break;
+					}
+					result.elements[i] = value;
+					nextFloat = readEnd;
+				}
+
+				if (readFinishIndex)
+				{
+					*readFinishIndex = (int32)(nextFloat - string);
+				}
+				return result;
+			}
+
+			Vector2 ParseMTLVec2(char *string, int32 length, int32 offset, Vector2 defaultValue, int32 *readFinishIndex = nullptr)
+			{
+				Vector2 result = defaultValue;
+				char *nextFloat = string + offset;
+
+				for (int32 i = 0; i < Vector2::ElementCount; i++)
+				{
+					char *readEnd = nullptr;
+					float value = strtof(nextFloat, &readEnd);
+					if (readEnd == nextFloat || (int32)(readEnd - string) > length) //TODO(Ian): Test this with whitespace
+					{
+						break;
+					}
+					result.elements[i] = value;
+					nextFloat = readEnd;
+				}
+
+				if (readFinishIndex)
+				{
+					*readFinishIndex = (int32)(nextFloat - string);
+				}
+				return result;
+			}
+
+			float ParseMTLFloat(char *string, int32 length, int32 offset, float defaultValue, int32 *readFinishIndex = nullptr)
+			{
+				float result = defaultValue;
+				char *nextFloat = string + offset;
+
 				char *readEnd = nullptr;
 				float value = strtof(nextFloat, &readEnd);
-				if (readEnd == nextFloat || (int32)(readEnd - string) > length) //TODO(Ian): Test this with whitespace
+				if (!(readEnd == nextFloat || (int32)(readEnd - string) > length)) //TODO(Ian): Test this with whitespace
 				{
-					break;
+					result = value;
+					nextFloat = readEnd;
 				}
-				result.elements[i] = value;
-				nextFloat = readEnd;
-			}
 
-			if (readFinishIndex)
-			{
-				*readFinishIndex = (int32)(nextFloat - string);
-			}
-			return result;
-		}
-
-		Vector2 ParseMTLVec2(char *string, int32 length, int32 offset, Vector2 defaultValue, int32 *readFinishIndex = nullptr)
-		{
-			Vector2 result = defaultValue;
-			char *nextFloat = string + offset;
-
-			for (int32 i = 0; i < Vector2::ElementCount; i++)
-			{
-				char *readEnd = nullptr;
-				float value = strtof(nextFloat, &readEnd);
-				if (readEnd == nextFloat || (int32)(readEnd - string) > length) //TODO(Ian): Test this with whitespace
+				if (readFinishIndex)
 				{
-					break;
+					*readFinishIndex = (int32)(nextFloat - string);
 				}
-				result.elements[i] = value;
-				nextFloat = readEnd;
+				return result;
 			}
 
-			if (readFinishIndex)
+			bool ParseMTLBool(char *string, int32 length, int32 offset, bool defaultValue, int32 *readFinishIndex = nullptr)
 			{
-				*readFinishIndex = (int32)(nextFloat - string);
-			}
-			return result;
-		}
+				bool result = defaultValue;
 
-		float ParseMTLFloat(char *string, int32 length, int32 offset, float defaultValue, int32 *readFinishIndex = nullptr)
-		{
-			float result = defaultValue;
-			char *nextFloat = string + offset;
-
-			char *readEnd = nullptr;
-			float value = strtof(nextFloat, &readEnd);
-			if (!(readEnd == nextFloat || (int32)(readEnd - string) > length)) //TODO(Ian): Test this with whitespace
-			{
-				result = value;
-				nextFloat = readEnd;
-			}
-
-			if (readFinishIndex)
-			{
-				*readFinishIndex = (int32)(nextFloat - string);
-			}
-			return result;
-		}
-
-		bool ParseMTLBool(char *string, int32 length, int32 offset, bool defaultValue, int32 *readFinishIndex = nullptr)
-		{
-			bool result = defaultValue;
-
-			if (string[offset + 2] == 'n') //on
-			{
-				result = true;
-				offset += 3;
-			}
-			else if (string[offset + 2] == 'f') //off
-			{
-				result = false;
-				offset += 4;
-			}
-
-			if (readFinishIndex)
-			{
-				*readFinishIndex = offset;
-			}
-
-			return result;
-		}
-
-		MTLTextureOptions ParseMapLineOptions(char *line, int32 lineLength, int32 offset, char *folder, bool isScalar, int32 *readFinishIndex = nullptr)
-		{
-			/*
-			Ka, Kd, Ks
-			-blendu on | off                   (Texture blending (?) - u direction)
-			-blendv on | off                   (Texture blending (?) - v direction)
-			-cc on | off                       (Color correction)
-			-clamp on | off                    (Texture clamping - restricts u and v to the range 0.0-1.0)
-			-mm base gain                      (Modifies the colors in the texture: color = (start * gain) + base)
-			(For these three, v and w are *optional*)
-			-o u v w                           (Offsets the origin of the texture)
-			-s u v w                           (Scales the texture)
-			-t u v w                           (Adds variation to the texture procedurally)
-			-texres value                      (Specifies the resolution of the final texture)
-
-			Ns, d, bump, disp, decal
-			-blendu on | off
-			-blendv on | off
-			-clamp on | off
-			-imfchan r | g | b | m | l | z     (Specifies which channel a texture's data is found in within an image)
-			-mm base gain
-			-o u v w
-			-s u v w
-			-t u v w
-			-texres value
-
-			bump
-			-bm mult                           (Multiply all values in the bump map by this)
-			*/
-			MTLTextureOptions options = {};
-
-			//TODO(Ian):  This function will cause issues if the texture's filename starts with a number, 
-			//            rewind slightly if something other than a space directly follows the last number read?
-			int32 currPos = CString::FindNonWhitespace(line, lineLength, offset);
-			while (currPos != -1)
-			{
-				if (line[currPos] == '-')
+				if (string[offset + 2] == 'n') //on
 				{
-					currPos++;
-					if (CString::FindSubstring("blendu", 6, line, 6, currPos) != -1)
-					{
-						currPos += 7;
-						options.BlendU = ParseMTLBool(line, lineLength, currPos, true, &currPos);
-					}
-					else if (CString::FindSubstring("blendv", 6, line, 6, currPos) != -1)
-					{
-						currPos += 7;
-						options.BlendV = ParseMTLBool(line, lineLength, currPos, true, &currPos);
-					}
-					else if (CString::FindSubstring("cc", 2, line, 2, currPos) != -1)
-					{
-						currPos += 3;
-						options.ColorCorrection = ParseMTLBool(line, lineLength, currPos, true, &currPos);
-					}
-					else if (CString::FindSubstring("clamp", 5, line, 5, currPos) != -1)
-					{
-						currPos += 6;
-						options.Clamp = ParseMTLBool(line, lineLength, currPos, true, &currPos);
-					}
-					else if (CString::FindSubstring("mm", 2, line, 2, currPos) != -1)
-					{
-						currPos += 3;
-						options.ColorMod = ParseMTLVec2(line, lineLength, currPos, { 1, 0 }, &currPos);
-					}
-					else if (CString::FindSubstring("texres", 6, line, 6, currPos) != -1)
-					{
-						currPos += 7;
-						//options.ColorMod = ParseMTLVec2(string, length, currPos, { 1, 0 }, &currPos);
-					}
-					else if (CString::FindSubstring("imfchan", 7, line, 7, currPos) != -1)
-					{
-						currPos += 8;
-
-					}
-					else if (CString::FindSubstring("bm", 2, line, 2, currPos) != -1)
-					{
-						currPos += 3;
-						options.BumpMultiplier = ParseMTLFloat(line, lineLength, currPos, 1, &currPos);
-					}
-					else if (line[currPos] == 'o')
-					{
-						currPos += 2;
-						options.Offset = ParseMTLVec3(line, lineLength, currPos, { 1, 0 }, &currPos);
-					}
-					else if (line[currPos] == 's')
-					{
-						currPos += 2;
-						options.Scale = ParseMTLVec3(line, lineLength, currPos, { 1, 0 }, &currPos);
-					}
-					else if (line[currPos] == 't')
-					{
-						currPos += 2;
-						options.Turbulence = ParseMTLVec3(line, lineLength, currPos, { 1, 0 }, &currPos);
-					}
+					result = true;
+					offset += 3;
 				}
-				else
+				else if (string[offset + 2] == 'f') //off
 				{
-					int32 endPos = CString::FindCharacter(line, ' ', lineLength, currPos);
-					if (endPos == -1)
-					{
-						endPos = lineLength;
-					}
-					char *path = CString::CopySubstring(line, endPos - currPos, &options.PathLength, lineLength, currPos);
-					if (Path::IsRelative(path))
-					{
-						char *pathEnd = path;
-
-						path = Path::Combine(folder, pathEnd, 0, 0, &options.PathLength);
-
-						delete[] pathEnd;
-					}
-
-					options.TexturePath = path;
-					currPos += endPos;
+					result = false;
+					offset += 4;
 				}
-				currPos = CString::FindNonWhitespace(line, lineLength, currPos);
+
+				if (readFinishIndex)
+				{
+					*readFinishIndex = offset;
+				}
+
+				return result;
 			}
 
-			if (readFinishIndex)
+			MTLTextureOptions ParseMapLineOptions(char *line, int32 lineLength, int32 offset, char *folder, bool isScalar, int32 *readFinishIndex = nullptr)
 			{
-				*readFinishIndex = currPos;
+				/*
+				Ka, Kd, Ks
+				-blendu on | off                   (Texture blending (?) - u direction)
+				-blendv on | off                   (Texture blending (?) - v direction)
+				-cc on | off                       (Color correction)
+				-clamp on | off                    (Texture clamping - restricts u and v to the range 0.0-1.0)
+				-mm base gain                      (Modifies the colors in the texture: color = (start * gain) + base)
+				(For these three, v and w are *optional*)
+				-o u v w                           (Offsets the origin of the texture)
+				-s u v w                           (Scales the texture)
+				-t u v w                           (Adds variation to the texture procedurally)
+				-texres value                      (Specifies the resolution of the final texture)
+
+				Ns, d, bump, disp, decal
+				-blendu on | off
+				-blendv on | off
+				-clamp on | off
+				-imfchan r | g | b | m | l | z     (Specifies which channel a texture's data is found in within an image)
+				-mm base gain
+				-o u v w
+				-s u v w
+				-t u v w
+				-texres value
+
+				bump
+				-bm mult                           (Multiply all values in the bump map by this)
+				*/
+				MTLTextureOptions options = {};
+
+				//TODO(Ian):  This function will cause issues if the texture's filename starts with a number, 
+				//            rewind slightly if something other than a space directly follows the last number read?
+				int32 currPos = CString::FindNonWhitespace(line, lineLength, offset);
+				while (currPos != -1)
+				{
+					if (line[currPos] == '-')
+					{
+						currPos++;
+						if (CString::FindSubstring("blendu", 6, line, 6, currPos) != -1)
+						{
+							currPos += 7;
+							options.BlendU = ParseMTLBool(line, lineLength, currPos, true, &currPos);
+						}
+						else if (CString::FindSubstring("blendv", 6, line, 6, currPos) != -1)
+						{
+							currPos += 7;
+							options.BlendV = ParseMTLBool(line, lineLength, currPos, true, &currPos);
+						}
+						else if (CString::FindSubstring("cc", 2, line, 2, currPos) != -1)
+						{
+							currPos += 3;
+							options.ColorCorrection = ParseMTLBool(line, lineLength, currPos, true, &currPos);
+						}
+						else if (CString::FindSubstring("clamp", 5, line, 5, currPos) != -1)
+						{
+							currPos += 6;
+							options.Clamp = ParseMTLBool(line, lineLength, currPos, true, &currPos);
+						}
+						else if (CString::FindSubstring("mm", 2, line, 2, currPos) != -1)
+						{
+							currPos += 3;
+							options.ColorMod = ParseMTLVec2(line, lineLength, currPos, { 1, 0 }, &currPos);
+						}
+						else if (CString::FindSubstring("texres", 6, line, 6, currPos) != -1)
+						{
+							currPos += 7;
+							//options.ColorMod = ParseMTLVec2(string, length, currPos, { 1, 0 }, &currPos);
+						}
+						else if (CString::FindSubstring("imfchan", 7, line, 7, currPos) != -1)
+						{
+							currPos += 8;
+
+						}
+						else if (CString::FindSubstring("bm", 2, line, 2, currPos) != -1)
+						{
+							currPos += 3;
+							options.BumpMultiplier = ParseMTLFloat(line, lineLength, currPos, 1, &currPos);
+						}
+						else if (line[currPos] == 'o')
+						{
+							currPos += 2;
+							options.Offset = ParseMTLVec3(line, lineLength, currPos, { 1, 0 }, &currPos);
+						}
+						else if (line[currPos] == 's')
+						{
+							currPos += 2;
+							options.Scale = ParseMTLVec3(line, lineLength, currPos, { 1, 0 }, &currPos);
+						}
+						else if (line[currPos] == 't')
+						{
+							currPos += 2;
+							options.Turbulence = ParseMTLVec3(line, lineLength, currPos, { 1, 0 }, &currPos);
+						}
+					}
+					else
+					{
+						int32 endPos = CString::FindCharacter(line, ' ', lineLength, currPos);
+						if (endPos == -1)
+						{
+							endPos = lineLength;
+						}
+						char *path = CString::CopySubstring(line, endPos - currPos, &options.PathLength, lineLength, currPos);
+						if (Path::IsRelative(path))
+						{
+							char *pathEnd = path;
+
+							path = Path::Combine(folder, pathEnd, 0, 0, &options.PathLength);
+
+							delete[] pathEnd;
+						}
+
+						options.TexturePath = path;
+						currPos += endPos;
+					}
+					currPos = CString::FindNonWhitespace(line, lineLength, currPos);
+				}
+
+				if (readFinishIndex)
+				{
+					*readFinishIndex = currPos;
+				}
+				return options;
 			}
-			return options;
 		}
 
-		StretchyArray<Drawing::Material> *ParseMTL(FileData toLoad, StretchyArray<Drawing::Material> *materialList = nullptr)
+		void ParseMTL(FileData toLoad, Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>& materialList)
 		{
+			using namespace _OBJInternal;
 
 			bool endOfFile = false;
 			bool materialFound = false;
 			char *file = (char *)toLoad.File;
 			char *fileDirectory = Path::GetParentDirectory(toLoad.Path);
 			int32 fileLength = toLoad.FileSize;
-			if (!materialList)
-			{
-				materialList = new StretchyArray<Material>();
-			}
 			Material currentMaterial = Material();
+			HMString currentMatName = {};
 
 			int32 nextLineStart = CString::FindNonWhitespace(file, fileLength, 0);
 			int32 nextLineEnd = CString::FindLineEnd(file, fileLength, nextLineStart);
@@ -261,12 +265,13 @@ namespace Content
 					}
 					else
 					{
-						materialList->PushBack(currentMaterial);
+						materialList.Add({ currentMatName, currentMaterial });
 					}
 
 					currentMaterial = Material();
 					int32 nameLength = nextLineEnd - (nextLineStart + 7);
-					currentMaterial.Name = CString::CopySubstring(file, nameLength, &currentMaterial.NameLength, fileLength, nextLineStart + 7);
+					char* name = CString::CopySubstring(file, nameLength, &nameLength, fileLength, nextLineStart + 7);
+					currentMatName = { name, (uint32)nameLength };
 				}
 				else if (file[nextLineStart] == 'K' || file[nextLineStart] == 'T')
 				{
@@ -391,68 +396,58 @@ namespace Content
 
 			if (materialFound)
 			{
-				materialList->PushBack(currentMaterial);
-				return materialList;
+				materialList.Add({ currentMatName, currentMaterial });
 			}
 			else
 			{
 				//TODO(Ian): Logging, provide a way to report a failure to find any materials
-				return nullptr;
+				return;
 			}
 		}
 
-		Drawing::Material *ParseMTL(FileData file, int32 &outMaterialCount)
+		StaticArray<NamedMTL> ParseMTL(FileData file, Memory::NewDeleteArena& arena)
 		{
-			using namespace Drawing;
+			auto mats = Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>(&arena);
+			ParseMTL(file, mats);
 
-			StretchyArray<Material> *mats = ParseMTL(file);
-			if (mats)
+			if (mats.Length() > 0)
 			{
-				outMaterialCount = mats->Length();
-				Material *outputArray = mats->ToArray();
-				delete mats;
-
-				return outputArray;
+				auto *outputArray = mats.ToArray(arena);
+				return { outputArray, (uint32)mats.Length() };
 			}
 			else
 			{
-				outMaterialCount = 0;
-				return nullptr;
+				return { nullptr, 0 };
 			}
 		}
 
-		StretchyArray<Drawing::Material> *ParseMTL(char *path, int32 pathLength, ReadFileFunc *readFile, StretchyArray<Drawing::Material> *materialList = nullptr)
+		void ParseMTL(HMString path, ReadFileFunc* readFile, Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>& materialList)
 		{
 			bool success = false;
-			FileData file = readFile(path, pathLength, &success);
+			FileData file = readFile(path.RawCString(), path.Length(), &success);
 			if (success)
 			{
-				return ParseMTL(file, materialList);
+				ParseMTL(file, materialList);
 			}
 			else
 			{
 				//TODO(Ian): Logging, provide a way to report a failure to load the file
-				return nullptr;
+				return;
 			}
 		}
 
-		Drawing::Material *ParseMTL(char *path, int32 pathLength, ReadFileFunc *readFile, int32 &outMaterialCount)
+		StaticArray<NamedMTL> ParseMTL(HMString path, ReadFileFunc *readFile, Memory::NewDeleteArena& arena)
 		{
-			using namespace Drawing;
-
-			StretchyArray<Material> *mats = ParseMTL(path, pathLength, readFile);
-			if (mats)
+			bool success = false;
+			FileData file = readFile(path.RawCString(), path.Length(), &success);
+			if (success)
 			{
-				outMaterialCount = mats->Length();
-				Material *outputArray = mats->ToArray();
-				delete mats;
-
-				return outputArray;
+				return ParseMTL(file, arena);
 			}
 			else
 			{
-				outMaterialCount = 0;
-				return nullptr;
+				//TODO(Ian): Logging, provide a way to report a failure to load the file
+				return{ nullptr, 0 };
 			}
 		}
 	}

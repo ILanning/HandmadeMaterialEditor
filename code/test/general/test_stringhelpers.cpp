@@ -166,7 +166,7 @@ TEST_CASE("Testing various C-string helper functions")
 		char *testStringB = " fgdgfd gff";
 		char *emptyString = "";
 
-		CHECK(CString::FindLineEnd(testStringA) == 6);
+		CHECK(CString::FindLineEnd(testStringA) == 5);
 		CHECK(CString::FindLineEnd(testStringB) == -1);
 		CHECK(CString::FindLineEnd(testStringA, 18, 7) == 16);
 

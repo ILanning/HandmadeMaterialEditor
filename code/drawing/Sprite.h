@@ -8,6 +8,8 @@
 #include "../math/Matrix4.h"
 #include "Vertex.h"
 #include "Mesh.h"
+#include "Material.h"
+#include "Texture2D.h"
 
 namespace Drawing
 {
@@ -27,7 +29,7 @@ namespace Drawing
 		///The clockwise rotation of the sprite, in radians.  Defaults to 0.
 		real32 Rotation;
 
-		Sprite(Vector2 position, real32 depth, Vector2 scale, real32 rotation, Math::Rectangle sampleArea, Material *material, GLuint shaderProgram) 
+		Sprite(Vector2 position, real32 depth, Vector2 scale, real32 rotation, Math::Rectangle sampleArea, Material *material, GLuint shaderProgram)
 			: Position(position), Depth(depth), Scale(scale), Rotation(rotation)
 		{
 			real32 texWidth = (real32)material->DiffuseMap->Width;
@@ -36,7 +38,7 @@ namespace Drawing
 
 			if (sampleArea.width == -1 && sampleArea.height == -1)
 			{
-				this->sampleArea = {0, 0, texWidth, texHeight};
+				this->sampleArea = { 0, 0, texWidth, texHeight };
 
 				uvTop = 0;
 				uvBot = 1;
@@ -73,7 +75,8 @@ namespace Drawing
 			imagePlane = new Mesh(verts, elements, 6, shaderProgram, material);
 		}
 
-		Sprite(Material *material, GLuint shaderProgram) : Sprite({ 0, 0 }, 0, { 1, 1 }, 0, {-1, -1, -1, -1}, material, shaderProgram) {}
+		Sprite(Material *material, GLuint shaderProgram) : Sprite({ 0, 0 }, 0, { 1, 1 }, 0, { -1, -1, -1, -1 }, material, shaderProgram) {}
+		Sprite(Texture2D *tex, GLuint shaderProgram) : Sprite({ 0, 0 }, 0, { 1, 1 }, 0, { -1, -1, -1, -1 }, new Material(tex), shaderProgram) {}
 
 		///Get the size and location of the current sample area.
 		Math::Rectangle GetSampleArea() const
@@ -86,7 +89,7 @@ namespace Drawing
 		{
 			sampleArea = area;
 
-			Texture2D &tex = *imagePlane->MeshMaterial->DiffuseMap;			
+			Texture2D &tex = *imagePlane->MeshMaterial->DiffuseMap;
 			VertexNormalTextureArray &verts = *(VertexNormalTextureArray*)(void*)imagePlane->Vertices;
 
 			real32 uvTop = area.y / tex.Height;
@@ -107,7 +110,7 @@ namespace Drawing
 		///Get the model matrix for this Sprite.
 		Matrix4 GetModelMatrix() const
 		{
-			return Matrix4::CreateTranslation({ Position.x, Position.y, Depth }) * Matrix4::CreateRotationZ(Rotation) * Matrix4::CreateScale({Scale.x, Scale.y, 1});
+			return Matrix4::CreateTranslation({ Position.x, Position.y, Depth }) * Matrix4::CreateRotationZ(Rotation) * Matrix4::CreateScale({ Scale.x, Scale.y, 1 });
 		}
 
 		///Draw this Sprite with the given View Projection matrix.

@@ -68,7 +68,10 @@ Core Goals:
 	Write MemoryArena class																			   - Done (StackArena) (11/1/18)
 	Write ArrayList class																			   - Done
 	Write HashMap/Dictionary class																	   - Done
-	Write ContentManager class																		   - 
+	Write AssetManager class																		   - Done
+	Rewire Sprite/Model/Geometry/Mesh/Material/Texture2D to rely on AssetManager rather than new       -
+	Read starting window position from file at startup and write to file at close                      -
+	Write SharedPtr class, use for large assets                                                        -
 	Write ShaderManager class																		   - 
 
 	Cleanup Pass - Examine all uses of new, VirtualAlloc(), etc. and ensure that there aren't any memory leaks

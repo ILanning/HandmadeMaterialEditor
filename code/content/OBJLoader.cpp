@@ -2,8 +2,9 @@
 #define HANDMADE_OBJLOADER_CPP
 
 #include "OBJLoader.h"
-#include "../general/StringHelpers.cpp"
 #include "../general/PathHelpers.cpp"
+#include "../general/StringHelpers.cpp"
+#include "../general/StaticArray.h"
 #include "../drawing/defaults/DefaultMaterials.h"
 #include "MTLLoader.cpp"
 #include <cstdlib>
@@ -77,7 +78,6 @@ namespace Content
 
 		ObjParser::ObjParser(FileData toLoad, ReadFileFunc *readFile, GLuint shaderProgram)
 		{
-
 			builtVertices = StretchyArray<Drawing::VertexNormalTexture>();
 			elements = StretchyArray<GLuint>();
 
@@ -93,7 +93,7 @@ namespace Content
 			uvs = StretchyArray<Vector2>();
 			uvs.PushBack({ 0, 0 });
 
-			materials = StretchyArray<Material>();
+			materials = Collections::HashMap<HMString, Material, Memory::NewDeleteArena>(&memory);
 			meshes = StretchyArray<Mesh*>();
 			textures = StretchyArray<Texture2D*>();
 			Material *setMaterial = Drawing::Defaults::BlankMaterial;
@@ -239,10 +239,11 @@ namespace Content
 						delete[] pathStart;
 						delete[] pathEnd;
 					}
+					auto results = ParseMTL({ path, (uint32)pathLength }, readFile, memory);
+					materials.AddMany(results);
+					memory.Deallocate(results.Data);
 
-					ParseMTL(path, pathLength, readFile, &materials);
 					delete[] path;
-
 					break;
 				}
 				case 'u': //usemtl
@@ -253,18 +254,23 @@ namespace Content
 					bool foundMaterial = false;
 					Material *currMat = nullptr;
 
-					int32 matCount = materials.Length();
+					/*int32 matCount = materials.Length();
 					for (int32 i = 0; i < matCount; i++)
 					{
 						currMat = &(materials[i]);
-						if (CString::IsEqual(file, currMat->Name, nextLineEnd, currMat->NameLength - 1, materialNameStart, 0))
+						if (CString::IsEqual(file, currMat->Name.RawCString(), nextLineEnd, currMat->Name.Length() - 1, materialNameStart, 0))
 						{
 							foundMaterial = true;
 							break;
 						}
-					}
-					if (foundMaterial)
+					}*/
+					int32 useNameLength = 0;
+					char* useNameChars = CString::CopySubstring(file, nextLineEnd - materialNameStart, &useNameLength, nextLineEnd, materialNameStart);
+					HMString useName = { useNameChars, (uint32)useNameLength };
+					
+					if (materials.CheckExists(useName))
 					{
+						currMat = &materials[useName];
 						//If the current list of built vertices and elements has any values, package that into a new finished mesh
 						if (builtVertices.Length() > 0)
 						{
@@ -273,6 +279,8 @@ namespace Content
 
 						setMaterial = currMat;
 					}
+
+					delete[] useNameChars;
 				}
 				default:
 					//TODO(Ian):  Warn over non-polygonal geometry data, since we don't care about supporting that
@@ -368,21 +376,22 @@ namespace Content
 			return result;
 		}
 
-		Material *ObjParser::ExportMaterials(int32 &outCount)
+		Collections::HashMap<HMString, Drawing::Material, Memory::NewDeleteArena> ObjParser::ExportMaterials()
 		{
-			outCount = materials.Length();
-			return materials.ToArray();
+			return materials;
 		}
 	}
 
-	Drawing::Geometry *ParseOBJ(char *path, const int32 pathLength, GLuint shaderProgram, ReadFileFunc *readFile)
+	Drawing::Geometry *ParseOBJ(char *path, int32 pathLength, GLuint shaderProgram, ReadFileFunc *readFile)
 	{
 		bool success = false;
 		FileData file = readFile(path, pathLength, &success);
 		if (success)
 		{
-			OBJ::ObjParser builder = OBJ::ObjParser(file, readFile, shaderProgram);
-			return builder.ExportGeometry();
+			OBJ::ObjParser* builder = new OBJ::ObjParser(file, readFile, shaderProgram);
+			Drawing::Geometry* geo = builder->ExportGeometry();
+			delete builder;
+			return geo;
 		}
 		else
 		{

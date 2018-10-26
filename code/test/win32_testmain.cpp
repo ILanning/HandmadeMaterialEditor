@@ -32,6 +32,12 @@ TEST_SUITE_BEGIN("file");
 
 TEST_SUITE_END();
 
+TEST_SUITE_BEGIN("content");
+
+#include "content/test_assetmanager.cpp"
+
+TEST_SUITE_END();
+
 //-lts list test suites
 //-tc=*x*
 //-sf --source-file=

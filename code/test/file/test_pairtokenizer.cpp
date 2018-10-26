@@ -22,10 +22,6 @@ namespace TestPairTokenizerHelpers
 
 	void CheckDictSet(HMString key, HMString value, Collections::HashMap<HMString, HMString, Memory::NewDeleteArena>& dict)
 	{
-		if (!dict.CheckExists(key))
-		{
-			dict.Add({ "test" }, {});
-		}
 		CHECK(dict.CheckExists(key));
 		CHECK(dict[key] == value);
 	}
