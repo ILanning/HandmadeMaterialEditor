@@ -252,6 +252,16 @@ namespace Collections
 			count -= deleteCount;
 		}
 
+		void EnsureCapacity(int32 minCapacity)
+		{
+			resizeUp(nextSizeUp(minCapacity));
+		}
+
+		Item* RawAccess()
+		{
+			return internalArray;
+		}
+
 		template <class ArrayAllocator>
 		Item* RangeToArray(ArrayAllocator& alloc, int32 startIndex, int32 arrayCount)
 		{
@@ -378,7 +388,7 @@ namespace Collections
 
 		bool resizeUp(int32 newSize, int32 gapIndex = 0, int32 gapCount = 0)
 		{
-			if (newSize == arraySize)
+			if (newSize <= arraySize)
 			{
 				return true;
 			}
@@ -407,7 +417,7 @@ namespace Collections
 
 		bool resizeDown(int32 newSize, int32 deleteIndex = 0, int32 deleteCount = 0)
 		{
-			if (newSize == arraySize)
+			if (newSize >= arraySize)
 			{
 				return true;
 			}

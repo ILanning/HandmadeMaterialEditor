@@ -189,13 +189,25 @@ TEST_CASE("Testing various C-string helper functions")
 	{
 
 	}
+	SUBCASE("Testing UpperChar")
+	{
+		CHECK(CString::UpperChar('u') == 'U');
+		CHECK(CString::UpperChar('U') == 'U');
+		CHECK(CString::UpperChar('!') == '!');
+	}
+	SUBCASE("Testing LowerChar")
+	{
+		CHECK(CString::LowerChar('U') == 'u');
+		CHECK(CString::LowerChar('u') == 'u');
+		CHECK(CString::LowerChar('!') == '!');
+	}
 	SUBCASE("Testing EditToUpper")
 	{
 		char *testString = "TestString 123\n";
 		char *testResult = "TESTSTRING 123\n";
 
 		char *modified = CString::CopySubstring(testString, 15);
-		CString::EditToUpper(modified, 16, 16);
+		CString::EditToUpper(modified, 16, 0, 16);
 
 		CHECK(CString::IsEqual(modified, testResult));
 
@@ -207,7 +219,7 @@ TEST_CASE("Testing various C-string helper functions")
 		char *testResult = "teststring 123\n";
 
 		char *modified = CString::CopySubstring(testString, 15);
-		CString::EditToLower(modified, 16, 16);
+		CString::EditToLower(modified, 16, 0, 16);
 
 		CHECK(CString::IsEqual(modified, testResult));
 

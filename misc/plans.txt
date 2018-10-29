@@ -70,9 +70,12 @@ Core Goals:
 	Write HashMap/Dictionary class																	   - Done
 	Write AssetManager class																		   - Done
 	Rewire Sprite/Model/Geometry/Mesh/Material/Texture2D to rely on AssetManager rather than new       -
-	Read starting window position from file at startup and write to file at close                      -
+	Read starting window position from file at startup and write to file at close                      - Done
 	Write SharedPtr class, use for large assets                                                        -
 	Write ShaderManager class																		   - 
+
+	Test current HashMap vs. one with a seperate cache aligned table for stored hashes 
+	  where the table only looks in the values on the same cache line
 
 	Cleanup Pass - Examine all uses of new, VirtualAlloc(), etc. and ensure that there aren't any memory leaks
 	Cleanup Pass - Organize everything into sensible namespaces

@@ -165,6 +165,8 @@ struct game_memory
     void *TransientStorage; // NOTE(casey): REQUIRED to be cleared to zero at startup
 
 	ReadFileFunc *ReadEntireFile;
+	WriteFileFunc *WriteEntireFile;
+
     debug_platform_free_file_memory *DEBUGPlatformFreeFileMemory;
     debug_platform_read_entire_file *DEBUGPlatformReadEntireFile;
     debug_platform_write_entire_file *DEBUGPlatformWriteEntireFile;

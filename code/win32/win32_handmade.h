@@ -9,7 +9,8 @@
    ======================================================================== */
 
 #include "InputProcessor.h"
-#include "../PlatformGameSettings.cpp"
+#include "../PlatformGameSettings.h"
+#include "../general/HMString.h"
 
 struct win32_offscreen_buffer
 {
@@ -101,5 +102,7 @@ global_variable bool32 GlobalPause;
 global_variable int64 GlobalPerfCountFrequency;
 global_variable HDC GlobalDeviceContext;
 global_variable PlatformGameSettings upcomingSettings;
+
+const HMString defaultSettingsLocation = { "settings.txt" };
 
 #endif

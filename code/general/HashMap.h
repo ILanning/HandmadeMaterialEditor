@@ -4,6 +4,7 @@
 #include "../handmade_typedefs.h"
 #include "HMPair.h"
 #include "HMString.h"
+#include "StaticArray.h"
 #define XXH_PRIVATE_API
 #include "../libraries/xxhash.h"
 

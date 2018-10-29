@@ -70,33 +70,6 @@ DEBUG_PLATFORM_READ_ENTIRE_FILE(DEBUGPlatformReadEntireFile)
 	return(Result);
 }
 
-PLATFORM_READ_FILE(DebugReadWrapper)
-{
-	FileData result = {};
-	result.Path = path;
-	result.PathSize = pathLength;
-
-	bool success = false;
-	debug_read_file_result file = DEBUGPlatformReadEntireFile({}, path, &success);
-
-	if (success)
-	{
-		result.File = file.Contents;
-		result.FileSize = file.ContentsSize;
-		result.IsLoaded = true;
-	}
-	else
-	{
-		result.IsLoaded = false;
-	}
-	if (outSuccess)
-	{
-		*outSuccess = success;
-	}
-
-	return result;
-}
-
 DEBUG_PLATFORM_MESSAGE_ERROR_FUNC(VSOutputDebugString)
 {
 	OutputDebugStringA(errorString);
@@ -128,6 +101,43 @@ DEBUG_PLATFORM_WRITE_ENTIRE_FILE(DEBUGPlatformWriteEntireFile)
 	}
 
 	return(Result);
+}
+
+PLATFORM_READ_FILE(DebugReadWrapper)
+{
+	FileData result = {};
+	result.Path = path;
+	result.PathSize = pathLength;
+
+	bool success = false;
+	debug_read_file_result file = DEBUGPlatformReadEntireFile({}, path, &success);
+
+	if (success)
+	{
+		result.File = file.Contents;
+		result.FileSize = file.ContentsSize;
+		result.IsLoaded = true;
+	}
+	else
+	{
+		result.IsLoaded = false;
+	}
+	if (outSuccess)
+	{
+		*outSuccess = success;
+	}
+
+	return result;
+}
+
+PLATFORM_WRITE_FILE(DebugWriteWrapper)
+{
+	bool success = DEBUGPlatformWriteEntireFile({}, path, fileLength, file);
+
+	if (outSuccess)
+	{
+		*outSuccess = success;
+	}
 }
 
 #endif

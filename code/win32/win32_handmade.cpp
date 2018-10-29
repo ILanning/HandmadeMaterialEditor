@@ -49,7 +49,9 @@
 #include "win32_graphics.cpp"
 #include "win32_debug.cpp"
 #include "InputProcessor.cpp"
+#include "../PlatformGameSettings.cpp"
 #include "../GameState.h"
+#include "../general/memory/NewDeleteArena.h"
 
 internal win32_game_code Win32LoadGameCode(char *SourceDLLName, char *TempDLLName)
 {
@@ -308,179 +310,216 @@ HGLRC InitializeOpenGL()
 	return glContext;
 }
 
+struct EasyReturnRect
+{
+	int32 x;
+	int32 y;
+	int32 width;
+	int32 height;
+};
+
+EasyReturnRect MakeFullscreen(HWND window)
+{
+	HMONITOR monitor = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
+	MONITORINFO monitorInfo = { sizeof(MONITORINFO) };
+	GetMonitorInfo(monitor, &monitorInfo);
+
+	EasyReturnRect result = { monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top,
+		monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top };
+
+	SetWindowLongPtr(window, GWL_STYLE,
+		WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE);
+	MoveWindow(window, result.x, result.y, result.width, result.height, TRUE);
+
+	return result;
+}
+
+void MakeWindowed(HWND window, EasyReturnRect& newDimensions)
+{
+	RECT rect = {newDimensions.x, newDimensions.y, newDimensions.x + newDimensions.width, newDimensions.y + newDimensions.height};
+	SetWindowLongPtr(window, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
+	AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+	MoveWindow(window, newDimensions.x, newDimensions.y, newDimensions.width, newDimensions.height, TRUE);
+}
+
 void ReconcileSettingsChanges(PlatformGameSettings &futureSettings, PlatformGameSettings &win32Settings, PlatformGameSettings &gameSettings, HWND window)
 {
+
 	if (futureSettings.Fullscreen != gameSettings.Fullscreen)
 	{
 		if (gameSettings.Fullscreen)
 		{
-			HMONITOR monitor = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
-			MONITORINFO monitorInfo = {sizeof(MONITORINFO)};
-			GetMonitorInfo(monitor, &monitorInfo);
-			int32 x = monitorInfo.rcMonitor.left;
-			int32 y = monitorInfo.rcMonitor.top;
-			int32 width = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
-			int32 height = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
+			EasyReturnRect result = MakeFullscreen(window);
 
-			futureSettings.cachedPosition = gameSettings.WindowPosition;
-			futureSettings.cachedSize = gameSettings.WindowSize;
-			futureSettings.WindowPosition = { (real32)x, (real32)y };
-			futureSettings.WindowSize = { (real32)width, (real32)height };
-
-			SetWindowLongPtr(window, GWL_STYLE,
-				WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE);
-			MoveWindow(window, x, y, width, height, TRUE);
+			futureSettings.WindowPosition = { (real32)result.x, (real32)result.y };
+			futureSettings.WindowSize = { (real32)result.width, (real32)result.height };
 		}
 		else
 		{
-			RECT rect;
-			rect.left = (int32)gameSettings.cachedPosition.x;
-			rect.top = (int32)gameSettings.cachedPosition.y;
-			rect.right = (int32)gameSettings.cachedSize.x + rect.left;
-			rect.bottom = (int32)gameSettings.cachedSize.y + rect.top;
+			EasyReturnRect rect = { (int32)gameSettings.CachedWindowedPosition.x, (int32)gameSettings.CachedWindowedPosition.y,
+				(int32)gameSettings.CachedWindowedSize.x, (int32)gameSettings.CachedWindowedSize.y };
 
-			futureSettings.WindowPosition = gameSettings.cachedPosition;
-			futureSettings.WindowSize = gameSettings.cachedSize;
+			futureSettings.WindowPosition = gameSettings.CachedWindowedPosition;
+			futureSettings.WindowSize = gameSettings.CachedWindowedSize;
 
-			SetWindowLongPtr(window, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
-			AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
-			MoveWindow(window, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, TRUE);
+			MakeWindowed(window, rect);
 		}
 		futureSettings.Fullscreen = gameSettings.Fullscreen;
 	}
+	if (futureSettings.CachedWindowedPosition != futureSettings.WindowPosition && !futureSettings.Fullscreen)
+	{
+		futureSettings.CachedWindowedPosition = futureSettings.WindowPosition;
+	}
+	if (futureSettings.CachedWindowedSize != futureSettings.WindowSize && !futureSettings.Fullscreen)
+	{
+		futureSettings.CachedWindowedSize = futureSettings.WindowSize;
+	}
+
 	win32Settings = futureSettings;
 }
 
 int CALLBACK WinMain(HINSTANCE Instance,
-					 HINSTANCE PrevInstance,
-					 LPSTR CommandLine,
-					 int ShowCode)
+	HINSTANCE PrevInstance,
+	LPSTR CommandLine,
+	int ShowCode)
 {
-    win32_state Win32State = {};
+	win32_state Win32State = {};
 
-    LARGE_INTEGER PerfCountFrequencyResult;
-    QueryPerformanceFrequency(&PerfCountFrequencyResult);
-    GlobalPerfCountFrequency = PerfCountFrequencyResult.QuadPart;
+	LARGE_INTEGER PerfCountFrequencyResult;
+	QueryPerformanceFrequency(&PerfCountFrequencyResult);
+	GlobalPerfCountFrequency = PerfCountFrequencyResult.QuadPart;
 
-    Win32GetEXEFileName(&Win32State);
+	Win32GetEXEFileName(&Win32State);
+	
+	char SourceGameCodeDLLFullPath[WIN32_STATE_FILE_NAME_COUNT];
+	Win32BuildEXEPathFileName(&Win32State, "handmade.dll",
+		sizeof(SourceGameCodeDLLFullPath), SourceGameCodeDLLFullPath);
 
-    char SourceGameCodeDLLFullPath[WIN32_STATE_FILE_NAME_COUNT];
-    Win32BuildEXEPathFileName(&Win32State, "handmade.dll",
-                              sizeof(SourceGameCodeDLLFullPath), SourceGameCodeDLLFullPath);
+	char TempGameCodeDLLFullPath[WIN32_STATE_FILE_NAME_COUNT];
+	Win32BuildEXEPathFileName(&Win32State, "handmade_temp.dll",
+		sizeof(TempGameCodeDLLFullPath), TempGameCodeDLLFullPath);
 
-    char TempGameCodeDLLFullPath[WIN32_STATE_FILE_NAME_COUNT];
-    Win32BuildEXEPathFileName(&Win32State, "handmade_temp.dll",
-                              sizeof(TempGameCodeDLLFullPath), TempGameCodeDLLFullPath);
+	// NOTE(casey): Set the Windows scheduler granularity to 1ms
+	// so that our Sleep() can be more granular.
+	UINT DesiredSchedulerMS = 1;
+	bool32 SleepIsGranular = (timeBeginPeriod(DesiredSchedulerMS) == TIMERR_NOERROR);
 
-    // NOTE(casey): Set the Windows scheduler granularity to 1ms
-    // so that our Sleep() can be more granular.
-    UINT DesiredSchedulerMS = 1;
-    bool32 SleepIsGranular = (timeBeginPeriod(DesiredSchedulerMS) == TIMERR_NOERROR);
-    
-    Win32LoadXInput();
-    
-    WNDCLASSA WindowClass = {};
-    
-    WindowClass.style = CS_HREDRAW|CS_VREDRAW|CS_OWNDC;
-    WindowClass.lpfnWndProc = Win32MainWindowCallback;
-    WindowClass.hInstance = Instance;
-//    WindowClass.hIcon;  //TODO(Ian): Add a window icon
-    WindowClass.lpszClassName = "HandmadeHeroWindowClass";
+	Win32LoadXInput();
 
-    if(RegisterClassA(&WindowClass))
-    {
-        HWND Window =
-            CreateWindowExA(
-                0, // WS_EX_TOPMOST|WS_EX_LAYERED,
-                WindowClass.lpszClassName,
-                "Handmade Material Editor",
-                WS_OVERLAPPEDWINDOW|WS_VISIBLE,
-                CW_USEDEFAULT,
-                CW_USEDEFAULT,
-                CW_USEDEFAULT,
-                CW_USEDEFAULT,
-                0,
-                0,
-                Instance,
-                0);
+	WNDCLASSA WindowClass = {};
 
-        if(Window)
-        {
-            //win32_sound_output SoundOutput = {};
+	WindowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+	WindowClass.lpfnWndProc = Win32MainWindowCallback;
+	WindowClass.hInstance = Instance;
+	//    WindowClass.hIcon;  //TODO(Ian): Add a window icon
+	WindowClass.lpszClassName = "HandmadeHeroWindowClass";
+
+	if (RegisterClassA(&WindowClass))
+	{
+		Memory::NewDeleteArena tempArena = Memory::NewDeleteArena();
+		bool settingsReadSuccess = Win32State.Settings.Import(defaultSettingsLocation, DebugReadWrapper, tempArena);
+		if (!settingsReadSuccess)
+		{
+			HMString defaultSettings = PlatformGameSettings::GenDefault();
+			DebugWriteWrapper(defaultSettingsLocation.RawCString(), defaultSettingsLocation.Length(),
+				defaultSettings.RawCString(), defaultSettings.Length(), nullptr);
+			Win32State.Settings.Import(defaultSettingsLocation, DebugReadWrapper, tempArena);
+		}
+
+		HWND Window =
+			CreateWindowExA(
+				0, // WS_EX_TOPMOST|WS_EX_LAYERED,
+				WindowClass.lpszClassName,
+				Win32State.Settings.GetWindowTitle(),
+				WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+				(int32)Win32State.Settings.CachedWindowedPosition.x,
+				(int32)Win32State.Settings.CachedWindowedPosition.y,
+				(int32)Win32State.Settings.CachedWindowedSize.x,
+				(int32)Win32State.Settings.CachedWindowedSize.y,
+				0,
+				0,
+				Instance,
+				0);
+
+		if (Window)
+		{
+			//win32_sound_output SoundOutput = {};
 
 			GlobalDeviceContext = GetDC(Window);
 
-            // TODO(casey): How do we reliably query on this on Windows?
-            int MonitorRefreshHz = 60;
-            int Win32RefreshRate = GetDeviceCaps(GlobalDeviceContext, VREFRESH);
-            if(Win32RefreshRate > 1)
-            {
-                MonitorRefreshHz = Win32RefreshRate;
-            }
-            real32 GameUpdateHz = (MonitorRefreshHz / 2.0f);
-            real32 TargetSecondsPerFrame = 1.0f / (real32)GameUpdateHz;
+			// TODO(casey): How do we reliably query on this on Windows?
+			int MonitorRefreshHz = 60;
+			int Win32RefreshRate = GetDeviceCaps(GlobalDeviceContext, VREFRESH);
+			if (Win32RefreshRate > 1)
+			{
+				MonitorRefreshHz = Win32RefreshRate;
+			}
+			real32 GameUpdateHz = (MonitorRefreshHz / 2.0f);
+			real32 TargetSecondsPerFrame = 1.0f / (real32)GameUpdateHz;
 
 			GlobalRunning = true;
 
-            // TODO(casey): Make this like sixty seconds?
-            /*SoundOutput.SamplesPerSecond = 48000;
-            SoundOutput.BytesPerSample = sizeof(int16)*2;
-            SoundOutput.SecondaryBufferSize = SoundOutput.SamplesPerSecond*SoundOutput.BytesPerSample;
-            // TODO(casey): Actually compute this variance and see
-            // what the lowest reasonable value is.
-            SoundOutput.SafetyBytes = (int)(((real32)SoundOutput.SamplesPerSecond*(real32)SoundOutput.BytesPerSample / GameUpdateHz)/3.0f);
-            Win32InitDSound(Window, SoundOutput.SamplesPerSecond, SoundOutput.SecondaryBufferSize);
-            Win32ClearBuffer(&SoundOutput);
-            GlobalSecondaryBuffer->Play(0, 0, DSBPLAY_LOOPING);
+			// TODO(casey): Make this like sixty seconds?
+			/*SoundOutput.SamplesPerSecond = 48000;
+			SoundOutput.BytesPerSample = sizeof(int16)*2;
+			SoundOutput.SecondaryBufferSize = SoundOutput.SamplesPerSecond*SoundOutput.BytesPerSample;
+			// TODO(casey): Actually compute this variance and see
+			// what the lowest reasonable value is.
+			SoundOutput.SafetyBytes = (int)(((real32)SoundOutput.SamplesPerSecond*(real32)SoundOutput.BytesPerSample / GameUpdateHz)/3.0f);
+			Win32InitDSound(Window, SoundOutput.SamplesPerSecond, SoundOutput.SecondaryBufferSize);
+			Win32ClearBuffer(&SoundOutput);
+			GlobalSecondaryBuffer->Play(0, 0, DSBPLAY_LOOPING);
 
 #if 0
-            // NOTE(casey): This tests the PlayCursor/WriteCursor update frequency
-            // On the Handmade Hero machine, it was 480 samples.
-            while(GlobalRunning)
-            {
-                DWORD PlayCursor;
-                DWORD WriteCursor;
-                GlobalSecondaryBuffer->GetCurrentPosition(&PlayCursor, &WriteCursor);
+			// NOTE(casey): This tests the PlayCursor/WriteCursor update frequency
+			// On the Handmade Hero machine, it was 480 samples.
+			while(GlobalRunning)
+			{
+				DWORD PlayCursor;
+				DWORD WriteCursor;
+				GlobalSecondaryBuffer->GetCurrentPosition(&PlayCursor, &WriteCursor);
 
-                char TextBuffer[256];
-                _snprintf_s(TextBuffer, sizeof(TextBuffer),
-                            "PC:%u WC:%u\n", PlayCursor, WriteCursor);
-                OutputDebugStringA(TextBuffer);
-            }
+				char TextBuffer[256];
+				_snprintf_s(TextBuffer, sizeof(TextBuffer),
+							"PC:%u WC:%u\n", PlayCursor, WriteCursor);
+				OutputDebugStringA(TextBuffer);
+			}
 #endif
-            
-            // TODO(casey): Pool with bitmap VirtualAlloc
-            int16 *Samples = (int16 *)VirtualAlloc(0, SoundOutput.SecondaryBufferSize,
-                                                   MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE); */
+
+			// TODO(casey): Pool with bitmap VirtualAlloc
+			int16 *Samples = (int16 *)VirtualAlloc(0, SoundOutput.SecondaryBufferSize,
+												   MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE); */
 
 			InputProcessor inputProcessor = {};
 			inputProcessor.RegisterRawInput();
-            
+
 #if HANDMADE_INTERNAL
-            LPVOID BaseAddress = (LPVOID)Terabytes(2);
+			LPVOID BaseAddress = (LPVOID)Terabytes(2);
 #else
-            LPVOID BaseAddress = 0;
+			LPVOID BaseAddress = 0;
 #endif
-            
-            game_memory GameMemory = {};
-            GameMemory.PermanentStorageSize = Megabytes(64);
-            GameMemory.TransientStorageSize = Megabytes(256);
+
+			game_memory GameMemory = {};
+			GameMemory.PermanentStorageSize = Megabytes(64);
+			GameMemory.TransientStorageSize = Megabytes(256);
 			GameMemory.ReadEntireFile = DebugReadWrapper;
-            GameMemory.DEBUGPlatformFreeFileMemory = DEBUGPlatformFreeFileMemory;
-            GameMemory.DEBUGPlatformReadEntireFile = DEBUGPlatformReadEntireFile;
-            GameMemory.DEBUGPlatformWriteEntireFile = DEBUGPlatformWriteEntireFile;
+			GameMemory.WriteEntireFile = DebugWriteWrapper;
+			GameMemory.DEBUGPlatformFreeFileMemory = DEBUGPlatformFreeFileMemory;
+			GameMemory.DEBUGPlatformReadEntireFile = DEBUGPlatformReadEntireFile;
+			GameMemory.DEBUGPlatformWriteEntireFile = DEBUGPlatformWriteEntireFile;
 			GameMemory.DEBUGMessageError = VSOutputDebugString;
 
 
-            // TODO(casey): Handle various memory footprints (USING SYSTEM METRICS)
-            Win32State.TotalSize = GameMemory.PermanentStorageSize + GameMemory.TransientStorageSize;
-            Win32State.GameMemoryBlock = VirtualAlloc(BaseAddress, (size_t)Win32State.TotalSize,
-                                                      MEM_RESERVE|MEM_COMMIT,
-                                                      PAGE_READWRITE);
-            GameMemory.PermanentStorage = Win32State.GameMemoryBlock;
-            GameMemory.TransientStorage = ((uint8 *)GameMemory.PermanentStorage +
-                                           GameMemory.PermanentStorageSize);
-			
+			// TODO(casey): Handle various memory footprints (USING SYSTEM METRICS)
+			Win32State.TotalSize = GameMemory.PermanentStorageSize + GameMemory.TransientStorageSize;
+			Win32State.GameMemoryBlock = VirtualAlloc(BaseAddress, (size_t)Win32State.TotalSize,
+				MEM_RESERVE | MEM_COMMIT,
+				PAGE_READWRITE);
+			GameMemory.PermanentStorage = Win32State.GameMemoryBlock;
+			GameMemory.TransientStorage = ((uint8 *)GameMemory.PermanentStorage +
+				GameMemory.PermanentStorageSize);
+
+			/*
 			Win32State.Settings.SetWindowTitle("Handmade Material Editor", 25);
 			Win32State.Settings.Focused = true;
 			POINT clientPos = { 0, 0 };
@@ -489,65 +528,77 @@ int CALLBACK WinMain(HINSTANCE Instance,
 			RECT clientBounds = {};
 			GetClientRect(Window, &clientBounds);
 			Win32State.Settings.WindowSize = { (real32)clientBounds.right, (real32)clientBounds.bottom };
+			*/
+			if (Win32State.Settings.Fullscreen)
+			{
+				EasyReturnRect fullscreenDim = MakeFullscreen(Window);
+				Win32State.Settings.WindowPosition = { (real32)fullscreenDim.x, (real32)fullscreenDim.y };
+				Win32State.Settings.WindowSize = { (real32)fullscreenDim.width, (real32)fullscreenDim.height };
+			}
+			else
+			{
+				Win32State.Settings.WindowPosition = Win32State.Settings.CachedWindowedPosition;
+				Win32State.Settings.WindowSize = Win32State.Settings.CachedWindowedSize;
+			}
 
 			upcomingSettings = PlatformGameSettings(Win32State.Settings);
 
-            for(int ReplayIndex = 0;
-                ReplayIndex < ArrayCount(Win32State.ReplayBuffers);
-                ++ReplayIndex)
-            {
-                win32_replay_buffer *ReplayBuffer = &Win32State.ReplayBuffers[ReplayIndex];
+			for (int ReplayIndex = 0;
+				ReplayIndex < ArrayCount(Win32State.ReplayBuffers);
+				++ReplayIndex)
+			{
+				win32_replay_buffer *ReplayBuffer = &Win32State.ReplayBuffers[ReplayIndex];
 
-                // TODO(casey): Recording system still seems to take too long
-                // on record start - find out what Windows is doing and if
-                // we can speed up / defer some of that processing.
-                
-                Win32GetInputFileLocation(&Win32State, false, ReplayIndex,
-                                          sizeof(ReplayBuffer->FileName), ReplayBuffer->FileName);
+				// TODO(casey): Recording system still seems to take too long
+				// on record start - find out what Windows is doing and if
+				// we can speed up / defer some of that processing.
 
-                ReplayBuffer->FileHandle =
-                    CreateFileA(ReplayBuffer->FileName,
-                                GENERIC_WRITE|GENERIC_READ, 0, 0, CREATE_ALWAYS, 0, 0);
+				Win32GetInputFileLocation(&Win32State, false, ReplayIndex,
+					sizeof(ReplayBuffer->FileName), ReplayBuffer->FileName);
 
-                LARGE_INTEGER MaxSize;
-                MaxSize.QuadPart = Win32State.TotalSize;
-                ReplayBuffer->MemoryMap = CreateFileMapping(
-                    ReplayBuffer->FileHandle, 0, PAGE_READWRITE,
-                    MaxSize.HighPart, MaxSize.LowPart, 0);
+				ReplayBuffer->FileHandle =
+					CreateFileA(ReplayBuffer->FileName,
+						GENERIC_WRITE | GENERIC_READ, 0, 0, CREATE_ALWAYS, 0, 0);
 
-                ReplayBuffer->MemoryBlock = MapViewOfFile(
-                    ReplayBuffer->MemoryMap, FILE_MAP_ALL_ACCESS, 0, 0, Win32State.TotalSize);
-                if(ReplayBuffer->MemoryBlock)
-                {
-                }
-                else
-                {
-                    // TODO(casey): Diagnostic
-                }
-            }
+				LARGE_INTEGER MaxSize;
+				MaxSize.QuadPart = Win32State.TotalSize;
+				ReplayBuffer->MemoryMap = CreateFileMapping(
+					ReplayBuffer->FileHandle, 0, PAGE_READWRITE,
+					MaxSize.HighPart, MaxSize.LowPart, 0);
+
+				ReplayBuffer->MemoryBlock = MapViewOfFile(
+					ReplayBuffer->MemoryMap, FILE_MAP_ALL_ACCESS, 0, 0, Win32State.TotalSize);
+				if (ReplayBuffer->MemoryBlock)
+				{
+				}
+				else
+				{
+					// TODO(casey): Diagnostic
+				}
+			}
 
 			HGLRC glContext = InitializeOpenGL();
 			wglMakeCurrent(GlobalDeviceContext, glContext);
-			
-            if(GameMemory.PermanentStorage && GameMemory.TransientStorage && glContext)
-            {
-                GameInput Input[2] = {};
+
+			if (GameMemory.PermanentStorage && GameMemory.TransientStorage && glContext)
+			{
+				GameInput Input[2] = {};
 				GameInput *NewInput = &Input[0];
 				GameInput *OldInput = &Input[1];
-    
-                LARGE_INTEGER LastCounter = Win32GetWallClock();
-                LARGE_INTEGER FlipWallClock = Win32GetWallClock();
 
-                int DebugTimeMarkerIndex = 0;
-                win32_debug_time_marker DebugTimeMarkers[30] = {0};
+				LARGE_INTEGER LastCounter = Win32GetWallClock();
+				LARGE_INTEGER FlipWallClock = Win32GetWallClock();
 
-                DWORD AudioLatencyBytes = 0;
-                real32 AudioLatencySeconds = 0;
-                bool32 SoundIsValid = false;
+				int DebugTimeMarkerIndex = 0;
+				win32_debug_time_marker DebugTimeMarkers[30] = { 0 };
 
-                win32_game_code Game = Win32LoadGameCode(SourceGameCodeDLLFullPath,
-                                                         TempGameCodeDLLFullPath);
-                uint32 LoadCounter = 0;
+				DWORD AudioLatencyBytes = 0;
+				real32 AudioLatencySeconds = 0;
+				bool32 SoundIsValid = false;
+
+				win32_game_code Game = Win32LoadGameCode(SourceGameCodeDLLFullPath,
+					TempGameCodeDLLFullPath);
+				uint32 LoadCounter = 0;
 
 				if (Game.Initialize)
 				{
@@ -555,7 +606,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
 					Game.Initialize(&dummyThreadContext, &GameMemory);
 				}
 
-                uint64 LastCycleCount = __rdtsc();
+				uint64 LastCycleCount = __rdtsc();
 
 				//BEGIN MAIN GAME LOOP
 
@@ -936,7 +987,6 @@ int CALLBACK WinMain(HINSTANCE Instance,
 					GameInput *Temp = NewInput;
 					NewInput = OldInput;
 					OldInput = Temp;
-					// TODO(casey): Should I clear these here?
 
 #if 0
 					uint64 EndCycleCount = __rdtsc();
@@ -959,25 +1009,25 @@ int CALLBACK WinMain(HINSTANCE Instance,
 						DebugTimeMarkerIndex = 0;
 					}
 #endif
-					//}
 				}
-            
 				//END MAIN GAME LOOP
-}
-            else
-            {
-                // TODO(casey): Logging
-            }
-        }
-        else
-        {
-            // TODO(casey): Logging
-        }
-    }
-    else
-    {
-        // TODO(casey): Logging
-    }
-    
-    return(0);
+
+				Win32State.Settings.Export(defaultSettingsLocation, DebugWriteWrapper);
+			}
+			else
+			{
+				// TODO(casey): Logging
+			}
+		}
+		else
+		{
+			// TODO(casey): Logging
+		}
+	}
+	else
+	{
+		// TODO(casey): Logging
+	}
+
+	return(0);
 }

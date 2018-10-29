@@ -1,17 +1,13 @@
 #ifndef HANDMADE_STRINGHELPERS_CPP
 #define HANDMADE_STRINGHELPERS_CPP
 
+#include <cstdio>
+#include <memory.h>
 #include "../handmade_typedefs.h"
-#include "../handmade.h"
+#include "Assert.h"
 
 namespace CString
 {
-	struct LengthString
-	{
-		char *Characters;
-		int64 Length;
-	};
-
 	///Gets the starting index of the specified substring, if it is present.  Returns -1 if it is not.
 	int32 FindSubstring(const char *find, int32 findLength, const char *within, int32 withinLength, int32 startIndex = 0)
 	{
@@ -234,45 +230,55 @@ namespace CString
 		return result;
 	}
 
-	void EditToLower(char *string, int32 count = MaxInt32, int32 length = MaxInt32, int32 offset = 0)
+	char LowerChar(char character)
 	{
-		int32 finalValue = count + offset;
-		if (finalValue > length)
+		if (character >= 'A' && character <= 'Z')
 		{
-			finalValue -= finalValue - length;
-		}
-		if (finalValue <= 0)
-		{
-			return;
+			return character + ('a' - 'A');
 		}
 
-		for (int32 i = offset; i < finalValue; i++)
+		return character;
+	}
+
+	void EditToLower(char* string, int32 editCount = MaxInt32)
+	{
+		for (int32 i = 0; string[i] != '\0' && i < editCount; i++)
 		{
-			if (string[i] >= 'A' && string[i] <= 'Z')
-			{
-				string[i] += 'a' - 'A';
-			}
+			string[i] = LowerChar(string[i]);
 		}
 	}
 
-	void EditToUpper(char *string, int32 stringLength, int32 editCount, int32 offset = 0)
+	void EditToLower(char *string, int32 stringLength, int32 offset, int32 editCount = MaxInt32)
 	{
-		int32 finalValue = editCount + offset;
-		if (finalValue > stringLength)
+		for (int32 i = 0; i + offset < stringLength && i < editCount; i++)
 		{
-			finalValue -= finalValue - stringLength;
+			string[i + offset] = LowerChar(string[i + offset]);
 		}
-		if (finalValue <= 0)
+	}
+
+	char UpperChar(char character)
+	{
+		if (character >= 'a' && character <= 'z')
 		{
-			return;
+			return character - ('a' - 'A');
 		}
 
-		for (int32 i = offset; i < finalValue; i++)
+		return character;
+	}
+
+	void EditToUpper(char* string, int32 editCount = MaxInt32)
+	{
+		for (int32 i = 0; string[i] != '\0' && i < editCount; i++)
 		{
-			if (string[i] >= 'a' && string[i] <= 'z')
-			{
-				string[i] -= 'a' - 'A';
-			}
+			string[i] = UpperChar(string[i]);
+		}
+	}
+
+	void EditToUpper(char *string, int32 stringLength, int32 offset, int32 editCount = MaxInt32)
+	{
+		for (int32 i = 0; i + offset < stringLength && i < editCount; i++)
+		{
+			string[i + offset] = UpperChar(string[i + offset]);
 		}
 	}
 
@@ -332,6 +338,161 @@ namespace CString
 
 		outResult = result;
 		return true;
+	}
+
+	bool TryParseBool(const char *string, int32 stringLength, bool &outResult, int32 offset = 0, int32 *readFinishIndex = nullptr)
+	{
+		/*
+		Valid true:    	 Valid false:
+		true			 false
+		t				 f
+		yes				 no
+		y                n
+		on				 off
+		*/
+
+		bool result = false;
+		bool success = true;
+		int32 negate = 1;
+		int32 stringPos = FindNonWhitespace(string, stringLength, offset);
+
+		const int32 shortestValidLength = 5;
+		int32 bufferSize = shortestValidLength < stringLength - stringPos ? shortestValidLength : stringLength - stringPos;
+		char buffer[shortestValidLength];  //No need to use dynamic memory here, some of the buffer may just go unused
+
+		if (bufferSize <= 0)
+		{
+			return false;
+		}
+
+		for (int32 bufferPos = 0; bufferPos < bufferSize; bufferPos++)
+		{
+			buffer[bufferPos] = LowerChar(string[stringPos + bufferPos]);
+		}
+
+		int32 bufferPos = 0;
+		if (buffer[bufferPos] == 't')
+		{
+			if (bufferSize >= 4 && FindSubstring(buffer, 3, "rue", 3, 1))
+			{
+				stringPos += 4;
+			}
+			else
+			{
+				stringPos++;
+			}
+			result = true;
+		}
+		else if (buffer[bufferPos] == 'y')
+		{
+			if (bufferSize >= 3 && FindSubstring(buffer, 2, "es", 2, 1))
+			{
+				stringPos += 3;
+			}
+			else
+			{
+				stringPos++;
+			}
+			result = true;
+		}
+		else if (buffer[bufferPos] == 'f')
+		{
+			if (bufferSize >= 5 && FindSubstring(buffer, 4, "alse", 4, 1))
+			{
+				stringPos += 5;
+			}
+			else
+			{
+				stringPos++;
+			}
+		}
+		else if (buffer[bufferPos] == 'n')
+		{
+			if (bufferSize >= 2 && buffer[bufferPos + 1] == 'o')
+			{
+				stringPos += 2;
+			}
+			else
+			{
+				stringPos++;
+			}
+		}
+		else if (buffer[bufferPos] == 'o')
+		{
+			if (bufferSize >= 2 && buffer[bufferPos + 1] == 'n')
+			{
+				stringPos += 2;
+				result = true;
+			}
+			else if (bufferSize >= 3 && FindSubstring(buffer, 2, "ff", 2, 1))
+			{
+				stringPos += 3;
+			}
+			else
+			{
+				success = false;
+			}
+		}
+		else
+		{
+			success = false;
+		}
+
+		if (readFinishIndex)
+		{
+			*readFinishIndex = stringPos;
+		}
+
+		outResult = result;
+		return success;
+	}
+
+	/** Writes an int value to the given string, using as little space as possible.  Returns the number of characters used.
+	*/
+	int32 WriteInt(char* string, int32 stringLength, int32 value, int32 maxCharsUsed)
+	{
+		char buffer[12];
+
+		snprintf(buffer, 12, "%d", value);
+
+		int32 charsNeeded = 0;
+
+		while (buffer[charsNeeded] != '\0')
+		{
+			if (charsNeeded < maxCharsUsed && charsNeeded < stringLength)
+			{
+				string[charsNeeded] = buffer[charsNeeded];
+			}
+
+			charsNeeded++;
+		}
+
+		return charsNeeded;
+	}
+
+	int32 WriteChars(char* target, int32 targetLength, char* source, int32 sourceLength)
+	{
+		int32 writeAmount = targetLength <= sourceLength ? targetLength : sourceLength;
+		memcpy(target, source, writeAmount);
+		return writeAmount;
+	}
+
+	/** Writes either "true" or "false" to the given string depending on the input.  Returns the number of characters used.
+	*/
+	int32 WriteBool(char* string, int32 stringLength, bool value, int32 maxCharsUsed)
+	{
+		if (value && 4 < stringLength)
+		{
+			WriteChars(string, stringLength, "true", 4);
+			return 4;
+		}
+		else if (!value && 5 < stringLength)
+		{
+			WriteChars(string, stringLength, "false", 5);
+			return 5;
+		}
+
+		return 0;
 	}
 
 	bool IsEqual(const char *a, const char *b)

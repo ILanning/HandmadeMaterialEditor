@@ -2,6 +2,7 @@
 #define HANDMADE_HMSTRING_H
 
 #include "../handmade_typedefs.h"
+#include "StringHelpers.cpp"
 
 // Contains a character array and a size.  Must end in a null, but may also contain them in the middle of the text/
 class HMString
@@ -33,6 +34,16 @@ public:
 	char* RawCString() const { return text; }
 	char& operator [] (uint32 index) { return text[index]; }
 	char operator [] (uint32 index) const { return text[index]; }
+
+	int32 CopyTo(char* target, uint32 targetLength, int32 offset)
+	{
+		uint32 i = 0;
+		for (; i < size - 1 && i + offset < targetLength; i++)
+		{
+			target[i + offset] = text[i];
+		}
+		return i + offset;
+	}
 
 	bool operator ==(const HMString& other) const
 	{

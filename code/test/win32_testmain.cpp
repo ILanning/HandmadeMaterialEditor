@@ -28,13 +28,19 @@ TEST_SUITE_END();
 
 TEST_SUITE_BEGIN("file");
 
-#include "file/test_pairtokenizer.cpp"
+#include "file/test_pairserializer.cpp"
 
 TEST_SUITE_END();
 
 TEST_SUITE_BEGIN("content");
 
 #include "content/test_assetmanager.cpp"
+
+TEST_SUITE_END();
+
+TEST_SUITE_BEGIN("unsorted");
+
+#include "test_platformgamesettings.cpp"
 
 TEST_SUITE_END();
 

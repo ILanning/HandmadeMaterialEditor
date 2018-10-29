@@ -1,17 +1,19 @@
-#ifndef HANDMADE_PAIRTOKENIZER_H
-#define HANDMADE_PAIRTOKENIZER_H
+#ifndef HANDMADE_PAIRSERIALIZER_H
+#define HANDMADE_PAIRSERIALIZER_H
 
 #include "..\handmade_typedefs.h"
+#include "..\handmade_funcdefs.h"
+#include "..\general\ArrayList.h"
 #include "..\general\Assert.h"
 #include "..\general\HashMap.h"
+#include "..\general\HMPair.h"
 #include "..\general\HMString.h"
-#include "..\general\ArrayList.h"
 #include "..\general\StaticArray.h"
 #include "..\general\StringHelpers.cpp"
 
 namespace File
 {
-	namespace PairTokenizer
+	namespace PairSerializer
 	{
 		enum class ErrorCodes
 		{
@@ -45,11 +47,7 @@ namespace File
 			}
 		};
 
-		struct TokenPair
-		{
-			HMString First;
-			HMString Second;
-		};
+		typedef HMPair<HMString, HMString> TokenPair;
 
 		// Parses the next single token from the given text, allocating memory for the token string.
 		template<class Allocator>
@@ -214,7 +212,66 @@ namespace File
 
 			return resultDict;
 		}
+		
+		template<class Allocator>
+		Collections::HashMap<HMString, HMString, Allocator> ParseFile(HMString path, ReadFileFunc& readFile, Allocator& memory, bool* outSuccess = nullptr)
+		{
+			bool success = true;
+			FileData fileData = readFile(path.RawCString(), path.Length(), &success);
+
+			if (outSuccess)
+			{
+				*outSuccess = success;
+			}
+
+			if (success)
+			{
+				return ParseText({ (char*)fileData.File, fileData.FileSize }, memory);
+			}
+			return {};
+		}
+
+		template<class Allocator>
+		bool WriteFile(HMString path, WriteFileFunc& writeFile, StaticArray<HMPair<HMString, HMString>> data, Allocator& scratchAlloc)
+		{
+			int32 totalLength = 1;
+			for (uint32 i = 0; i < data.Length; i++)
+			{
+				totalLength += data[i].First.Length() + data[i].Second.Length() + 5;
+			}
+
+			char* fileText = scratchAlloc.Allocate<void>(totalLength);
+
+			itn32 fileTextIter = 0;
+			for (uint32 arrayIter = 0; arrayIter < data.Length; arrayIter++)
+			{
+				firstLength = data[arrayIter].First.Length() - 1;
+				secondLength = data[arrayIter].Second.Length() - 1;
+
+				for (uint32 firstIter = 0; firstIter < firstLength; firstIter++)
+				{
+					fileText[fileTextIter++] = data[arrayIter].First[firstIter];
+				}
+
+				fileText[fileTextIter++] = ' ';
+				fileText[fileTextIter++] = '=';
+				fileText[fileTextIter++] = ' ';
+
+				for (uint32 secondIter = 0; secondIter < secondLength; secondIter++)
+				{
+					fileText[fileTextIter++] = data[arrayIter].First[secondIter];
+				}
+
+				fileText[fileTextIter++] = '\r';
+				fileText[fileTextIter++] = '\n';
+			}
+
+			bool success = true;
+			writeFile(path.RawCString(), path.Length(), fileText, totalLength, &success);
+
+			return success;
+		}
 	}
 }
 
-#endif // !HANDMADE_PAIRTOKENIZER_H
+#endif // HANDMADE_PAIRSERIALIZER_H
