@@ -23,6 +23,14 @@ struct win32_offscreen_buffer
     int BytesPerPixel;
 };
 
+struct Win32BoundsRect
+{
+	int32 x;
+	int32 y;
+	int32 width;
+	int32 height;
+};
+
 struct win32_window_dimension
 {
     int Width;

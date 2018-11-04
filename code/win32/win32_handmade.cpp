@@ -151,7 +151,6 @@ internal LRESULT CALLBACK Win32MainWindowCallback(HWND Window,
 
 		case WM_SIZE:
 		{
-			//TODO(Ian): Respect fullscreen/maximization
 			upcomingSettings.WindowSize.x = LOWORD(LParam);
 			upcomingSettings.WindowSize.y = HIWORD(LParam);
 		} break;
@@ -310,21 +309,15 @@ HGLRC InitializeOpenGL()
 	return glContext;
 }
 
-struct EasyReturnRect
-{
-	int32 x;
-	int32 y;
-	int32 width;
-	int32 height;
-};
-
-EasyReturnRect MakeFullscreen(HWND window)
+/** Makes the window borderless and screen sized, and returns the new dimensions of the window.
+*/
+Win32BoundsRect MakeFullscreen(HWND window)
 {
 	HMONITOR monitor = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
 	MONITORINFO monitorInfo = { sizeof(MONITORINFO) };
 	GetMonitorInfo(monitor, &monitorInfo);
 
-	EasyReturnRect result = { monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top,
+	Win32BoundsRect result = { monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top,
 		monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top };
 
 	SetWindowLongPtr(window, GWL_STYLE,
@@ -334,7 +327,9 @@ EasyReturnRect MakeFullscreen(HWND window)
 	return result;
 }
 
-void MakeWindowed(HWND window, EasyReturnRect& newDimensions)
+/** Returns the window to a normal windowed state with the given dimensions.
+*/
+void MakeWindowed(HWND window, Win32BoundsRect& newDimensions)
 {
 	RECT rect = {newDimensions.x, newDimensions.y, newDimensions.x + newDimensions.width, newDimensions.y + newDimensions.height};
 	SetWindowLongPtr(window, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
@@ -342,6 +337,8 @@ void MakeWindowed(HWND window, EasyReturnRect& newDimensions)
 	MoveWindow(window, newDimensions.x, newDimensions.y, newDimensions.width, newDimensions.height, TRUE);
 }
 
+/** Takes the settings changes that have been made by Windows events and by the game itself, enacts them if necessary, and commits them to futureSettings.
+*/
 void ReconcileSettingsChanges(PlatformGameSettings &futureSettings, PlatformGameSettings &win32Settings, PlatformGameSettings &gameSettings, HWND window)
 {
 
@@ -349,14 +346,14 @@ void ReconcileSettingsChanges(PlatformGameSettings &futureSettings, PlatformGame
 	{
 		if (gameSettings.Fullscreen)
 		{
-			EasyReturnRect result = MakeFullscreen(window);
+			Win32BoundsRect result = MakeFullscreen(window);
 
 			futureSettings.WindowPosition = { (real32)result.x, (real32)result.y };
 			futureSettings.WindowSize = { (real32)result.width, (real32)result.height };
 		}
 		else
 		{
-			EasyReturnRect rect = { (int32)gameSettings.CachedWindowedPosition.x, (int32)gameSettings.CachedWindowedPosition.y,
+			Win32BoundsRect rect = { (int32)gameSettings.CachedWindowedPosition.x, (int32)gameSettings.CachedWindowedPosition.y,
 				(int32)gameSettings.CachedWindowedSize.x, (int32)gameSettings.CachedWindowedSize.y };
 
 			futureSettings.WindowPosition = gameSettings.CachedWindowedPosition;
@@ -376,6 +373,62 @@ void ReconcileSettingsChanges(PlatformGameSettings &futureSettings, PlatformGame
 	}
 
 	win32Settings = futureSettings;
+}
+
+/** Checks to make sure the window is at least partially on a monitor and returns true if it is.  
+    If it isn't, returns false and sets targetBounds to the bounds the window needs to be match to to be fully contained within the nearest monitor.
+*/
+bool CheckWindowFitsMonitor(HWND window, Win32BoundsRect &fixedBounds)
+{
+	//if window is not in monitor,
+	HMONITOR currMonitor = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
+	MONITORINFO monitorInfo = { sizeof(MONITORINFO) };
+	GetMonitorInfo(currMonitor, &monitorInfo);
+	RECT& monitorArea = monitorInfo.rcMonitor;
+
+	RECT windowArea = {};
+	GetWindowRect(window, &windowArea);
+
+	RECT dummy;
+	if (!IntersectRect(&dummy, &windowArea, &monitorInfo.rcMonitor))
+	{
+		int32 wWidth = windowArea.right - windowArea.left;
+		int32 wHeight = windowArea.bottom - windowArea.top;
+		int32 mWidth = monitorArea.right - monitorArea.left;
+		int32 mHeight = monitorArea.bottom - monitorArea.top;
+		fixedBounds = { windowArea.left, windowArea.top, wWidth, wHeight };
+
+		if (wWidth > mWidth)
+		{
+			fixedBounds.width = mWidth;
+		}
+		if (wHeight > mHeight)
+		{
+			fixedBounds.height = mHeight;
+		}
+
+		if (windowArea.left < monitorArea.left)
+		{
+			fixedBounds.x = monitorArea.left;
+		}
+		else if (windowArea.right > monitorArea.right)
+		{
+			fixedBounds.x = monitorArea.right - wWidth;
+		}
+
+		if (windowArea.top < monitorArea.top)
+		{
+			fixedBounds.y = monitorArea.top;
+		}
+		else if (windowArea.bottom > monitorArea.bottom)
+		{
+			fixedBounds.y = monitorArea.bottom - wHeight;
+		}
+
+		return false;
+	}
+
+	return true;
 }
 
 int CALLBACK WinMain(HINSTANCE Instance,
@@ -529,9 +582,21 @@ int CALLBACK WinMain(HINSTANCE Instance,
 			GetClientRect(Window, &clientBounds);
 			Win32State.Settings.WindowSize = { (real32)clientBounds.right, (real32)clientBounds.bottom };
 			*/
+
+			Win32BoundsRect targetBounds = {};
+			if (!CheckWindowFitsMonitor(Window, targetBounds))
+			{
+				Win32State.Settings.WindowPosition = { (real32)targetBounds.x, (real32)targetBounds.y };
+				Win32State.Settings.WindowSize = { (real32)targetBounds.width, (real32)targetBounds.height };
+				Win32State.Settings.CachedWindowedPosition = { (real32)targetBounds.x, (real32)targetBounds.y };
+				Win32State.Settings.CachedWindowedSize = { (real32)targetBounds.width, (real32)targetBounds.height };
+
+				MoveWindow(Window, targetBounds.x, targetBounds.y, targetBounds.width, targetBounds.height, true);
+			}
+
 			if (Win32State.Settings.Fullscreen)
 			{
-				EasyReturnRect fullscreenDim = MakeFullscreen(Window);
+				Win32BoundsRect fullscreenDim = MakeFullscreen(Window);
 				Win32State.Settings.WindowPosition = { (real32)fullscreenDim.x, (real32)fullscreenDim.y };
 				Win32State.Settings.WindowSize = { (real32)fullscreenDim.width, (real32)fullscreenDim.height };
 			}
