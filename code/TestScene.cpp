@@ -4,17 +4,18 @@
 #include "TestScene.h"
 
 #include "GameState.h"
+#include "content\AssetManager.cpp"
+#include "content\MeshCollection.h"
+#include "content\OBJLoader.cpp"
+#include "drawing\GeometryHelpers.cpp"
 #include "drawing\GLState.h"
-#include "drawing\Texture2D.h"
-#include "drawing\Geometry.h"
 #include "drawing\Sprite.h"
+#include "drawing\Texture2D.h"
 #include "drawing\Vertex.h"
+#include "general\StringHelpers.cpp"
+#include "math\Matrix4.cpp"
 #include "math\Vector2.cpp"
 #include "math\Vector3.cpp"
-#include "math\Matrix4.cpp"
-#include "drawing\GeometryHelpers.cpp"
-#include "content\OBJLoader.cpp"
-#include "general\StringHelpers.cpp"
 
 GLuint TestScene::BuildShaderProgram(HMString vertexSourcePath, HMString fragmentSourcePath, ReadFileFunc *readFile, DebugMessageErrorFunc *messageError)
 {
@@ -62,13 +63,16 @@ void TestScene::Initialize(ReadFileFunc *readFile, DebugMessageErrorFunc *messag
 	content = AssetManager(readFile, memory);
 	content.shaderProgram = shaderProgram;
 
-	enterButton = new Drawing::Sprite(content.Load<Drawing::Texture2D>("EnterButton.png"), shaderProgram);
+	bool success = false;
+	Drawing::Material tempEnterMat = Drawing::Material(content.Load<Drawing::Texture2D>("EnterButton.png", success));
+	AssetPtr<Drawing::Material> enterMat = content.AddManaged(tempEnterMat, "EnterMat", success);
+	enterButton = new Drawing::Sprite(enterMat, shaderProgram);
 	//enterButton->SetSampleArea({ 75, 0, 40, 66 });
 
-	Virt = new Drawing::Model(content.Load<Drawing::Geometry>({ "Assets/virt/virt.obj" }));
+	Virt = new Drawing::Model(content.Load<Content::MeshCollection>({ "Assets/virt/virt.obj" }, success));
 	Virt->Size = { 20, 20, 20 };
 
-	arrow = Drawing::MakeArrow({ 1, 1, 1 }, 16, shaderProgram);
+	arrow = Drawing::MakeArrow({ 1, 1, 1 }, 16, shaderProgram, {"arrow1"}, content, memory);
 	arrow->Rotation = Matrix4::CreateRotationX(Pi32 / 2);
 	arrow->Position.y = 550;
 	arrow->Size.z = 3;

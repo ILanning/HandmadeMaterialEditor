@@ -3,7 +3,9 @@
 
 #include "../handmade.h"
 #include "../handmade_typedefs.h"
-#include "../drawing/Geometry.h"
+#include "AssetManager.h"
+#include "AssetPtr.h"
+#include "../content/MeshCollection.h"
 #include "../drawing/Mesh.h"
 #include "../drawing/Texture2D.h"
 #include "../drawing/Vertex.h"
@@ -74,9 +76,8 @@ namespace Content
 			};
 
 
-			StretchyArray<Drawing::Mesh *> meshes;
-			Collections::HashMap<HMString, Drawing::Material, Memory::NewDeleteArena> materials;
-			StretchyArray<Drawing::Texture2D *> textures;
+			MeshCollection meshes;
+			Collections::HashMap<HMString, AssetPtr<Drawing::Material>, Memory::NewDeleteArena> materials;
 
 			StretchyArray<ObjVertexNode> vertexBlueprints;
 			StretchyArray<Drawing::VertexNormalTexture> builtVertices;
@@ -85,19 +86,19 @@ namespace Content
 			StretchyArray<Vector3> normals;
 			StretchyArray<Vector2> uvs;
 
-			Memory::NewDeleteArena memory = {};
+			Memory::NewDeleteArena* memory;
 
 		public:
 
 			int32 FindOrCreate(const ObjVertexNode &node);
 
-			void PushMesh(GLuint shaderProgram, Drawing::Material *mat);
+			void PushMesh(GLuint shaderProgram, AssetPtr<Drawing::Material> mat);
 
-			ObjParser(FileData toLoad, ReadFileFunc *readFile, GLuint shaderProgram);
+			ObjParser(FileData toLoad, ReadFileFunc *readFile, GLuint shaderProgram, AssetManager& assets, Memory::NewDeleteArena* memory);
 
-			Drawing::Geometry *ExportGeometry();
+			Content::MeshCollection ExportGeometry();
 
-			Collections::HashMap<HMString, Drawing::Material, Memory::NewDeleteArena> ObjParser::ExportMaterials();
+			Collections::HashMap<HMString, AssetPtr<Drawing::Material>, Memory::NewDeleteArena> ObjParser::ExportMaterials();
 
 			~ObjParser()
 			{
@@ -110,7 +111,8 @@ namespace Content
 		};
 	}
 
-	Drawing::Geometry *ParseOBJ(char *path, const int32 pathLength, GLuint shaderProgram, ReadFileFunc *readFile);
+	MeshCollection ParseOBJ(char *path, int32 pathLength, GLuint shaderProgram,
+		ReadFileFunc *readFile, AssetManager& assets, Memory::NewDeleteArena* memory);
 }
 
 #endif //HANDMADE_OBJLOADER_H

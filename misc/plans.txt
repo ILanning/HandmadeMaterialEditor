@@ -69,9 +69,9 @@ Core Goals:
 	Write ArrayList class																			   - Done
 	Write HashMap/Dictionary class																	   - Done
 	Write AssetManager class																		   - Done
-	Rewire Sprite/Model/Geometry/Mesh/Material/Texture2D to rely on AssetManager rather than new       -
+	Write SharedPtr class, use for large assets                                                        - Done
+	Rewire Sprite/Model/Geometry/Mesh/Material/Texture2D to rely on AssetManager rather than new       - Done
 	Read starting window position from file at startup and write to file at close                      - Done
-	Write SharedPtr class, use for large assets                                                        -
 	Write ShaderManager class																		   - 
 
 	Test current HashMap vs. one with a seperate cache aligned table for stored hashes 

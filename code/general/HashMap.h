@@ -10,13 +10,14 @@
 
 namespace Collections
 {
-	// TODO (Ian): Set up KeyType as something that must be Hashable
+	// TODO: Set up KeyType as something that must be Hashable
 
 	//A dictionary/unordered map data structure.
 	template <class KeyType, class ValueType, class Allocator>
 	class HashMap
 	{
 		//Arranged as flat array that fills buckets in sequence if desired bucket is full
+		//TODO: Alternate version with three (probably contiguous) arrays, one for each member
 		struct HashItem
 		{
 			KeyType Key;
@@ -125,7 +126,7 @@ namespace Collections
 			return *this;
 		}
 
-		ValueType& operator [] (const KeyType key) 
+		ValueType& operator [] (const KeyType& key) 
 		{
 			int32 bucket = internalFind(hashTransform(key));
 			if (bucket == -1)
@@ -175,26 +176,26 @@ namespace Collections
 		}
 
 		// Returns a pointer to the value of the given key, or null if the key does not exist.  This pointer does not belong to the caller.
-		ValueType *GetAt(KeyType key) const
+		ValueType* GetAt(const KeyType& key) const
 		{
 			int32 item = internalFind(hashTransform(key));
 
 			if (item != -1)
 			{
-				return *buckets[item].Value;
+				return &(buckets[item].Value);
 			}
 
 			return nullptr;
 		}
 
 		// Returns true if the given key exists in the Hashmap, and false otherwise.
-		bool CheckExists(const KeyType key) const
+		bool CheckExists(const KeyType& key) const
 		{
 			return internalFind(hashTransform(key)) != -1;
 		}
 
 		//Removes the given key/value from the HashMap if the given key exists.
-		void Remove(const KeyType key)
+		void Remove(const KeyType& key)
 		{
 			int32 item = internalFind(hashTransform(key));
 
@@ -252,7 +253,7 @@ namespace Collections
 
 		void upsizeArray(int32 newCapacity, int32 extraHash)
 		{
-			// TODO (Ian): Test doubling size on shuffle fail vs just adding a single space
+			// TODO: Test doubling size on shuffle fail vs just adding a single space
 			// Also test making the array slightly larger than it needs to be so we can reroll it without reallocating
 			
 			HashItem *newArray = nullptr;

@@ -2,6 +2,7 @@
 #define HANDMADE_MESH_H
 
 #include "../handmade_typedefs.h"
+#include "../content/AssetPtr.h"
 #include "../math/Vector3.cpp"
 #include "../math/Matrix4.h"
 #include "Texture2D.h"
@@ -27,13 +28,13 @@ namespace Drawing
 		GLint MVPUniform = -1;
 		GLint ColorUniform = -1;
 
-		Material *MeshMaterial = nullptr;
+		AssetPtr<Material> MeshMaterial = {};
 
 		bool Initialized = false;
 
 		void CreateBufferObjects(GLuint shaderProgram)
 		{
-			//NOTE(Ian): Ordering here is important, these are commands to the OpenGL state machine. glBufferData operates on whatever buffer was most recently bound.
+			//NOTE: Ordering here is important, these are commands to the OpenGL state machine. glBufferData operates on whatever buffer was most recently bound.
 			glGenVertexArrays(1, &VAO);
 			glBindVertexArray(VAO);
 
@@ -67,7 +68,7 @@ namespace Drawing
 		Mesh() {}
 
 		Mesh(VertexArray *vertices, GLuint *elements, uint32 elementCount, GLuint shaderProgram,
-			Material *material = nullptr, bool genBuffers = true, GLenum mode = GL_TRIANGLES, uint32 primitiveRestartIndex = MaxInt32)
+			AssetPtr<Material> material = {}, bool genBuffers = true, GLenum mode = GL_TRIANGLES, uint32 primitiveRestartIndex = MaxInt32)
 			: Vertices(vertices), Elements(elements), ElementCount(elementCount), MeshMaterial(material), Mode(mode), PrimitiveRestartIndex(primitiveRestartIndex)
 		{
 			if (genBuffers)
@@ -91,7 +92,7 @@ namespace Drawing
 			glBindVertexArray(VAO);
 			glUniform3fv(ColorUniform, 1, color.elements);
 			glUniformMatrix4fv(MVPUniform, 1, GL_TRUE, mvp.elements);
-			if (MeshMaterial)
+			if (!MeshMaterial.IsNull())
 			{
 				MeshMaterial->Use();
 			}
@@ -101,28 +102,29 @@ namespace Drawing
 
 		friend void swap(Mesh &first, Mesh &second)
 		{
-			//ASK(Ian): Any reason in this case to not just do this?
-			//Only disadvantage seems to be somewhat more memory used on the stack
-			char temp[sizeof(Mesh)];
+			uint8 temp[sizeof(Mesh)];
 			memcpy(temp, &first, sizeof(Mesh));
 			memcpy(&first, &second, sizeof(Mesh));
 			memcpy(&second, temp, sizeof(Mesh));
 		}
 
-		Mesh(const Mesh &other)
+		Mesh(Mesh& other)
 		{
-			memcpy(this, &other, sizeof(Mesh));
+			swap(*this, other);
 		}
 
 		Mesh(Mesh &&other)
 		{
 			swap(*this, other);
-			other.Vertices = nullptr;
-			other.Elements = nullptr;
-			other.MeshMaterial = nullptr;
 		}
 
 		Mesh &operator=(Mesh other)
+		{
+			swap(*this, other);
+			return *this;
+		}
+
+		Mesh &operator=(Mesh&& other)
 		{
 			swap(*this, other);
 			return *this;
@@ -138,10 +140,71 @@ namespace Drawing
 			}
 			delete[] Vertices;
 			delete[] Elements;
-
-			//CONSIDER(Ian):  Eventually a ContentManager will be handling assets, including textures. As a result, we probably don't want to delete the textures this holds.
-			//Should there be something here that tells the ContentManager that the textures held by this object have one less dependency?
 		}
+
+		/*void swap(HashMap& other)
+		{
+			real32 tempFloat = other.upsizeFactor;
+			other.upsizeFactor = upsizeFactor;
+			upsizeFactor = tempFloat;
+
+			Allocator* tempMem = other.memory;
+			other.memory = memory;
+			memory = tempMem;
+
+			HashItem* tempItems = other.buckets;
+			other.buckets = buckets;
+			buckets = tempItems;
+
+			int32 tempInt = other.bucketCount;
+			other.bucketCount = bucketCount;
+			bucketCount = tempInt;
+
+			tempInt = other.occupied;
+			other.occupied = occupied;
+			occupied = tempInt;
+
+			tempInt = other.maxAlreadyFilled;
+			other.maxAlreadyFilled = maxAlreadyFilled;
+			maxAlreadyFilled = tempInt;
+		}
+
+		HashMap(HashMap& other)
+		{
+			memory = other.memory;
+			bucketCount = other.bucketCount;
+			occupied = other.occupied;
+			buckets = memory->Allocate<HashItem>(bucketCount);
+
+			for (int32 i = 0; i < bucketCount; i++)
+			{
+				buckets[i] = other.buckets[i];
+			}
+		}
+
+		HashMap(HashMap&& other) : HashMap()
+		{
+			swap(other);
+		}
+
+		HashMap& operator=(HashMap other)
+		{
+			swap(other);
+			return *this;
+		}
+
+		~HashMap()
+		{
+			if (memory && buckets)
+			{
+				memory->Deallocate(buckets);
+				buckets = nullptr;
+				memory = nullptr;
+			}
+
+			bucketCount = 0;
+			occupied = 0;
+		}*/
 	};
 }
 

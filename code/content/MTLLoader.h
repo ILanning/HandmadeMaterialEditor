@@ -3,6 +3,7 @@
 
 #include "MTLTextureOptions.h"
 #include "../handmade_typedefs.h"
+#include "../content/AssetManager.h"
 #include "../drawing/Material.h"
 #include "../general/ArrayList.h"
 #include "../general/HMString.h"
@@ -16,6 +17,8 @@ namespace Content
 {
 	namespace OBJ
 	{
+		typedef HMPair<HMString, AssetPtr<Drawing::Material>> NamedMTL;
+
 		namespace _OBJInternal
 		{
 			Vector3 ParseMTLVec3(char *string, int32 length, int32 offset, Vector3 defaultValue, int32 *readFinishIndex);
@@ -27,21 +30,22 @@ namespace Content
 			bool ParseMTLBool(char *string, int32 length, int32 offset, bool defaultValue, int32 *readFinishIndex);
 
 			MTLTextureOptions ParseMapLineOptions(char *line, int32 lineLength, int32 offset, char *folder, bool isScalar, int32 *readFinishIndex);
+
+			void FinalizeMaterial(const FileData& toLoad, const HMString& matName, Drawing::Material& mat,
+				Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>& materialList, AssetManager& assets);
 		}
 
-		typedef HMPair<HMString, Drawing::Material> NamedMTL;
-
 		//Parses any materials in the given text and adds them to the provided collection.
-		void ParseMTL(FileData toLoad, Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>& materialList);
+		void ParseMTL(FileData toLoad, Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>& materialList, AssetManager& assets);
 
 		//Returns an array containing any materials found in the given text.
-		StaticArray<NamedMTL> ParseMTL(FileData file, Memory::NewDeleteArena& arena);
+		StaticArray<NamedMTL> ParseMTL(FileData file, Memory::NewDeleteArena& arena, AssetManager& assets);
 
 		//Parses any materials in the given text and adds them to the provided collection.
-		void ParseMTL(HMString path, ReadFileFunc *readFile, Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>& materialList);
+		void ParseMTL(HMString path, ReadFileFunc *readFile, Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>& materialList, AssetManager& assets);
 
 		//Returns an array containing any materials found in the given text.
-		StaticArray<NamedMTL> ParseMTL(HMString path, ReadFileFunc *readFile, Memory::NewDeleteArena& arena);
+		StaticArray<NamedMTL> ParseMTL(HMString path, ReadFileFunc *readFile, Memory::NewDeleteArena& arena, AssetManager& assets);
 	}
 }
 

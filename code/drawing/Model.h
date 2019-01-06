@@ -2,18 +2,20 @@
 #define HANDMADE_MODEL_H
 
 #include "../handmade_typedefs.h"
+#include "../content/AssetPtr.h"
+#include "../content/MeshCollection.h"
+#include "../general/ArrayList.h"
+#include "../general/memory/NewDeleteArena.h"
 #include "../math/Vector3.h"
 #include "../math/Matrix4.h"
 #include "Texture2D.h"
-#include "Geometry.h"
 #include "../libraries/glew.h"
 
 namespace Drawing
 {
 	struct Model
 	{
-		//TODO(Ian): Transform matrices for each mesh in the geometry object
-		Geometry *MeshData;
+		AssetPtr<Content::MeshCollection> Meshes = {};
 
 		Vector3 Size;
 		Matrix4 Rotation;
@@ -21,8 +23,8 @@ namespace Drawing
 		Vector3 Color;
 		Vector3 Pivot = {};
 
-		Model(Geometry *meshData, const Vector3 &position = { 0, 0, 0 }, const Vector3 &size = { 1, 1, 1 }, const Matrix4 &rotation = Matrix4::Identity(), const Vector3 &color = { 1, 1, 1 })
-			: MeshData(meshData), Position(position), Size(size), Rotation(rotation), Color(color)
+		Model(AssetPtr<Content::MeshCollection> meshes, const Vector3 &position = { 0, 0, 0 }, const Vector3 &size = { 1, 1, 1 }, const Matrix4 &rotation = Matrix4::Identity(), const Vector3 &color = { 1, 1, 1 })
+			: Meshes(meshes), Position(position), Size(size), Rotation(rotation), Color(color)
 		{
 
 		}
@@ -36,7 +38,10 @@ namespace Drawing
 		void Draw(const Matrix4 &viewProjection) const
 		{
 			Matrix4 mvp = viewProjection * GetModelMatrix();
-			MeshData->Draw(mvp, Color);
+			for (int32 i = 0; i < Meshes->Length(); i++)
+			{
+				(*Meshes)[i].Draw(mvp, Color);
+			}
 		}
 	};
 }

@@ -4,6 +4,7 @@
 #include "../drawing/Channels.h"
 #include "../math/Vector2.h"
 #include "../math/Vector3.h"
+#include "../general/HMString.h"
 
 namespace Content
 {
@@ -11,8 +12,7 @@ namespace Content
 	{
 		struct MTLTextureOptions
 		{
-			char *TexturePath;
-			int32 PathLength;
+			HMString Path;
 
 			//NOTE(Ian): Currently unsupported
 			bool BlendU = true;

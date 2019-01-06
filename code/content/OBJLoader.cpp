@@ -15,7 +15,7 @@ namespace Content
 	{
 		using namespace Drawing;
 
-		//TODO(Ian):  This function is not very resilient against malformed definitions, find a way to improve that
+		//TODO:  This function is not very resilient against malformed definitions, find a way to improve that
 		bool ObjParser::ObjVertexNode::TryParse(const char *string, int32 length, ObjVertexNode &outResult, int32 offset = 0, int32 *readFinishIndex = nullptr)
 		{
 			//Consists of at least two slashes, with some at most three vertex components before, between, and after them
@@ -76,7 +76,7 @@ namespace Content
 			this->Next = nullptr;
 		}
 
-		ObjParser::ObjParser(FileData toLoad, ReadFileFunc *readFile, GLuint shaderProgram)
+		ObjParser::ObjParser(FileData toLoad, ReadFileFunc *readFile, GLuint shaderProgram, AssetManager& assets, Memory::NewDeleteArena* memory)
 		{
 			builtVertices = StretchyArray<Drawing::VertexNormalTexture>();
 			elements = StretchyArray<GLuint>();
@@ -93,10 +93,9 @@ namespace Content
 			uvs = StretchyArray<Vector2>();
 			uvs.PushBack({ 0, 0 });
 
-			materials = Collections::HashMap<HMString, Material, Memory::NewDeleteArena>(&memory);
-			meshes = StretchyArray<Mesh*>();
-			textures = StretchyArray<Texture2D*>();
-			Material *setMaterial = Drawing::Defaults::BlankMaterial;
+			materials = Collections::HashMap<HMString, AssetPtr<Material>, Memory::NewDeleteArena>(memory);
+			meshes = Collections::ArrayList<Mesh, Memory::NewDeleteArena>();
+			AssetPtr<Material> setMaterial = Drawing::Defaults::BlankMaterial;
 
 			char *file = (char *)toLoad.File;
 			int32 fileLength = toLoad.FileSize;
@@ -113,14 +112,14 @@ namespace Content
 				}
 				switch (file[nextLineStart])
 				{
-					//TODO(Ian): Examine lod support
+					//TODO: Examine lod support
 				case 'v': //Vector components
 				{
 					switch (file[nextLineStart + 1])
 					{
 					case ' ': //Position component
 					{
-						//TODO(Ian): A vertex color can be embedded in these lines, handle that
+						//TODO: A vertex color can be embedded in these lines, handle that
 						//Create an array for 6 floats, parse the line until you hit a newline, then see how many floats you got
 						//Can a vertex color have alpha?
 						//.obj file vector line layout:
@@ -215,12 +214,12 @@ namespace Content
 				}
 				case 's': //Shading Group
 				{
-					//TODO(Ian): Recognize shading group line
+					//TODO: Recognize shading group line
 					break;
 				}
 				case 'g': //Group
 				{
-					//TODO(Ian): Recognize group line
+					//TODO: Recognize group line
 					break;
 				}
 				case 'm': //Material file
@@ -239,9 +238,9 @@ namespace Content
 						delete[] pathStart;
 						delete[] pathEnd;
 					}
-					auto results = ParseMTL({ path, (uint32)pathLength }, readFile, memory);
+					auto results = ParseMTL({ path, (uint32)pathLength }, readFile, *memory, assets);
 					materials.AddMany(results);
-					memory.Deallocate(results.Data);
+					memory->Deallocate(results.Data);
 
 					delete[] path;
 					break;
@@ -250,27 +249,13 @@ namespace Content
 				{
 					int32 materialNameStart = CString::FindNonWhitespace(file, fileLength, nextLineStart + 6);
 
-					//Search through materials by name
-					bool foundMaterial = false;
-					Material *currMat = nullptr;
-
-					/*int32 matCount = materials.Length();
-					for (int32 i = 0; i < matCount; i++)
-					{
-						currMat = &(materials[i]);
-						if (CString::IsEqual(file, currMat->Name.RawCString(), nextLineEnd, currMat->Name.Length() - 1, materialNameStart, 0))
-						{
-							foundMaterial = true;
-							break;
-						}
-					}*/
 					int32 useNameLength = 0;
 					char* useNameChars = CString::CopySubstring(file, nextLineEnd - materialNameStart, &useNameLength, nextLineEnd, materialNameStart);
 					HMString useName = { useNameChars, (uint32)useNameLength };
 					
 					if (materials.CheckExists(useName))
 					{
-						currMat = &materials[useName];
+						AssetPtr<Material> currMat = materials[useName];
 						//If the current list of built vertices and elements has any values, package that into a new finished mesh
 						if (builtVertices.Length() > 0)
 						{
@@ -283,7 +268,7 @@ namespace Content
 					delete[] useNameChars;
 				}
 				default:
-					//TODO(Ian):  Warn over non-polygonal geometry data, since we don't care about supporting that
+					//TODO:  Warn over non-polygonal geometry data, since we don't care about supporting that
 					break;
 				}
 
@@ -342,14 +327,13 @@ namespace Content
 			}
 		}
 
-		void ObjParser::PushMesh(GLuint shaderProgram, Material *mat)
+		void ObjParser::PushMesh(GLuint shaderProgram, AssetPtr<Material> mat)
 		{
 			VertexNormalTextureArray *vertexArray = new VertexNormalTextureArray(builtVertices.ToArray(), builtVertices.Length());
 			GLuint *elementArray = elements.ToArray();
 			uint32 elementCount = elements.Length();
 
-			Mesh *mesh = new Mesh(vertexArray, elementArray, elementCount, shaderProgram, new Material(*mat));
-			meshes.PushBack(mesh);
+			new (meshes.AddRaw()) Mesh(vertexArray, elementArray, elementCount, shaderProgram, mat);
 
 			//Clear builtVertices, elements, and possibly vertexBlueprints as well
 			builtVertices = StretchyArray<VertexNormalTexture>();
@@ -361,47 +345,31 @@ namespace Content
 			}
 		}
 
-		Geometry *ObjParser::ExportGeometry()
+		MeshCollection ObjParser::ExportGeometry()
 		{
-			int32 arraySize = meshes.Length();
-			Mesh *meshArray = new Mesh[arraySize];
-			for (int32 i = 0; i < arraySize; i++)
-			{
-				swap(meshArray[i], *meshes[i]);
-				delete meshes[i];
-			}
-
-			Geometry *result = new Geometry(meshArray, arraySize);
-
-			return result;
+			return meshes;
 		}
 
-		Collections::HashMap<HMString, Drawing::Material, Memory::NewDeleteArena> ObjParser::ExportMaterials()
+		Collections::HashMap<HMString, AssetPtr<Drawing::Material>, Memory::NewDeleteArena> ObjParser::ExportMaterials()
 		{
 			return materials;
 		}
 	}
 
-	Drawing::Geometry *ParseOBJ(char *path, int32 pathLength, GLuint shaderProgram, ReadFileFunc *readFile)
+	MeshCollection ParseOBJ(char *path, int32 pathLength, GLuint shaderProgram, 
+		ReadFileFunc *readFile, AssetManager& assets, Memory::NewDeleteArena* memory)
 	{
 		bool success = false;
 		FileData file = readFile(path, pathLength, &success);
 		if (success)
 		{
-			OBJ::ObjParser* builder = new OBJ::ObjParser(file, readFile, shaderProgram);
-			Drawing::Geometry* geo = builder->ExportGeometry();
-			delete builder;
-			return geo;
+			return OBJ::ObjParser(file, readFile, shaderProgram, assets, memory).ExportGeometry();
 		}
 		else
 		{
-			//TODO(Ian): Logging, provide a way to report a failure to load the file
-			return nullptr;
+			//TODO: Logging, provide a way to report a failure to load the file
+			return MeshCollection();
 		}
-
-		//TODO(Ian): Needs a shader program, possibly a different one for each material type.  Figure out how to deal with that
-		//Maybe a general shader manager with a library of shader programs to pull from?
-		//TODO(Ian): Creates a Texture2D resource and does not manage it, handle that once there's a ContentManager
 	}
 }
 

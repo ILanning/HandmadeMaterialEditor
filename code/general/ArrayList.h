@@ -30,14 +30,21 @@ namespace Collections
 		ArrayList() {}
 
 		ArrayList(Allocator *allocator, int starterCapacity = 0)
-			: memory(allocator), arraySize(starterCapacity)
+			: memory(allocator)
 		{
 			Assert(memory != nullptr);
 
 			if (starterCapacity != 0)
 			{
-				internalArray = memory->Allocate<Item>(starterCapacity);
+				resizeUp(starterCapacity);
 			}
+		}
+
+		ArrayList(ArrayList& other)
+		{
+			swap(other);
+			other.internalArray = nullptr;
+			other.memory = nullptr;
 		}
 
 		ArrayList(ArrayList&& other)
@@ -49,7 +56,7 @@ namespace Collections
 
 		ArrayList& operator =(ArrayList other)
 		{
-			swap(&other);
+			swap(other);
 			return *this;
 		}
 
@@ -262,6 +269,31 @@ namespace Collections
 			return internalArray;
 		}
 
+		//Returns a pointer to a memory address at the end of the array and increments the count.
+		Item* AddRaw()
+		{
+			if (count == arraySize)
+			{
+				bool success;
+				if (arraySize != 0)
+				{
+					success = resizeUp((int32)(arraySize * UpsizeFactor));
+				}
+				else
+				{
+					success = resizeUp(baseSize);
+				}
+
+				if (!success)
+				{
+					return false;
+				}
+			}
+			count++;
+
+			return internalArray + count - 1;
+		}
+
 		template <class ArrayAllocator>
 		Item* RangeToArray(ArrayAllocator& alloc, int32 startIndex, int32 arrayCount)
 		{
@@ -355,8 +387,8 @@ namespace Collections
 			other.internalArray = internalArray;
 			internalArray = tempItems;
 
-			int32 tempInt = other.arrazySize;
-			other.arraySize = arrazySize;
+			int32 tempInt = other.arraySize;
+			other.arraySize = arraySize;
 			arraySize = tempInt;
 
 			tempInt = other.count;
@@ -392,11 +424,14 @@ namespace Collections
 			{
 				return true;
 			}
-			//CONSIDER(IAN): Template specializations for types that can be memcpy'd, see if that improves performance
+			//CONSIDER: Template specializations for types that can be memcpy'd, see if that improves performance
 			Item* newArray = memory->Allocate<Item>(newSize);
-			//TODO(Ian): Assert on debug build, return false otherwise
-			//           Or maybe contain that to the actual memory functions?
+			//TODO: Assert on debug build, return false otherwise
+			//      Or maybe contain that to the actual memory functions?
 			Assert(newArray != nullptr);
+
+			memset(newArray, 0, sizeof(Item) * newSize);
+
 			if (internalArray)
 			{
 				for (int32 internalIter = 0, newIter = 0; internalIter < count; internalIter++, newIter++)
@@ -407,9 +442,9 @@ namespace Collections
 					}
 					newArray[newIter] = internalArray[internalIter];
 				}
+				memory->Deallocate(internalArray);
 			}
 
-			memory->Deallocate(internalArray);
 			internalArray = newArray;
 			arraySize = newSize;
 			return true;
@@ -421,10 +456,10 @@ namespace Collections
 			{
 				return true;
 			}
-			//CONSIDER(IAN): Template specializations for types that can be memcpy'd, see if that improves performance
+			//CONSIDER: Template specializations for types that can be memcpy'd, see if that improves performance
 			Item* newArray = memory->Allocate<Item>(newSize);
-			//TODO(Ian): Assert on debug build, return false otherwise
-			//           Or maybe contain that to the actual memory functions?
+			//TODO: Assert on debug build, return false otherwise
+			//      Or maybe contain that to the actual memory functions?
 			Assert(newArray != nullptr);
 			if (internalArray)
 			{

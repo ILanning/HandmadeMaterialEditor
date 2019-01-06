@@ -3,18 +3,16 @@
 
 #include <new>
 #include "../handmade_typedefs.h"
-#include "../content/MTLLoader.h"
-#include "../drawing/Geometry.h"
+#include "AssetPtr.h"
+#include "MTLDict.h"
+#include "MTLTextureOptions.h"
+#include "../content/MeshCollection.h"
 #include "../drawing/Material.h"
 #include "../drawing/Model.h"
-#include "../drawing/Sprite.h"
 #include "../drawing/Texture2D.h"
 #include "../general/HashMap.h"
 #include "../general/HMString.h"
-#include "../general/StaticArray.h"
-#include "../general/StringHelpers.cpp"
 #include "../general/memory/NewDeleteArena.h"
-#include "OBJLoader.h"
 
 //A clas for managing large assets such as textures and model geometry.
 class AssetManager
@@ -22,15 +20,19 @@ class AssetManager
 	struct Asset
 	{
 		bool Managed = false;
+		Content::AssetPtrSharedData* AssetTracker = {};
 		void* Data = nullptr;
+
+		Asset() {}
+
+		Asset(bool managed, void* data) : Managed(managed), Data(data) {}
 	};
 
 	Collections::HashMap<HMString, Asset, Memory::NewDeleteArena> items = {};
 	ReadFileFunc* reader = nullptr;
 	HMString basePath = {};
 	Memory::NewDeleteArena memory;
-
-	typedef Collections::HashMap<HMString, Drawing::Material, Memory::NewDeleteArena> MTLDict;
+	Content::AssetPtrSharedData invalidAssetData = {1};
 
 public:
 	AssetManager() {}
@@ -42,14 +44,7 @@ public:
 	template<typename T = void>
 	//Loads an item into the AssetManager and returns a reference to it, or just returns a reference if it's already loaded in.  
 	//Will not attempt to load asset classes it does not understand from file, but will return them if they've been Register()'d.
-	T* Load(HMString path)
-	{
-		if (items.CheckExists(path))
-		{
-			return (T*)items[path].Data;
-		}
-		return nullptr;
-	}
+	AssetPtr<T> Load(HMString path, bool& validAsset);
 
 #ifdef HANDMADE_INTERNAL
 	//Note:  Temporary hack until a proper shader handling system exists, remove ASAP
@@ -57,74 +52,32 @@ public:
 #endif
 
 	template<>
-	Drawing::Texture2D* Load(HMString path)
-	{
-		if (!items.CheckExists(path))
-		{
-			Drawing::Texture2D* tex = memory.Allocate<Drawing::Texture2D>();
-			new (tex) Drawing::Texture2D(path.RawCString());
-
-			items[path] = { true, tex };
-			return tex;
-		}
-		else
-		{
-			return (Drawing::Texture2D*)items[path].Data;
-		}
-	}
+	AssetPtr<Drawing::Texture2D> Load(HMString path, bool& validAsset);
 
 	template<>
-	MTLDict* Load(HMString path)
-	{
-		if (!items.CheckExists(path))
-		{
-			MTLDict *mats = memory.Allocate<MTLDict>();
-			new (mats) MTLDict(Content::OBJ::ParseMTL(path, reader, memory), &memory);
-
-			items[path] = { true, mats };
-			return mats;
-		}
-		else
-		{
-			return (MTLDict*)items[path].Data;
-		}
-	}
+	AssetPtr<Content::MTLDict> Load(HMString path, bool& validAsset);
 
 	template<>
-	Drawing::Geometry* Load(HMString path)
-	{
-		if (!items.CheckExists(path))
-		{
-			Drawing::Texture2D *tex = memory.Allocate<Drawing::Texture2D>();
-			tex = new (tex) Drawing::Texture2D(path.RawCString());
-			Drawing::Geometry* geo = Content::ParseOBJ(path.RawCString(), path.Length(), shaderProgram, reader);
+	AssetPtr<Content::MeshCollection> Load(HMString path, bool& validAsset);
 
-			items[path] = { true, geo };
-			return geo;
-		}
-		else
-		{
-			return (Drawing::Geometry*)items[path].Data;
-		}
-	}
+	AssetPtr<Drawing::Texture2D> Load(Content::OBJ::MTLTextureOptions& options, Content::TextureMapType mapType, bool& validAsset);
 
-	//Registers a pointer to an object with the AssetManager without doing any processing to the object.  Object may be of any type, not just those that are loadable.
+	/**Creates a copy of the object for the AssetManager without doing any other processing to the object.
+	Object may be of any type, not just those that are loadable.  Fails if the given name already exists in the AssetManager.
+	*/
 	template<typename T>
-	T Register(T* object, HMString name)
-	{
-		items[name] = { false, object };
-	}
+	AssetPtr<T> AddManaged(T &object, HMString name, bool& success);
+
+	/**Registers a pointer to an object with the AssetManager without doing any processing to the object.
+	Object may be of any type, not just those that are loadable.  Fails if the given name already exists in the AssetManager.
+	*/
+	template<typename T>
+	AssetPtr<T> AddUnmanaged(T* object, HMString name, bool& success);
+
+	//TODO: Unload(HMString name), which frees the memory used by an asset but does not remove it from the dictionary (and therefore leave dangling AssetPtrs)
 
 	//Removes an item from the AssetManager.
-	void Remove(HMString name)
-	{
-		Asset item = items[name];
-		if (item.Managed)
-		{
-			memory.Deallocate(item.Data);
-		}
-		items.Remove(name);
-	}
+	void Remove(HMString name);
 };
 
 #endif //HANDMADE_ASSETMANAGER_H

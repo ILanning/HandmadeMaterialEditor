@@ -27,7 +27,7 @@ namespace Content
 				{
 					char *readEnd = nullptr;
 					float value = strtof(nextFloat, &readEnd);
-					if (readEnd == nextFloat || (int32)(readEnd - string) > length) //TODO(Ian): Test this with whitespace
+					if (readEnd == nextFloat || (int32)(readEnd - string) > length) //TODO: Test this with whitespace
 					{
 						break;
 					}
@@ -51,7 +51,7 @@ namespace Content
 				{
 					char *readEnd = nullptr;
 					float value = strtof(nextFloat, &readEnd);
-					if (readEnd == nextFloat || (int32)(readEnd - string) > length) //TODO(Ian): Test this with whitespace
+					if (readEnd == nextFloat || (int32)(readEnd - string) > length) //TODO: Test this with whitespace
 					{
 						break;
 					}
@@ -73,7 +73,7 @@ namespace Content
 
 				char *readEnd = nullptr;
 				float value = strtof(nextFloat, &readEnd);
-				if (!(readEnd == nextFloat || (int32)(readEnd - string) > length)) //TODO(Ian): Test this with whitespace
+				if (!(readEnd == nextFloat || (int32)(readEnd - string) > length)) //TODO: Test this with whitespace
 				{
 					result = value;
 					nextFloat = readEnd;
@@ -211,17 +211,18 @@ namespace Content
 						{
 							endPos = lineLength;
 						}
-						char *path = CString::CopySubstring(line, endPos - currPos, &options.PathLength, lineLength, currPos);
+						int32 pathLength = 0;
+						char *path = CString::CopySubstring(line, endPos - currPos, &pathLength, lineLength, currPos);
 						if (Path::IsRelative(path))
 						{
 							char *pathEnd = path;
 
-							path = Path::Combine(folder, pathEnd, 0, 0, &options.PathLength);
+							path = Path::Combine(folder, pathEnd, 0, 0, &pathLength);
 
 							delete[] pathEnd;
 						}
 
-						options.TexturePath = path;
+						options.Path = { path, (uint32)pathLength };
 						currPos += endPos;
 					}
 					currPos = CString::FindNonWhitespace(line, lineLength, currPos);
@@ -233,9 +234,25 @@ namespace Content
 				}
 				return options;
 			}
+		
+			void FinalizeMaterial(const FileData& toLoad, const HMString& matName, Material& mat, 
+				Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>& materialList, AssetManager& assets)
+			{
+				//Create a name for the new material, then add it to the AssetManager
+				int32 assetNameLength = matName.Length() + toLoad.PathSize;
+				char* assetName = new char[assetNameLength];
+				CString::WriteChars(assetName, assetNameLength, toLoad.Path, toLoad.PathSize - 1);
+				assetName[toLoad.PathSize - 1] = ' ';
+				CString::WriteChars(assetName + toLoad.PathSize, matName.Length(), matName.RawCString(), matName.Length());
+
+				bool success = false;
+				AssetPtr<Material> finalMat = assets.AddManaged(mat, { assetName, (uint32)assetNameLength }, success);
+
+				materialList.Add({ matName, finalMat });
+			}
 		}
 
-		void ParseMTL(FileData toLoad, Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>& materialList)
+		void ParseMTL(FileData toLoad, Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>& materialList, AssetManager& assets)
 		{
 			using namespace _OBJInternal;
 
@@ -265,7 +282,7 @@ namespace Content
 					}
 					else
 					{
-						materialList.Add({ currentMatName, currentMaterial });
+						FinalizeMaterial(toLoad, currentMatName, currentMaterial, materialList, assets);
 					}
 
 					currentMaterial = Material();
@@ -275,7 +292,7 @@ namespace Content
 				}
 				else if (file[nextLineStart] == 'K' || file[nextLineStart] == 'T')
 				{
-					//TODO(Ian):  Handle xyz and spectral forms of these, if they're ever used in reality
+					//TODO:  Handle xyz and spectral forms of these, if they're ever used in reality
 
 					Vector3 color = ParseMTLVec3(file, fileLength, nextLineStart + 2, { 1, 1, 1 });
 
@@ -326,44 +343,57 @@ namespace Content
 				else if (CString::FindSubstring("map_", 4, file, nextLineStart + 4, nextLineStart) != -1) //Defines a texture map
 				{
 					int32 offset = nextLineStart + 4;
+					bool success = false;
 
 					if (file[offset] == 'K')
 					{
 						offset++;
 						MTLTextureOptions options = ParseMapLineOptions(file, nextLineEnd, offset + 1, fileDirectory, false);
-						//TODO(Ian): Hook this into ContentManager!
 
 						if (file[offset] == 'a') //Ambient definition
 						{
-							Texture2D *map = new Texture2D(options, Content::TextureMapType::Ambient);
-							currentMaterial.AmbientMap = map;
+							AssetPtr<Texture2D> map = assets.Load(options, Content::TextureMapType::Ambient, success);
+							if (success)
+							{
+								currentMaterial.AmbientMap = map;
+							}
 						}
 						else if (file[offset] == 'd') //Diffuse definition
 						{
-							Texture2D *map = new Texture2D(options, Content::TextureMapType::Diffuse);
-							currentMaterial.DiffuseMap = map;
+							AssetPtr<Texture2D> map = assets.Load(options, Content::TextureMapType::Diffuse, success);
+							if (success)
+							{
+								currentMaterial.DiffuseMap = map;
+							}
 						}
 						else if (file[offset] == 's') //Specular definition
 						{
-							Texture2D *map = new Texture2D(options, Content::TextureMapType::Specular);
-							currentMaterial.SpecularMap = map;
+							AssetPtr<Texture2D> map = assets.Load(options, Content::TextureMapType::Specular, success);
+							if (success)
+							{
+								currentMaterial.SpecularMap = map;
+							}
 						}
 					}
 					else if (CString::FindSubstring("Ns", 2, file, 2, offset) != -1) //Specular exponent/gloss definition
 					{
 						offset += 3;
 						MTLTextureOptions options = ParseMapLineOptions(file, nextLineEnd, offset + 1, fileDirectory, false);
-						Texture2D *map = new Texture2D(options, Content::TextureMapType::Gloss);
-						currentMaterial.GlossMap = map;
-						//currentMaterial.GlossTexture = 
+						AssetPtr<Texture2D> map = assets.Load(options, Content::TextureMapType::Gloss, success);
+						if (success)
+						{
+							currentMaterial.GlossMap = map;
+						}
 					}
 					else if (file[offset] == 'd')
 					{
 						offset += 2;
 						MTLTextureOptions options = ParseMapLineOptions(file, nextLineEnd, offset + 1, fileDirectory, false);
-						Texture2D *map = new Texture2D(options, Content::TextureMapType::Dissolve);
-						currentMaterial.DissolveMap = map;
-						//currentMaterial.DissolveTexture = 
+						AssetPtr<Texture2D> map = assets.Load(options, Content::TextureMapType::Dissolve, success);
+						if (success) 
+						{
+							currentMaterial.DissolveMap = map;
+						}
 					}
 
 					//map_aat on - Turns on antialiasing for textures in this material without affecting all textures, 
@@ -375,17 +405,18 @@ namespace Content
 				}
 				else if (CString::FindSubstring("decal", 5, file, nextLineStart + 5, nextLineStart) != -1)
 				{
-					//TODO(Ian): Decal support
+					//TODO: Decal support
 				}
 				else if (CString::FindSubstring("refl", 4, file, nextLineStart + 4, nextLineStart) != -1) //Reflection map definition
 				{
-					//TODO(Ian): Reflection map support
-					//           Needs to handle single texture sphere maps and 6 texture cube maps
+					//TODO: Reflection map support
+					//      Needs to handle single texture sphere maps and 6 texture cube maps
 				}
 
 				nextLineStart = CString::FindNonWhitespace(file, fileLength, nextLineEnd);
 				if (nextLineStart == -1)
 				{
+
 					break;
 				}
 				nextLineEnd = CString::FindLineEnd(file, fileLength, nextLineStart);
@@ -396,19 +427,19 @@ namespace Content
 
 			if (materialFound)
 			{
-				materialList.Add({ currentMatName, currentMaterial });
+				FinalizeMaterial(toLoad, currentMatName, currentMaterial, materialList, assets);
 			}
 			else
 			{
-				//TODO(Ian): Logging, provide a way to report a failure to find any materials
+				//TODO: Logging, provide a way to report a failure to find any materials
 				return;
 			}
 		}
 
-		StaticArray<NamedMTL> ParseMTL(FileData file, Memory::NewDeleteArena& arena)
+		StaticArray<NamedMTL> ParseMTL(FileData file, Memory::NewDeleteArena& arena, AssetManager &assets)
 		{
 			auto mats = Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>(&arena);
-			ParseMTL(file, mats);
+			ParseMTL(file, mats, assets);
 
 			if (mats.Length() > 0)
 			{
@@ -421,32 +452,32 @@ namespace Content
 			}
 		}
 
-		void ParseMTL(HMString path, ReadFileFunc* readFile, Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>& materialList)
+		void ParseMTL(HMString path, ReadFileFunc* readFile, Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>& materialList, AssetManager &assets)
 		{
 			bool success = false;
 			FileData file = readFile(path.RawCString(), path.Length(), &success);
 			if (success)
 			{
-				ParseMTL(file, materialList);
+				ParseMTL(file, materialList, assets);
 			}
 			else
 			{
-				//TODO(Ian): Logging, provide a way to report a failure to load the file
+				//TODO: Logging, provide a way to report a failure to load the file
 				return;
 			}
 		}
 
-		StaticArray<NamedMTL> ParseMTL(HMString path, ReadFileFunc *readFile, Memory::NewDeleteArena& arena)
+		StaticArray<NamedMTL> ParseMTL(HMString path, ReadFileFunc *readFile, Memory::NewDeleteArena& arena, AssetManager &assets)
 		{
 			bool success = false;
 			FileData file = readFile(path.RawCString(), path.Length(), &success);
 			if (success)
 			{
-				return ParseMTL(file, arena);
+				return ParseMTL(file, arena, assets);
 			}
 			else
 			{
-				//TODO(Ian): Logging, provide a way to report a failure to load the file
+				//TODO: Logging, provide a way to report a failure to load the file
 				return{ nullptr, 0 };
 			}
 		}

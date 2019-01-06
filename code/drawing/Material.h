@@ -1,6 +1,7 @@
 #ifndef HANDMADE_MATERIAL_H
 #define HANDMADE_MATERIAL_H
 
+#include "../content/AssetPtr.h"
 #include "../handmade_typedefs.h"
 #include "../math/Vector3.cpp"
 #include "../general/HMString.h"
@@ -12,21 +13,21 @@ namespace Drawing
 	struct Material
 	{
 		Vector3 AmbientColor = { 1, 1, 1 };
-		Texture2D *AmbientMap = nullptr;
+		AssetPtr<Texture2D> AmbientMap = {};
 		Vector3 DiffuseColor = { 1, 1, 1 };
-		Texture2D *DiffuseMap = nullptr;
+		AssetPtr<Texture2D> DiffuseMap = {};
 		Vector3 SpecularColor = { 1, 1, 1 };
-		Texture2D *SpecularMap = nullptr;
+		AssetPtr<Texture2D> SpecularMap = {};
 		real32 Gloss = 1;
-		Texture2D *GlossMap = nullptr;
+		AssetPtr<Texture2D> GlossMap = {};
 		real32 Dissolve = 1;
-		Texture2D *DissolveMap = nullptr;
+		AssetPtr<Texture2D> DissolveMap = {};
 		Vector3 TransmissionFilter = { 1, 1, 1 };
 		real32 ReflectionSharpness = 60;
 		real32 OpticalDensity = 1;
-		Texture2D *BumpMap = nullptr;
-		Texture2D *NormalMap = nullptr;
-		Texture2D *ReflectionMap = nullptr;
+		AssetPtr<Texture2D> BumpMap = {};
+		AssetPtr<Texture2D> NormalMap = {};
+		AssetPtr<Texture2D> ReflectionMap = {};
 		bool DissolveHalo = false;
 		uint8 IlluminationModel = 0; //Probably replace this with a reference to a shader
 
@@ -53,8 +54,6 @@ namespace Drawing
 
 		friend void swap(Material &first, Material &second)
 		{
-			//ASK(Ian): Any reason in this case to not just do this?
-			//Only disadvantage seems to be somewhat more memory used on the stack
 			char temp[sizeof(Material)];
 			memcpy(temp, &first, sizeof(Material));
 			memcpy(&first, &second, sizeof(Material));
@@ -144,7 +143,7 @@ namespace Drawing
 		}
 
 		Material() {}
-		Material(Texture2D* diffuse) : DiffuseMap(diffuse) { }
+		Material(AssetPtr<Texture2D> diffuse) : DiffuseMap(diffuse) { }
 
 		Material(const Material &other)
 		{

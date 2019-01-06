@@ -58,7 +58,7 @@ namespace Drawing
 		Texture2D(const Content::OBJ::MTLTextureOptions &options, const Content::TextureMapType mapType)
 		{
 			int32 components;
-			Data = stbi_load(options.TexturePath, &Width, &Height, &components, 4);
+			Data = stbi_load(options.Path.RawCString(), &Width, &Height, &components, 4);
 			if (options.Clamp)
 			{
 				WrapStyle = GL_CLAMP_TO_EDGE;

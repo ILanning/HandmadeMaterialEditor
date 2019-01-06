@@ -3,14 +3,17 @@
 
 #include "../handmade_typedefs.h"
 #include "../handmade.h"
+#include "../content/AssetManager.h"
+#include "../content/AssetPtr.h"
+#include "../content/MeshCollection.h"
 #include "../math/Vector2.cpp"
 #include "../math/Vector3.cpp"
 #include "../math/Matrix4.cpp"
 #include "../general/StretchyArray.h"
 #include "../general/StringHelpers.cpp"
+#include "../general/memory/NewDeleteArena.h"
 #include "Texture2D.h"
 #include "Material.h"
-#include "Geometry.h"
 #include "Model.h"
 #include "Vertex.h"
 #include "defaults/DefaultMaterials.h"
@@ -37,7 +40,7 @@ namespace Drawing
 		GenerateVertexRing(transform, color, count, container);
 	};
 
-	Model* MakeArrow(const Vector3 &color, int32 ringVertices, GLuint shaderProgram)
+	Model* MakeArrow(const Vector3 &color, int32 ringVertices, GLuint shaderProgram, HMString assetName, AssetManager& assets, Memory::NewDeleteArena& memory)
 	{
 		/*  Example vertex layout:
 		1           0
@@ -60,7 +63,7 @@ namespace Drawing
 		currentVertex += ringVertices;
 		*currentVertex = { 0, 0, 0, 1, 1, 1, 0, 0 };
 
-		//TODO(Ian): Figure out how to consistently decompose a mesh into sensible strips seperated by Primitive Restart Indices, see if that's any faster
+		//TODO: Figure out how to consistently decompose a mesh into sensible strips seperated by Primitive Restart Indices, see if that's any faster
 
 		//ringVertices tris on either end, then ringVertices * 2 tris for the two strips of quads in the middle
 		uint32 elementCount = ringVertices * 6 * 3;
@@ -114,9 +117,11 @@ namespace Drawing
 		}
 
 		VertexColorTextureArray *verts = new VertexColorTextureArray(vertices, vertexCount);
-		Mesh *arrowMesh = new Mesh(verts, elements, elementCount, shaderProgram, Drawing::Defaults::BlankMaterial);
-		Geometry *arrowGeo = new Geometry(arrowMesh, 1);
-		Model *arrow = new Model(arrowGeo, { 0, 0, 0 }, { 1, 1, 1 }, Matrix4::Identity(), color);
+		//Mesh *arrowMesh = new Mesh(verts, elements, elementCount, shaderProgram, Drawing::Defaults::BlankMaterial);
+		Content::MeshCollection arrowGeo = Content::MeshCollection(&memory, 1);
+		new (arrowGeo.AddRaw()) Mesh(verts, elements, elementCount, shaderProgram, Drawing::Defaults::BlankMaterial);
+		bool success = false;
+		Model *arrow = new Model(assets.AddManaged(arrowGeo, assetName, success), { 0, 0, 0 }, { 1, 1, 1 }, Matrix4::Identity(), color);
 
 		return arrow;
 	}
