@@ -399,6 +399,10 @@ namespace Collections
 		int32 nextSizeUp(int32 targetCount) const
 		{
 			double newSize = arraySize;
+			if (newSize == 0)
+			{
+				newSize = baseSize;
+			}
 			while (targetCount > newSize)
 			{
 				newSize *= UpsizeFactor;
@@ -409,6 +413,10 @@ namespace Collections
 		int32 nextSizeDown(int32 targetCount) const
 		{
 			double newSize = arraySize;
+			if (newSize == 0)
+			{
+				newSize = baseSize;
+			}
 			while (targetCount < newSize && newSize > baseSize)
 			{
 				newSize *= DownsizeFactor;

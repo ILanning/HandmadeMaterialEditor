@@ -85,7 +85,8 @@ AssetPtr<Content::MeshCollection> AssetManager::Load(HMString path, bool& validA
 	{
 		Content::MeshCollection *geo = memory.Allocate<Content::MeshCollection>();
 		memset(geo, 0, sizeof(Content::MeshCollection));
-		*geo = Content::ParseOBJ(path.RawCString(), path.Length(), shaderProgram, reader, *this, &memory);
+		//TODO: Have it load in a shader based on the proerties needed by the material
+		*geo = Content::ParseOBJ(path.RawCString(), path.Length(), Shaders.DefaultShader, reader, *this, &memory);
 
 		items[path] = { true, geo };
 		items[path].AssetTracker = new (memory.Allocate<Content::AssetPtrSharedData>()) Content::AssetPtrSharedData();
@@ -96,6 +97,25 @@ AssetPtr<Content::MeshCollection> AssetManager::Load(HMString path, bool& validA
 	{
 		validAsset = true;
 		return AssetPtr<Content::MeshCollection>((Content::MeshCollection*)items[path].Data, items[path].AssetTracker);
+	}
+}
+
+GLuint AssetManager::CreateShader(HMString name, HMString vertSourcePath, HMString fragSourcePath, DebugMessageErrorFunc *messageError)
+{
+	return Shaders.SetNamedShader(name, vertSourcePath, fragSourcePath, reader, messageError);
+}
+
+GLuint AssetManager::GetShader(HMString name, bool& success)
+{
+	if (Shaders.NamedShaderPrograms.CheckExists(name))
+	{
+		success = true;
+		return Shaders.NamedShaderPrograms[name];
+	}
+	else
+	{
+		success = false;
+		return 0;
 	}
 }
 

@@ -17,35 +17,7 @@
 #include "math\Vector2.cpp"
 #include "math\Vector3.cpp"
 
-GLuint TestScene::BuildShaderProgram(HMString vertexSourcePath, HMString fragmentSourcePath, ReadFileFunc *readFile, DebugMessageErrorFunc *messageError)
-{
-	FileData vertexResult = readFile(vertexSourcePath.RawCString(), vertexSourcePath.Length(), nullptr);
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &(GLchar *)vertexResult.File, NULL);
-	glCompileShader(vertexShader);
 
-	FileData fragResult = readFile(fragmentSourcePath.RawCString(), fragmentSourcePath.Length(), nullptr);
-	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &(GLchar *)fragResult.File, NULL);
-	glCompileShader(fragmentShader);
-
-	GLuint shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-
-	glBindFragDataLocation(shaderProgram, 0, "outColor");
-	glLinkProgram(shaderProgram);
-
-	GLint isLinked;
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &isLinked);
-	if (!isLinked)
-	{
-		//TODO(Ian): True diagnostics
-		messageError("Shader link failed!");
-	}
-
-	return shaderProgram;
-}
 
 void TestScene::Initialize(ReadFileFunc *readFile, DebugMessageErrorFunc *messageError, GameState *gameState)
 {
@@ -55,13 +27,11 @@ void TestScene::Initialize(ReadFileFunc *readFile, DebugMessageErrorFunc *messag
 	glCullFace(GL_BACK);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  //Uncomment to get a wireframe view
 
-	GLuint shaderProgram = BuildShaderProgram({ "Shaders\\Basic.vert" }, { "Shaders\\Basic.frag" }, readFile, messageError);
-
-	glUseProgram(shaderProgram);
-
 	memory = Memory::NewDeleteArena();
 	content = AssetManager(readFile, memory);
-	content.shaderProgram = shaderProgram;
+	GLuint shaderProgram = content.CreateShader({ "default" }, { "Shaders\\Basic.vert" }, { "Shaders\\Basic.frag" }, messageError);
+	content.Shaders.DefaultShader = shaderProgram;
+	glUseProgram(shaderProgram);
 
 	bool success = false;
 	Drawing::Material tempEnterMat = Drawing::Material(content.Load<Drawing::Texture2D>("EnterButton.png", success));

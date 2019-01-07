@@ -21,8 +21,6 @@ struct TestScene
 	Drawing::Model *Virt;
 	Drawing::Camera2D *Camera;
 
-	GLuint BuildShaderProgram(HMString vertexSourcePath, HMString fragmentSourcePath, ReadFileFunc *readFile, DebugMessageErrorFunc *messageError);
-
 	void Initialize(ReadFileFunc *readFile, DebugMessageErrorFunc *messageError, GameState *gameState);
 
 	void HandleInput(GameState *state);

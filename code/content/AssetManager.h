@@ -6,7 +6,8 @@
 #include "AssetPtr.h"
 #include "MTLDict.h"
 #include "MTLTextureOptions.h"
-#include "../content/MeshCollection.h"
+#include "MeshCollection.h"
+#include "ShaderManager.h"
 #include "../drawing/Material.h"
 #include "../drawing/Model.h"
 #include "../drawing/Texture2D.h"
@@ -14,7 +15,7 @@
 #include "../general/HMString.h"
 #include "../general/memory/NewDeleteArena.h"
 
-//A clas for managing large assets such as textures and model geometry.
+//A class for managing large assets such as textures and model geometry.
 class AssetManager
 {
 	struct Asset
@@ -35,21 +36,17 @@ class AssetManager
 	Content::AssetPtrSharedData invalidAssetData = {1};
 
 public:
-	AssetManager() {}
+	Content::ShaderManager Shaders;
 
 	AssetManager(ReadFileFunc* readFile, Memory::NewDeleteArena& arena, HMString basePath = {}) : reader(readFile), basePath(basePath),
-		items(Collections::HashMap<HMString, Asset, Memory::NewDeleteArena>(&arena)), memory(arena)
-	{}
+		items(Collections::HashMap<HMString, Asset, Memory::NewDeleteArena>(&arena)), memory(arena), Shaders(Content::ShaderManager(&arena))
+	{
+	}
 
 	template<typename T = void>
 	//Loads an item into the AssetManager and returns a reference to it, or just returns a reference if it's already loaded in.  
 	//Will not attempt to load asset classes it does not understand from file, but will return them if they've been Register()'d.
 	AssetPtr<T> Load(HMString path, bool& validAsset);
-
-#ifdef HANDMADE_INTERNAL
-	//Note:  Temporary hack until a proper shader handling system exists, remove ASAP
-	GLuint shaderProgram;
-#endif
 
 	template<>
 	AssetPtr<Drawing::Texture2D> Load(HMString path, bool& validAsset);
@@ -61,6 +58,11 @@ public:
 	AssetPtr<Content::MeshCollection> Load(HMString path, bool& validAsset);
 
 	AssetPtr<Drawing::Texture2D> Load(Content::OBJ::MTLTextureOptions& options, Content::TextureMapType mapType, bool& validAsset);
+
+	GLuint CreateShader(HMString name, HMString vertSourcePath, HMString fragSourcePath, DebugMessageErrorFunc *messageError);
+
+	//Returns the ID of the requested prebuilt ShaderProgram.
+	GLuint GetShader(HMString name, bool& success);
 
 	/**Creates a copy of the object for the AssetManager without doing any other processing to the object.
 	Object may be of any type, not just those that are loadable.  Fails if the given name already exists in the AssetManager.

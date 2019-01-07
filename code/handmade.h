@@ -36,7 +36,7 @@
 #define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
 // TODO(casey): swap, min, max ... macros???
 
-//TODO(Ian): Split the things in this file off as they become more certain
+//TODO: Split the things in this file off as they become more certain
 
 
 inline uint32
@@ -87,7 +87,7 @@ typedef DEBUG_PLATFORM_MESSAGE_ERROR_FUNC(DebugMessageErrorFunc);
 
 // THREE THINGS - timing, controller/keyboard input, sound buffer to use
 
-//NOTE(Ian): Game now directly tied to OpenGL, pixel buffer no longer needed
+//NOTE: Game now directly tied to OpenGL, pixel buffer no longer needed
 
 struct game_sound_output_buffer
 {
@@ -137,12 +137,12 @@ struct game_controller_input
     };
 };
 
-//TODO(Ian): Rework this, probably needs to have info on what devices we got input from (array of InputFrames?)
-//           Plus info on device changes
+//TODO: Rework this, probably needs to have info on what devices we got input from (array of InputFrames?)
+//      Plus info on device changes
 struct GameInput
 {
 	Input::InputFrame newFrame;
-    // TODO(Ian): Insert clock values here, delta from last frame and total time since program start.    
+    // TODO: Insert clock values here, delta from last frame and total time since program start.    
     game_controller_input Controllers[5];
 };
 

@@ -72,7 +72,7 @@ Core Goals:
 	Write SharedPtr class, use for large assets                                                        - Done
 	Rewire Sprite/Model/Geometry/Mesh/Material/Texture2D to rely on AssetManager rather than new       - Done
 	Read starting window position from file at startup and write to file at close                      - Done
-	Write ShaderManager class																		   - 
+	Write ShaderManager class																		   - Done
 
 	Test current HashMap vs. one with a seperate cache aligned table for stored hashes 
 	  where the table only looks in the values on the same cache line
