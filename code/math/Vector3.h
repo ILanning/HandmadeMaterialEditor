@@ -24,14 +24,28 @@ struct Vector3
 		real32 elements[ElementCount];
 	};
 
+	///Gives the vector a magnitude of 1 without changing its direction.
 	Vector3 Normalize() const;
+	///Calculates the dot product of the two vectors.
 	real32 Dot(const Vector3 &b) const;
+	///Calculates the cross product of the two vectors.
 	Vector3 Cross(const Vector3 &b) const;
+	///Returns the length of the vector.
 	real32 Magnitude() const;
+	///Returns the squared length of the vector.
 	real32 MagnitudeSquared() const;
+	///Returns true if the vector is within certain distance of another.
 	bool CloseTo(const Vector3 &other, real32 margin) const;
 
+	///Interpolates between two vectors at a linear rate.
+	///@param start The vector to move from
+	///@param end The vector to move to
+	///@param fraction How far along the line between the two vectors the result will be, with 0 being at start and 1 being at end.
 	static Vector3 Lerp(const Vector3 &start, const Vector3 &end, real32 fraction);
+	///Interpolates between two vectors at a sine-like rate, accelerating at first and decelerating towards the end.
+	///@param start The vector to move from
+	///@param end The vector to move to
+	///@param fraction How close the motion should be to completion, with 0 being at start and 1 being at end.
 	static Vector3 CosInterpolate(const Vector3 &start, const Vector3 &end, real32 fraction);
 
 	friend Vector3 operator-(Vector3 a);

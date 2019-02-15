@@ -10,6 +10,7 @@
 
 namespace Content
 {
+	///Represents an OpenGL shader program, with links to its constituent parts.
 	class ShaderProgram
 	{
 	public:

@@ -39,7 +39,7 @@ void TestScene::Initialize(ReadFileFunc *readFile, DebugMessageErrorFunc *messag
 	enterButton = new Drawing::Sprite(enterMat, shaderProgram);
 	//enterButton->SetSampleArea({ 75, 0, 40, 66 });
 
-	Virt = new Drawing::Model(content.Load<Content::MeshCollection>({ "Assets/virt/virt.obj" }, success));
+	Virt = new Drawing::Model(content.Load<Content::MeshCollection>({ "Assets/chair/chair.obj" }, success));
 	Virt->Size = { 20, 20, 20 };
 
 	arrow = Drawing::MakeArrow({ 1, 1, 1 }, 16, shaderProgram, {"arrow1"}, content, memory);
@@ -47,6 +47,7 @@ void TestScene::Initialize(ReadFileFunc *readFile, DebugMessageErrorFunc *messag
 	arrow->Position.y = 550;
 	arrow->Size.z = 3;
 	arrow->Size *= 50;
+	Virt->Size *= 20;
 
 	/*Camera = new Drawing::SphericalCamera();
 	Camera->SetProjection(Matrix4::CreatePerspective(Pi32 / 2, 16.0f / 9.0f, 1, 1000));

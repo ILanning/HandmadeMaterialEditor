@@ -15,14 +15,24 @@ namespace Memory
 	class FixedSizeArena
 	{
 	public:
+		/// The beginning of the memory space controlled by this object.
 		uint8 *buffer = nullptr;
+		/// The next open space in the buffer.
 		uint8 *bufferNext = nullptr;
+		/// The last address that this object controls.
 		uint8 *bufferEnd = nullptr;
+		/// The end of the list of deleted memory addresses.
 		uint8 **deletedListEnd = nullptr;
+		/// The allocator this object's memory came from.
 		Allocator *memoryAllocator = nullptr;
+		/// The size of the buffer.
 		uint64 size = 0;
+		/// The size of object this arena can store.
 		uint64 binSize = 0;
+		/// Whether or not the object owns its own memory.
 		bool ownsMemory = false;
+		/// Whether or not a partial allocation is in progress.
+		bool partialInProgress = false;
 		
 		FixedSizeArena(uint8 *bufferStart, uint64 bufferSize, uint64 itemSize)
 			: buffer(bufferStart), bufferNext(bufferStart), bufferEnd(bufferStart + bufferSize),

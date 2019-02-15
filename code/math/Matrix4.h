@@ -5,9 +5,12 @@
 #include "..\handmade_typedefs.h"
 #include "Vector3.h"
 
+///A three dimensional matrix.
 struct Matrix4
 {
+	///The number of rows in the matrix
 	const static int32 RowCount = 4;
+	///The number of elements in a matrix
 	const static int32 ElementCount = RowCount * RowCount;
 	union
 	{
@@ -59,7 +62,7 @@ struct Matrix4
 	friend bool operator==(const Matrix4 &a, const Matrix4 &b);
 	friend bool operator!=(const Matrix4 &a, const Matrix4 &b);
 
-	static Matrix4 Matrix4::Identity()
+	static Matrix4 Identity()
 	{
 		Matrix4 result = { 1, 0, 0, 0,
 			0, 1, 0, 0,

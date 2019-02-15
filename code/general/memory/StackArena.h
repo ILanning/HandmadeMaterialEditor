@@ -12,13 +12,21 @@ namespace Memory
 	class StackArena
 	{
 	public:
+		/// The beginning of the memory space controlled by this object.
 		uint8 *buffer = nullptr;
+		/// The next open space in the buffer.
 		uint8 *bufferNext = nullptr;
+		/// The last address that this object controls.
 		uint8 *bufferEnd = nullptr;
+		/// The allocator this object's memory came from.
 		Allocator *memoryAllocator = nullptr;
+		/// The size of the partial allocation currently in progress.
 		uint64 upcomingSize = 0;
+		/// The size of the buffer.
 		uint64 size = 0;
+		/// Whether or not the object owns its own memory.
 		bool ownsMemory = false;
+		/// Whether or not a partial allocation is in progress.
 		bool partialInProgress = false;
 
 		///Swaps two instances.

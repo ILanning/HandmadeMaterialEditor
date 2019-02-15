@@ -5,9 +5,12 @@
 #include "..\handmade_typedefs.h"
 #include "Vector2.h"
 
+///A three dimensional matrix.
 struct Matrix3
 {
+	///The number of rows in the matrix
 	const static int32 RowCount = 3;
+	///The number of elements in a matrix
 	const static int32 ElementCount = RowCount * RowCount;
 	union
 	{

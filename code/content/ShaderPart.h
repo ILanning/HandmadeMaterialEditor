@@ -8,6 +8,7 @@
 
 namespace Content
 {
+	///Represents a part of a shader program, such as an individual fragment or vertex shader.
 	struct ShaderPart
 	{
 		GLuint ID;

@@ -10,6 +10,7 @@
 
 namespace Drawing
 {
+	///A collection of textures and other data that cointains the information needed to draw something to the screen.
 	struct Material
 	{
 		Vector3 AmbientColor = { 1, 1, 1 };
@@ -155,9 +156,7 @@ namespace Drawing
 			swap(*this, other);
 		}
 
-		/**
-			/brief Prepares the GL to draw meshes using this material
-		*/
+		///Prepares the GL to draw meshes using this material
 		void Use() const
 		{
 			DiffuseMap->Bind();

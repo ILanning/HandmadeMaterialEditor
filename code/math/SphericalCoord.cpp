@@ -12,7 +12,6 @@
 
 namespace Math
 {
-
 	Vector3 SphericalCoord::ToCartesian(real32 radius, Radian direction, Radian elevation)
 	{
 		real32 cosElevation = cosf(elevation);

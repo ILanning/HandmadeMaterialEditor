@@ -10,6 +10,7 @@
 
 namespace Drawing
 {
+	///Represents a typical 2D image, such as the sort found in a png or jpg file.
 	class Texture2D
 	{
 		GLuint GLID = 0;
@@ -73,12 +74,14 @@ namespace Drawing
 			textureGLSetup();
 		}
 
+		///Sets this as the active texture within OpenGL
 		void Bind(const GLenum textureUnit) const
 		{
 			glActiveTexture(textureUnit);
 			Bind();
 		}
 
+		///Sets this as the active texture within OpenGL
 		void Bind() const
 		{
 			glBindTexture(GL_TEXTURE_2D, GLID);

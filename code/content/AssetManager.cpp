@@ -102,7 +102,7 @@ AssetPtr<Content::MeshCollection> AssetManager::Load(HMString path, bool& validA
 
 GLuint AssetManager::CreateShader(HMString name, HMString vertSourcePath, HMString fragSourcePath, DebugMessageErrorFunc *messageError)
 {
-	return Shaders.SetNamedShader(name, vertSourcePath, fragSourcePath, reader, messageError);
+	return Shaders.CreateNamedShader(name, vertSourcePath, fragSourcePath, reader, messageError);
 }
 
 GLuint AssetManager::GetShader(HMString name, bool& success)

@@ -10,6 +10,7 @@
 
 namespace Content
 {
+	///Contains and manages shader programs and shader parts.
 	class ShaderManager
 	{
 	public:
@@ -28,6 +29,7 @@ namespace Content
 			NamedShaderPrograms = Collections::HashMap<HMString, GLuint, Memory::NewDeleteArena>(4, memory);
 		}
 
+		///Create a full new shader program from the given files.
 		GLuint CreateShader(HMString& vertSourcePath, HMString& fragSourcePath, ReadFileFunc *readFile, DebugMessageErrorFunc *messageError)
 		{
 			ShaderPart vert = ShaderPart(vertSourcePath, readFile, GL_VERTEX_SHADER);
@@ -45,7 +47,8 @@ namespace Content
 			return program.ID;
 		}
 
-		GLuint SetNamedShader(HMString& name, HMString& vertSourcePath, HMString& fragSourcePath, ReadFileFunc *readFile, DebugMessageErrorFunc *messageError)
+		///Creates a full new shader program from the given files and gives it a name.
+		GLuint CreateNamedShader(HMString& name, HMString& vertSourcePath, HMString& fragSourcePath, ReadFileFunc *readFile, DebugMessageErrorFunc *messageError)
 		{
 			GLuint shaderID = CreateShader(vertSourcePath, fragSourcePath, readFile, messageError);
 			NamedShaderPrograms[name] = shaderID;

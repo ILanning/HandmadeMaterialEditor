@@ -13,25 +13,36 @@
 
 namespace Drawing
 {
+	///An individual 3D mesh.
 	struct Mesh
 	{
+		///The vertices that make up the mesh.
 		VertexArray *Vertices = nullptr;
+		///Defines how the vertices are laid out.
 		GLuint *Elements = nullptr;
+		///The number of elements.
 		uint32 ElementCount = 0;
+		///The mode that OpenGL uses when interpreting the element array.
 		GLenum Mode = GL_TRIANGLES;
 		uint32 PrimitiveRestartIndex = MaxInt32;
 
+		///The OpenGL Vertex Array Object ID for this mesh.
 		GLuint VAO = 0;
+		///The OpenGL Vertex Buffer Object ID for this mesh.
 		GLuint VBO = 0;
+		///The OpenGL Element Buffer Object ID for this mesh.
 		GLuint EBO = 0;
 
 		GLint MVPUniform = -1;
 		GLint ColorUniform = -1;
 
+		///The material to draw this mesh with.
 		AssetPtr<Material> MeshMaterial = {};
 
+		///Whether or not this mesh has been set up with OpenGL yet.
 		bool Initialized = false;
 
+		///Sets up the mesh within OpenGL.
 		void CreateBufferObjects(GLuint shaderProgram)
 		{
 			//NOTE: Ordering here is important, these are commands to the OpenGL state machine. glBufferData operates on whatever buffer was most recently bound.
@@ -54,6 +65,7 @@ namespace Drawing
 			MVPUniform = glGetUniformLocation(shaderProgram, "mvp");
 		}
 
+		///Updates the data in OpenGL to match the data in the vertex and element arrays.
 		void UpdateBufferObjects()
 		{
 			glBindVertexArray(VAO);
@@ -87,6 +99,7 @@ namespace Drawing
 			}
 		}
 
+		///Draws the mesh to the world.
 		void Draw(const Matrix4 &mvp, const Vector3 &color) const
 		{
 			glBindVertexArray(VAO);
@@ -141,70 +154,6 @@ namespace Drawing
 			delete[] Vertices;
 			delete[] Elements;
 		}
-
-		/*void swap(HashMap& other)
-		{
-			real32 tempFloat = other.upsizeFactor;
-			other.upsizeFactor = upsizeFactor;
-			upsizeFactor = tempFloat;
-
-			Allocator* tempMem = other.memory;
-			other.memory = memory;
-			memory = tempMem;
-
-			HashItem* tempItems = other.buckets;
-			other.buckets = buckets;
-			buckets = tempItems;
-
-			int32 tempInt = other.bucketCount;
-			other.bucketCount = bucketCount;
-			bucketCount = tempInt;
-
-			tempInt = other.occupied;
-			other.occupied = occupied;
-			occupied = tempInt;
-
-			tempInt = other.maxAlreadyFilled;
-			other.maxAlreadyFilled = maxAlreadyFilled;
-			maxAlreadyFilled = tempInt;
-		}
-
-		HashMap(HashMap& other)
-		{
-			memory = other.memory;
-			bucketCount = other.bucketCount;
-			occupied = other.occupied;
-			buckets = memory->Allocate<HashItem>(bucketCount);
-
-			for (int32 i = 0; i < bucketCount; i++)
-			{
-				buckets[i] = other.buckets[i];
-			}
-		}
-
-		HashMap(HashMap&& other) : HashMap()
-		{
-			swap(other);
-		}
-
-		HashMap& operator=(HashMap other)
-		{
-			swap(other);
-			return *this;
-		}
-
-		~HashMap()
-		{
-			if (memory && buckets)
-			{
-				memory->Deallocate(buckets);
-				buckets = nullptr;
-				memory = nullptr;
-			}
-
-			bucketCount = 0;
-			occupied = 0;
-		}*/
 	};
 }
 

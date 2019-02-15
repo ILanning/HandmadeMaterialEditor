@@ -12,9 +12,9 @@ namespace Input
 	///Manages the inputs from all devices for the program.
 	class InputManager
 	{
-		//TODO(Ian): Keep a set of frames per registered controller
-		//TODO(Ian): Provide a way to check whether or not an Action (Gesture?) was completed, as opposed to a PhysicalInput
-		//           Actions could be associated with zero or more keys, or even a more complex input sequence that occurs over several frames
+		//TODO: Keep a set of frames per registered controller
+		//TODO: Provide a way to check whether or not an Action (Gesture?) was completed, as opposed to a PhysicalInput
+		//      Actions could be associated with zero or more keys, or even a more complex input sequence that occurs over several frames
 		InputFrame oldFrame = {};
 		InputFrame newFrame = {};
 

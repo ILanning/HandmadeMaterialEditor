@@ -26,6 +26,7 @@ namespace Math
 		return start + diff * fraction;
 	}
 
+	///Measures the distance between two angles
 	Radian AngleDist(Radian a, Radian b)
 	{
 		Radian diff = fabsf(b - a);
@@ -57,7 +58,7 @@ namespace Math
 		}
 		else //Clamp to range [max, 0][2Pi, min]
 		{
-			//TODO(Ian): Will fail to produce correct results if the bounds are out of (2Pi, 0], fix that
+			//TODO: Will fail to produce correct results if the bounds are out of (2Pi, 0], fix that
 			if (orig >= Pi32 * 2 || orig < 0)
 			{
 				Radian fullSpins = floorf(orig / (Pi32 * 2));

@@ -5,7 +5,8 @@
 
 namespace Input
 {
-	//NOTE(Ian): Matches Windows VK codes for convenience, but is *not* platform-specific code and may include values that Windows does not
+	//NOTE: Matches Windows VK codes for convenience, but is *not* platform-specific code and may include values that Windows does not
+	///Enumeration of all physical buttons that a user might press.
 	enum PhysicalInputs
 	{
 		LMB = 0x01,
@@ -90,7 +91,7 @@ namespace Input
 		X,
 		Y,
 		Z,
-		LeftWindows, //TODO(Ian): Find out what these are on other OSs and rename them to match
+		LeftWindows, //TODO: Find out what these are on other OSs and rename them to match
 		RightWindows,
 		Apps,
 		//Reserved on Windows
@@ -143,7 +144,7 @@ namespace Input
 		RightShift,
 		LeftControl,
 		RightControl,
-		LeftMenu, //TODO(Ian): Is this the Alt key?
+		LeftMenu, //TODO: Is this the Alt key?
 		RightMenu,
 		Browser_Back,
 		Browser_Forward,

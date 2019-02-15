@@ -61,7 +61,6 @@ namespace Drawing
 
 			VertexNormalTextureArray *verts = new VertexNormalTextureArray(new VertexNormalTexture[4], 4);
 
-
 			(*verts)[0] = { -halfWidth,  halfHeight, 0.0f, 0.0f, 0.0f, 1.0f,  uvLeft, uvBot };
 			(*verts)[1] = { halfWidth,   halfHeight, 0.0f, 0.0f, 0.0f, 1.0f,  uvRight, uvBot };
 			(*verts)[2] = { halfWidth,  -halfHeight, 0.0f, 0.0f, 0.0f, 1.0f,  uvRight, uvTop };

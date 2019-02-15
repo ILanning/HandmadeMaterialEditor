@@ -5,14 +5,15 @@
 #include "Vertex.h"
 #include "../libraries/glew.h"
 
-//TODO(Ian):  Define a VertexInfo class with one child class for each type of vertex, to 
+//TODO:  Define a VertexInfo class with one child class for each type of vertex, to 
 //            better enable functions that can handle many types of vertices
 namespace Drawing
 {
+	///An abstract structure for arrays that contain vertices.
 	struct VertexArray
 	{
 		virtual void BindShaderVariables(GLuint shaderProgram) = 0;
-		virtual int32 GetBufferSize() = 0;
+		virtual int32 GetBufferSize() const = 0;
 		virtual GLfloat *GetBuffer() = 0;
 
 		virtual ~VertexArray() = 0;
@@ -20,7 +21,8 @@ namespace Drawing
 
 	VertexArray::~VertexArray() {}
 
-	//CONSIDER(Ian): This class would work well as a template/macro/code generation thing
+	//CONSIDER: This class would work well as a template/macro/code generation thing
+	///A Vertex Array meant for vertices with a position, an RGB color, and a texture coordinate.
 	struct VertexColorTextureArray : VertexArray
 	{
 		VertexColorTexture *Vertices;
@@ -28,11 +30,13 @@ namespace Drawing
 
 		VertexColorTextureArray(VertexColorTexture *vertices, uint32 vertexCount) : Vertices(vertices), VertexCount(vertexCount) {}
 
-		//ASK(Ian):  This modifies the currently set VAO, but does not require that that VAO be passed in.
-		//			 How should I best signify the global state that this requires, since modifying the current VAO myself here would cause other issues?
+		//ASK:  This modifies the currently set VAO, but does not require that that VAO be passed in.
+		//	    How should I best signify the global state that this requires, since modifying the current VAO myself here would cause other issues?
+
+		///Sets up OpenGL to have this sort of vertex work with the passed in shader.
 		void BindShaderVariables(GLuint shaderProgram)
 		{
-			//TODO(Ian): Figure out why this function is causing a GL_INVALID_VALUE error
+			//TODO: Figure out why this function is causing a GL_INVALID_VALUE error
 			int32 vertexSize = sizeof(VertexColorTexture);
 			GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
 			glEnableVertexAttribArray(posAttrib);
@@ -52,7 +56,8 @@ namespace Drawing
 			return Vertices[index];
 		}
 
-		int32 GetBufferSize()
+		///Returns the size of the buffer, in bytes.
+		int32 GetBufferSize() const
 		{
 			return sizeof(VertexColorTexture) * VertexCount;
 		}
@@ -68,6 +73,7 @@ namespace Drawing
 		}
 	};
 
+	///A Vertex Array meant for vertices with a position, a normal vector, and a texture coordinate.
 	struct VertexNormalTextureArray : VertexArray
 	{
 		VertexNormalTexture *Vertices;
@@ -75,6 +81,7 @@ namespace Drawing
 
 		VertexNormalTextureArray(VertexNormalTexture *vertices, uint32 vertexCount) : Vertices(vertices), VertexCount(vertexCount) {}
 
+		///Sets up OpenGL to have this sort of vertex work with the passed in shader.
 		void BindShaderVariables(GLuint shaderProgram)
 		{
 			int32 vertexSize = sizeof(VertexNormalTexture);
@@ -96,11 +103,13 @@ namespace Drawing
 			return Vertices[index];
 		}
 
-		int32 GetBufferSize()
+		///Returns the size of the buffer, in bytes.
+		int32 GetBufferSize() const
 		{
 			return sizeof(VertexNormalTexture) * VertexCount;
 		}
 
+		///Returns a pointer to the vertex buffer.
 		GLfloat *GetBuffer()
 		{
 			return (GLfloat *)(void *)Vertices;

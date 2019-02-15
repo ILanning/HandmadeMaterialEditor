@@ -21,12 +21,13 @@ namespace Content
 
 		namespace _OBJInternal
 		{
+			///Parses a 3D vector found in an mtl file.
 			Vector3 ParseMTLVec3(char *string, int32 length, int32 offset, Vector3 defaultValue, int32 *readFinishIndex);
-
+			///Parses a 2S vector found in an mtl file.
 			Vector2 ParseMTLVec2(char *string, int32 length, int32 offset, Vector2 defaultValue, int32 *readFinishIndex);
-
+			///Parses a float found in an mtl file.
 			float ParseMTLFloat(char *string, int32 length, int32 offset, float defaultValue, int32 *readFinishIndex);
-
+			///Parses a boolean found in an mtl file.
 			bool ParseMTLBool(char *string, int32 length, int32 offset, bool defaultValue, int32 *readFinishIndex);
 
 			MTLTextureOptions ParseMapLineOptions(char *line, int32 lineLength, int32 offset, char *folder, bool isScalar, int32 *readFinishIndex);
@@ -35,16 +36,16 @@ namespace Content
 				Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>& materialList, AssetManager& assets);
 		}
 
-		//Parses any materials in the given text and adds them to the provided collection.
+		///Parses any materials in the given text and adds them to the provided collection.
 		void ParseMTL(FileData toLoad, Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>& materialList, AssetManager& assets);
 
-		//Returns an array containing any materials found in the given text.
+		///Returns an array containing any materials found in the given text.
 		StaticArray<NamedMTL> ParseMTL(FileData file, Memory::NewDeleteArena& arena, AssetManager& assets);
 
-		//Parses any materials in the given text and adds them to the provided collection.
+		///Parses any materials in the given text and adds them to the provided collection.
 		void ParseMTL(HMString path, ReadFileFunc *readFile, Collections::ArrayList<NamedMTL, Memory::NewDeleteArena>& materialList, AssetManager& assets);
 
-		//Returns an array containing any materials found in the given text.
+		///Returns an array containing any materials found in the given text.
 		StaticArray<NamedMTL> ParseMTL(HMString path, ReadFileFunc *readFile, Memory::NewDeleteArena& arena, AssetManager& assets);
 	}
 }

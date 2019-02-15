@@ -13,19 +13,28 @@
 
 namespace File
 {
+	///Functions for writing and reading simple dictionary-like data structures from file
 	namespace PairSerializer
 	{
+		///Potential parsing errors the serializer may find
 		enum class ErrorCodes
 		{
+			///No error
 			OK = 0,
+			///A qoutation mark was found, but no match occurred between it and the end of the document
 			QuoteDidNotEnd,
+			///Two tokens in a pair were found to be seperated by a space rather than an equals sign
 			NoEqualsBeforeNextToken,
 		};
 
+		///Contains information on a found parsing error.
 		struct ParseError
 		{
+			///The error code for this issue
 			ErrorCodes ErrorCode = ErrorCodes::OK;
+			///The line the error is believed to be on
 			int32 Line = 0;
+			///The column/character depth into the line of the error.
 			int32 Depth = 0;
 
 			bool operator ==(const ParseError& other) const
@@ -49,7 +58,7 @@ namespace File
 
 		typedef HMPair<HMString, HMString> TokenPair;
 
-		// Parses the next single token from the given text, allocating memory for the token string.
+		///Parses the next single token from the given text, allocating memory for the token string.
 		template<class Allocator>
 		HMString ParseToken(const HMString& string, Allocator& allocator, int32 offset = 0, int32* outOffset = nullptr, ParseError* outError = nullptr)
 		{
@@ -133,7 +142,7 @@ namespace File
 			return result;
 		}
 
-		// Returns the next single pair found in the given text, allocating memory for the resulting strings.  
+		///Returns the next single pair found in the given text, allocating memory for the resulting strings.  
 		template<class Allocator>
 		TokenPair ParsePair(const HMString& string, Allocator& allocator, int32 offset = 0, int32* outOffset = nullptr, ParseError* outError = nullptr)
 		{
@@ -169,7 +178,7 @@ namespace File
 			return result;
 		}
 
-		// Returns a HashMap containing all pairs found in the given text and creates copies of the strings for it.
+		///Returns a HashMap containing all pairs found in the given text and creates copies of the strings for it.
 		template<class Allocator>
 		Collections::HashMap<HMString, HMString, Allocator> ParseText(const HMString& string, Allocator& allocator, int32 offset = 0, StaticArray<ParseError>* outErrors = nullptr)
 		{
@@ -212,7 +221,8 @@ namespace File
 
 			return resultDict;
 		}
-		
+
+		///Returns a HashMap containing all pairs found in the given file and creates copies of the strings for it.
 		template<class Allocator>
 		Collections::HashMap<HMString, HMString, Allocator> ParseFile(HMString path, ReadFileFunc& readFile, Allocator& memory, bool* outSuccess = nullptr)
 		{
@@ -231,6 +241,7 @@ namespace File
 			return {};
 		}
 
+		///Takes a HashMap and creates a file containing a human-readable array of pairs from it.
 		template<class Allocator>
 		bool WriteFile(HMString path, WriteFileFunc& writeFile, StaticArray<HMPair<HMString, HMString>> data, Allocator& scratchAlloc)
 		{

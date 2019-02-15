@@ -3,6 +3,7 @@
 
 namespace Drawing
 {
+	///Bitflag list of channels that an image may have.
 	enum class Channels
 	{
 		Default = 1,
