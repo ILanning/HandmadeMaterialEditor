@@ -15,9 +15,8 @@
 #include "math\Matrix3.h"
 #include "math\Matrix4.h"
 #include "general\Assert.h"
-#include "PlatformGameSettings.cpp"
+#include "PlatformGameSettings.h"
 #include "GameState.h"
-#include "TestScene.cpp"
 
 /*internal void GameOutputSound(game_state *GameState, game_sound_output_buffer *SoundBuffer, int ToneHz)
 {
@@ -48,9 +47,9 @@
 }*/
 DebugMessageErrorFunc *MessageError;
 
-bool InitMemory(thread_context *thread, game_memory *memory)
+bool InitMemory(ThreadContext *thread, game_memory *memory)
 {
-	char *filename = __FILE__;
+	const char *filename = __FILE__;
 
 	bool success = false;
 	debug_read_file_result file = memory->DEBUGPlatformReadEntireFile(thread, filename, &success);
@@ -61,20 +60,20 @@ bool InitMemory(thread_context *thread, game_memory *memory)
 	}
 
 	// TODO(casey): This may be more appropriate to do in the platform layer
-	// TODO(Ian): Add actual error checking here
+	// TODO: Add actual error checking here
 	memory->IsInitialized = true;
 
 	return success && memory->IsInitialized;
 }
 
-extern "C" GAME_INITIALIZE(GameInitialize)
+extern "C" __declspec(dllexport) GAME_INITIALIZE(GameInitialize)
 {
 	GameState *state = (GameState*)memory->PermanentStorage;
 
 	state->testScene.Initialize(memory->ReadEntireFile, memory->DEBUGMessageError, state);
 }
 
-extern "C" GAME_PROCESS_INPUT(GameProcessInput)
+extern "C" __declspec(dllexport) GAME_PROCESS_INPUT(GameProcessInput)
 {
 	Assert((&newInputs->Controllers[0].Terminator - &newInputs->Controllers[0].Buttons[0]) ==
 		(ArrayCount(newInputs->Controllers[0].Buttons)));
@@ -131,7 +130,7 @@ extern "C" GAME_PROCESS_INPUT(GameProcessInput)
 	}
 }
 
-extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
+extern "C" __declspec(dllexport) GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 {
     Assert(sizeof(GameState) <= Memory->PermanentStorageSize);
     
@@ -145,12 +144,14 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
 	if (!MessageError)
 		MessageError = Memory->DEBUGMessageError;
 
+	DebugOutputGLErrors(MessageError);
+
 	gameState->testScene.HandleInput(gameState);
 	gameState->testScene.Update(gameState);
 	gameState->testScene.Draw(gameState);
 }
 
-extern "C" GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
+extern "C" __declspec(dllexport) GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
 {
 	GameState *gameState = (GameState *)Memory->PermanentStorage;
     //GameOutputSound(gameState, SoundBuffer, gameState->ToneHz);

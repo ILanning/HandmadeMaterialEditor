@@ -5,10 +5,10 @@
 #include <math.h>
 #include "MathTypedefs.h"
 #include "..\handmade_typedefs.h"
-#include "Vector3.cpp"
-#include "Quaternion.cpp"
-#include "Matrix4.cpp"
-#include "MathHelpers.cpp"
+#include "Vector3.h"
+#include "Quaternion.h"
+#include "Matrix4.h"
+#include "MathHelpers.h"
 
 namespace Math
 {
@@ -34,7 +34,7 @@ namespace Math
 
 	Quaternion SphericalCoord::ToNormalizedQuaternion(real32 radius, Radian direction, Radian elevation)
 	{
-		//TODO(Ian): Does not account for roll
+		//TODO: Does not account for roll
 		//Probably choose an up vector based on roll, then build axis by crossing the cartesian vector with that
 		Vector3 axis = { cosf(direction), 0, sinf(direction) };
 		return Quaternion::CreateFromAxisAngle(axis, elevation);

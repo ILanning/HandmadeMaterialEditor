@@ -2,6 +2,7 @@
 #define HANDMADE_WIN32_INPUTPROCESSOR_H
 
 #include "../input/InputFrame.h"
+#include <windows.h>
 
 /*
 Needs to create InputFrames for the InputManager
@@ -15,8 +16,8 @@ struct InputProcessor
 
 	void HandleRawInputMessages(MSG message);
 
-	//TODO(Ian): Have this accept timing information in support of frametime-invariant updating
-	Input::InputFrame GenerateFrame()
+	//TODO: Have this accept timing information in support of frametime-invariant updating
+	inline Input::InputFrame GenerateFrame()
 	{
 		Input::InputFrame clone = nextFrame;
 		nextFrame.scrollWheelChange = 0;

@@ -37,7 +37,7 @@ Quaternion Quaternion::CreateFromAxisAngle(Vector3 axis, real32 angle)
 	return result.Normalize();
 }
 
-//TODO(Ian): Copied from Ogre3D, replace this with something you actually understand later
+//TODO: Copied from Ogre3D, replace this with something you actually understand later
 Quaternion Quaternion::FromRotationMatrix(const Matrix4& kRot)
 {
 	// Algorithm in Ken Shoemake's article in 1987 SIGGRAPH course notes

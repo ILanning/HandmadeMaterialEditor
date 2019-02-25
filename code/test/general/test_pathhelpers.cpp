@@ -2,23 +2,19 @@
 #define HANDMADE_TEST_PATHHELPERS
 
 #include "../../handmade_typedefs.h"
-#include "../../general/PathHelpers.cpp"
-
-#ifndef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "../../libraries/doctest.h"
-#endif
+#include "../../general/PathHelpers.h"
 
 TEST_CASE("Testing various path manipulation functions")
 {
-	char *relativeFile = "/test/bin/Windows Platform/executable.exe";
-	char *relativeFolder = "code/general";
-	char *relativeIsland = "/island/";
+	const char *relativeFile = "/test/bin/Windows Platform/executable.exe";
+	const char *relativeFolder = "code/general";
+	const char *relativeIsland = "/island//";
 
-	char *absoluteFile = "E:/Games/Handmade Material Editor/bin/win32_handmade.exe";
-	char *absoluteFolder = "C:/Program Files (x86)/folder/";
+	const char *absoluteFile = "E:/Games/Handmade Material Editor/bin/win32_handmade.exe";
+	const char *absoluteFolder = "C:/Program Files (x86)/folder/";
 
-	char *drive = "D:";
-	char *emptyString = "";
+	const char *drive = "D:";
+	const char *emptyString = "";
 
 	SUBCASE("Testing IsAbsolute")
 	{
@@ -48,8 +44,8 @@ TEST_CASE("Testing various path manipulation functions")
 	}
 	SUBCASE("Testing Combine")
 	{
-		char *resultA = "code/general/test/bin/Windows Platform/executable.exe";
-		char *resultB = "C:/Program Files (x86)/folder/test/bin/Windows Platform/executable.exe";
+		const char *resultA = "code/general/test/bin/Windows Platform/executable.exe";
+		const char *resultB = "C:/Program Files (x86)/folder/test/bin/Windows Platform/executable.exe";
 
 		char *combined = Path::Combine(relativeFolder, relativeFile);
 		CHECK(CString::IsEqual(combined, resultA));
@@ -66,45 +62,45 @@ TEST_CASE("Testing various path manipulation functions")
 	}
 	SUBCASE("Testing GetParentDirectory")
 	{
-		char *resultA = "/test/bin/Windows Platform/";
-		char *resultB = "C:/Program Files (x86)/";
-		char *resultC = "/";
-		char *resultD = "";
+		const char *resultA = "/test/bin/Windows Platform/";
+		const char *resultB = "C:/Program Files (x86)/";
+		const char *resultC = "/";
+		const char *resultD = "";
 
 		int32 length = 0;
-		char *name = Path::GetParentDirectory(relativeFile, &length);
+		char *name = Path::CloneParentDirectory(relativeFile, &length);
 		CHECK(CString::IsEqual(name, resultA));
 		CHECK(length == 28);
 		delete[] name;
-		name = Path::GetParentDirectory(absoluteFolder);
+		name = Path::CloneParentDirectory(absoluteFolder);
 		CHECK(CString::IsEqual(name, resultB));
 		delete[] name;
-		name = Path::GetParentDirectory(relativeIsland);
+		name = Path::CloneParentDirectory(relativeIsland);
 		CHECK(CString::IsEqual(name, resultC));
 		delete[] name;
-		name = Path::GetParentDirectory(drive);
+		name = Path::CloneParentDirectory(drive);
 		CHECK(CString::IsEqual(name, resultD));
 		delete[] name;
 	}
 	SUBCASE("Testing GetEndName")
 	{
-		char *resultA = "executable.exe";
-		char *resultB = "folder";
-		char *resultC = "island";
-		char *resultD = "D:";
+		const char *resultA = "executable.exe";
+		const char *resultB = "folder";
+		const char *resultC = "island";
+		const char *resultD = "D:";
 
 		int32 length = 0;
-		char *name = Path::GetEndName(relativeFile, &length);
+		char *name = Path::CloneEndName(relativeFile, &length);
 		CHECK(CString::IsEqual(name, resultA));
 		CHECK(length == 15);
 		delete[] name;
-		name = Path::GetEndName(absoluteFolder);
+		name = Path::CloneEndName(absoluteFolder);
 		CHECK(CString::IsEqual(name, resultB));
 		delete[] name;
-		name = Path::GetEndName(relativeIsland);
+		name = Path::CloneEndName(relativeIsland);
 		CHECK(CString::IsEqual(name, resultC));
 		delete[] name;
-		name = Path::GetEndName(drive);
+		name = Path::CloneEndName(drive);
 		CHECK(CString::IsEqual(name, resultD));
 		delete[] name;
 	}

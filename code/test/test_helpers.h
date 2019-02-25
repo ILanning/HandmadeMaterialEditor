@@ -10,7 +10,7 @@
 #include "../math/Matrix4.h"
 #include "../math/Quaternion.h"
 
-GENERAL_ALLOC_MEMORY(TestAlloc)
+inline GENERAL_ALLOC_MEMORY(TestAlloc)
 {
 	uint8 *memBlock = (uint8 *)malloc((size_t)size);
 	if (outSuccess)
@@ -20,7 +20,7 @@ GENERAL_ALLOC_MEMORY(TestAlloc)
 	return memBlock;
 }
 
-GENERAL_DEALLOC_MEMORY(TestDealloc)
+inline GENERAL_DEALLOC_MEMORY(TestDealloc)
 {
 	free(memory);
 	if (outSuccess)
@@ -32,7 +32,7 @@ GENERAL_DEALLOC_MEMORY(TestDealloc)
 //TODO(Ian): Should these really be macros, or is there a better solution?
 
 #define HANDMADE_TO_CHARARRAY_VECTOR(className)													\
-char *ToCharArray(const className &a)															\
+inline char *ToCharArray(const className &a)													\
 {																								\
 	const int bufferSize = 21;																	\
 	const int componentCount = className::ElementCount;											\
@@ -80,7 +80,7 @@ HANDMADE_TO_CHARARRAY_VECTOR(Quaternion)
 #undef HANDMADE_TO_CHARARRAY_VECTOR
 
 #define HANDMADE_STREAM_VECTOR(className)                             \
-std::ostream &operator<<(std::ostream &os, const className &a)		  \
+inline std::ostream &operator<<(std::ostream &os, const className &a) \
 {																	  \
 	os << '(';														  \
 	for (int i = 0; i < className::ElementCount; i++)				  \
@@ -101,7 +101,7 @@ HANDMADE_STREAM_VECTOR(Quaternion)
 #undef HANDMADE_STREAM_VECTOR
 
 #define HANDMADE_STREAM_MATRIX(className)                                \
-std::ostream &operator<<(std::ostream &os, const className &a)			 \
+inline std::ostream &operator<<(std::ostream &os, const className &a)	 \
 {																		 \
 	os << "\n";															 \
 	for (int y = 0; y < className::RowCount; y++)						 \
@@ -125,17 +125,18 @@ HANDMADE_STREAM_MATRIX(Matrix4)
 
 #undef HANDMADE_STREAM_MATRIX
 
-#define HANDMADE_CHECK_WITHIN_BOUNDS(className) bool CheckWithinBounds(const className &a, const className &b) \
-{																											\
-	for (int i = 0; i < className::ElementCount; i++)														\
-	{																										\
-		real32 difference = a.elements[i] - b.elements[i];													\
-		if (difference > 0.00001 || difference < -0.00001)													\
-		{																									\
-			return false;																					\
-		}																									\
-	}																										\
-	return true;																							\
+/*#define HANDMADE_CHECK_WITHIN_BOUNDS(className)						\
+inline bool CheckWithinBounds(const className &a, const className &b)	\
+{																		\
+	for (int i = 0; i < className::ElementCount; i++)					\
+	{																	\
+		real32 difference = a.elements[i] - b.elements[i];				\
+		if (difference > 0.00001 || difference < -0.00001)				\
+		{																\
+			return false;												\
+		}																\
+	}																	\
+	return true;														\
 }
 
 HANDMADE_CHECK_WITHIN_BOUNDS(Vector2)
@@ -144,6 +145,26 @@ HANDMADE_CHECK_WITHIN_BOUNDS(Quaternion)
 HANDMADE_CHECK_WITHIN_BOUNDS(Matrix3)
 HANDMADE_CHECK_WITHIN_BOUNDS(Matrix4)
 
-#undef HANDMADE_CHECK_WITHIN_BOUNDS
+#undef HANDMADE_CHECK_WITHIN_BOUNDS*/
+
+template<typename T>
+inline bool CheckWithinBounds(const T &a, const T &b)
+{
+	for (int i = 0; i < T::ElementCount; i++)
+	{
+		real32 difference = a.elements[i] - b.elements[i];
+		if (difference > 0.00001 || difference < -0.00001)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+template bool CheckWithinBounds(const Vector2&, const Vector2&);
+template bool CheckWithinBounds(const Vector3&, const Vector3&);
+template bool CheckWithinBounds(const Quaternion&, const Quaternion&);
+template bool CheckWithinBounds(const Matrix3&, const Matrix3&);
+template bool CheckWithinBounds(const Matrix4&, const Matrix4&);
 
 #endif

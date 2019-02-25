@@ -4,7 +4,7 @@
 #include "handmade_typedefs.h"
 #include "general\Assert.h"
 #include "general\StretchyArray.h"
-#include "math\Vector2.cpp"
+#include "math\Vector2.h"
 
 /**
  *Defines a function that takes an object, and rescales it to a new set of dimensions.  Use this to handle DPI scaling.
@@ -26,7 +26,7 @@ class RescalerManager
 		RescaleFunc *rescaler;
 	};
 
-	//TODO(Ian): objects should be unique in this, replace with a hash map later
+	//TODO: objects should be unique in this, replace with a hash map later
 	StretchyArray<ObjectRescalerPair> rescaleableObjects = StretchyArray<ObjectRescalerPair>();
 
 public:

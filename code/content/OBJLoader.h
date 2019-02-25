@@ -98,7 +98,7 @@ namespace Content
 
 			Content::MeshCollection ExportGeometry();
 
-			Collections::HashMap<HMString, AssetPtr<Drawing::Material>, Memory::NewDeleteArena> ObjParser::ExportMaterials();
+			Collections::HashMap<HMString, AssetPtr<Drawing::Material>, Memory::NewDeleteArena> ExportMaterials();
 
 			~ObjParser()
 			{

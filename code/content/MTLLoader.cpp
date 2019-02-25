@@ -5,8 +5,9 @@
 #include "../general/StaticArray.h"
 #include "../general/ArrayList.h"
 #include "../general/memory/NewDeleteArena.h"
-#include "../general/StringHelpers.cpp"
-#include "../general/PathHelpers.cpp"
+#include "../general/PathHelpers.h"
+#include "../general/StringHelpers.h"
+#include "AssetManager.h"
 #include "../drawing/Texture2D.h"
 #include <cstdlib>
 
@@ -140,50 +141,50 @@ namespace Content
 				*/
 				MTLTextureOptions options = {};
 
-				//TODO(Ian):  This function will cause issues if the texture's filename starts with a number, 
-				//            rewind slightly if something other than a space directly follows the last number read?
+				//TODO:  This function will cause issues if the texture's filename starts with a number, 
+				//       rewind slightly if something other than a space directly follows the last number read?
 				int32 currPos = CString::FindNonWhitespace(line, lineLength, offset);
 				while (currPos != -1)
 				{
 					if (line[currPos] == '-')
 					{
 						currPos++;
-						if (CString::FindSubstring("blendu", 6, line, 6, currPos) != -1)
+						if (CString::FindSubstring("blendu", 6, line + currPos, 6) != -1)
 						{
 							currPos += 7;
 							options.BlendU = ParseMTLBool(line, lineLength, currPos, true, &currPos);
 						}
-						else if (CString::FindSubstring("blendv", 6, line, 6, currPos) != -1)
+						else if (CString::FindSubstring("blendv", 6, line + currPos, 6) != -1)
 						{
 							currPos += 7;
 							options.BlendV = ParseMTLBool(line, lineLength, currPos, true, &currPos);
 						}
-						else if (CString::FindSubstring("cc", 2, line, 2, currPos) != -1)
+						else if (CString::FindSubstring("cc", 2, line + currPos, 2) != -1)
 						{
 							currPos += 3;
 							options.ColorCorrection = ParseMTLBool(line, lineLength, currPos, true, &currPos);
 						}
-						else if (CString::FindSubstring("clamp", 5, line, 5, currPos) != -1)
+						else if (CString::FindSubstring("clamp", 5, line + currPos, 5) != -1)
 						{
 							currPos += 6;
 							options.Clamp = ParseMTLBool(line, lineLength, currPos, true, &currPos);
 						}
-						else if (CString::FindSubstring("mm", 2, line, 2, currPos) != -1)
+						else if (CString::FindSubstring("mm", 2, line + currPos, 2) != -1)
 						{
 							currPos += 3;
 							options.ColorMod = ParseMTLVec2(line, lineLength, currPos, { 1, 0 }, &currPos);
 						}
-						else if (CString::FindSubstring("texres", 6, line, 6, currPos) != -1)
+						else if (CString::FindSubstring("texres", 6, line + currPos, 6) != -1)
 						{
 							currPos += 7;
 							//options.ColorMod = ParseMTLVec2(string, length, currPos, { 1, 0 }, &currPos);
 						}
-						else if (CString::FindSubstring("imfchan", 7, line, 7, currPos) != -1)
+						else if (CString::FindSubstring("imfchan", 7, line + currPos, 7) != -1)
 						{
 							currPos += 8;
 
 						}
-						else if (CString::FindSubstring("bm", 2, line, 2, currPos) != -1)
+						else if (CString::FindSubstring("bm", 2, line + currPos, 2) != -1)
 						{
 							currPos += 3;
 							options.BumpMultiplier = ParseMTLFloat(line, lineLength, currPos, 1, &currPos);
@@ -212,7 +213,7 @@ namespace Content
 							endPos = lineLength;
 						}
 						int32 pathLength = 0;
-						char *path = CString::CopySubstring(line, endPos - currPos, &pathLength, lineLength, currPos);
+						char *path = CString::CopySubstring(line + currPos, endPos - currPos, &pathLength, lineLength);
 						if (Path::IsRelative(path))
 						{
 							char *pathEnd = path;
@@ -259,12 +260,12 @@ namespace Content
 			bool endOfFile = false;
 			bool materialFound = false;
 			char *file = (char *)toLoad.File;
-			char *fileDirectory = Path::GetParentDirectory(toLoad.Path);
+			char *fileDirectory = Path::CloneParentDirectory(toLoad.Path);
 			int32 fileLength = toLoad.FileSize;
 			Material currentMaterial = Material();
 			HMString currentMatName = {};
 
-			int32 nextLineStart = CString::FindNonWhitespace(file, fileLength, 0);
+			int32 nextLineStart = CString::FindNonWhitespace(file, fileLength);
 			int32 nextLineEnd = CString::FindLineEnd(file, fileLength, nextLineStart);
 
 			while (!endOfFile)
@@ -274,7 +275,7 @@ namespace Content
 					endOfFile = true;
 				}
 
-				if (CString::FindSubstring("newmtl", 6, file, nextLineStart + 6, nextLineStart) != -1) //New material definition
+				if (CString::FindSubstring("newmtl", 6, file + nextLineStart, 6) != -1) //New material definition
 				{
 					if (!materialFound)
 					{
@@ -287,7 +288,7 @@ namespace Content
 
 					currentMaterial = Material();
 					int32 nameLength = nextLineEnd - (nextLineStart + 7);
-					char* name = CString::CopySubstring(file, nameLength, &nameLength, fileLength, nextLineStart + 7);
+					char* name = CString::CopySubstring(file + nextLineStart + 7, nameLength, &nameLength, fileLength);
 					currentMatName = { name, (uint32)nameLength };
 				}
 				else if (file[nextLineStart] == 'K' || file[nextLineStart] == 'T')
@@ -313,18 +314,18 @@ namespace Content
 						currentMaterial.TransmissionFilter = color;
 					}
 				}
-				else if (CString::FindSubstring("Ns", 2, file, nextLineStart + 2, nextLineStart) != -1) //Specular exponent/gloss definition
+				else if (CString::FindSubstring("Ns", 2, file + nextLineStart, 2) != -1) //Specular exponent/gloss definition
 				{
 					currentMaterial.Gloss = strtof(file + nextLineStart + 2, nullptr);
 				}
-				else if (CString::FindSubstring("Ni", 2, file, nextLineStart + 2, nextLineStart) != -1)
+				else if (CString::FindSubstring("Ni", 2, file + nextLineStart, nextLineStart + 2) != -1)
 				{
 					currentMaterial.OpticalDensity = strtof(file + nextLineStart + 2, nullptr);
 				}
 				else if (file[nextLineStart] == 'd') //Dissolve level
 				{
 					int32 offset = 2;
-					if (CString::FindSubstring("-halo", 5, file, nextLineStart + 5, nextLineStart + offset) != -1) //Dissolve less at edges
+					if (CString::FindSubstring("-halo", 5, file + nextLineStart, 5) != -1) //Dissolve less at edges
 					{
 						currentMaterial.DissolveHalo = true;
 						offset += 5;
@@ -332,15 +333,15 @@ namespace Content
 
 					currentMaterial.Dissolve = strtof(file + nextLineStart + offset, nullptr);
 				}
-				else if (CString::FindSubstring("sharpness", 9, file, nextLineStart + 9, nextLineStart) != -1) //Reflection sharpness
+				else if (CString::FindSubstring("sharpness", 9, file + nextLineStart, 9) != -1) //Reflection sharpness
 				{
 					currentMaterial.ReflectionSharpness = strtof(file + nextLineStart + 9, nullptr);
 				}
-				else if (CString::FindSubstring("illum", 5, file, nextLineStart + 5, nextLineStart) != -1) //Rendering method
+				else if (CString::FindSubstring("illum", 5, file + nextLineStart, 5) != -1) //Rendering method
 				{
 					currentMaterial.IlluminationModel = (uint8)strtof(file + nextLineStart + 5, nullptr);
 				}
-				else if (CString::FindSubstring("map_", 4, file, nextLineStart + 4, nextLineStart) != -1) //Defines a texture map
+				else if (CString::FindSubstring("map_", 4, file + nextLineStart, 4) != -1) //Defines a texture map
 				{
 					int32 offset = nextLineStart + 4;
 					bool success = false;
@@ -375,7 +376,7 @@ namespace Content
 							}
 						}
 					}
-					else if (CString::FindSubstring("Ns", 2, file, 2, offset) != -1) //Specular exponent/gloss definition
+					else if (CString::FindSubstring("Ns", 2, file + offset, 2) != -1) //Specular exponent/gloss definition
 					{
 						offset += 3;
 						MTLTextureOptions options = ParseMapLineOptions(file, nextLineEnd, offset + 1, fileDirectory, false);
@@ -399,15 +400,15 @@ namespace Content
 					//map_aat on - Turns on antialiasing for textures in this material without affecting all textures, 
 					//			   probably not something we care about
 				}
-				else if (CString::FindSubstring("bump", 4, file, nextLineStart + 4, nextLineStart) != -1)
+				else if (CString::FindSubstring("bump", 4, file + nextLineStart, 4) != -1)
 				{
 
 				}
-				else if (CString::FindSubstring("decal", 5, file, nextLineStart + 5, nextLineStart) != -1)
+				else if (CString::FindSubstring("decal", 5, file + nextLineStart, 5) != -1)
 				{
 					//TODO: Decal support
 				}
-				else if (CString::FindSubstring("refl", 4, file, nextLineStart + 4, nextLineStart) != -1) //Reflection map definition
+				else if (CString::FindSubstring("refl", 4, file + nextLineStart, 4) != -1) //Reflection map definition
 				{
 					//TODO: Reflection map support
 					//      Needs to handle single texture sphere maps and 6 texture cube maps
@@ -416,7 +417,6 @@ namespace Content
 				nextLineStart = CString::FindNonWhitespace(file, fileLength, nextLineEnd);
 				if (nextLineStart == -1)
 				{
-
 					break;
 				}
 				nextLineEnd = CString::FindLineEnd(file, fileLength, nextLineStart);

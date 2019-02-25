@@ -4,18 +4,18 @@
 #include "TestScene.h"
 
 #include "GameState.h"
-#include "content\AssetManager.cpp"
+#include "content\AssetManager.h"
 #include "content\MeshCollection.h"
-#include "content\OBJLoader.cpp"
-#include "drawing\GeometryHelpers.cpp"
+#include "content\OBJLoader.h"
+#include "drawing\GeometryHelpers.h"
 #include "drawing\GLState.h"
 #include "drawing\Sprite.h"
 #include "drawing\Texture2D.h"
 #include "drawing\Vertex.h"
-#include "general\StringHelpers.cpp"
-#include "math\Matrix4.cpp"
-#include "math\Vector2.cpp"
-#include "math\Vector3.cpp"
+#include "general\StringHelpers.h"
+#include "math\Matrix4.h"
+#include "math\Vector2.h"
+#include "math\Vector3.h"
 
 
 

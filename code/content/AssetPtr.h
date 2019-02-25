@@ -11,21 +11,21 @@ class AssetPtr
 	T* item = nullptr;
 
 public:
-	AssetPtr() {}
+	inline AssetPtr() {}
 
-	AssetPtr(T* item, Content::AssetPtrSharedData* groupData) : item(item), groupData(groupData)
+	inline AssetPtr(T* item, Content::AssetPtrSharedData* groupData) : item(item), groupData(groupData)
 	{
 		groupData->Count++;
 	}
 
-	AssetPtr(const AssetPtr& other)
+	inline AssetPtr(const AssetPtr& other)
 	{
 		groupData = other.groupData;
 		groupData->Count++;
 		item = other.item;
 	}
 
-	AssetPtr& operator=(AssetPtr other)
+	inline AssetPtr& operator=(AssetPtr other)
 	{
 		groupData = other.groupData;
 		groupData->Count++;
@@ -33,27 +33,27 @@ public:
 		return *this;
 	}
 
-	bool IsNull() const
+	inline bool IsNull() const
 	{
 		return item == nullptr;
 	}
 
-	T* GetRaw() const
+	inline T* GetRaw() const
 	{
 		return item;
 	}
 
-	T& operator*() const
+	inline T& operator*() const
 	{
 		return *item;
 	}
 
-	T* operator->() const
+	inline T* operator->() const
 	{
 		return item;
 	}
 
-	~AssetPtr()
+	inline ~AssetPtr()
 	{
 		if (groupData)
 		{

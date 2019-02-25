@@ -10,6 +10,7 @@
 #include "Vertex.h"
 #include "Mesh.h"
 #include "Texture2D.h"
+#include "VertexNormalTextureArray.h"
 
 namespace Drawing
 {

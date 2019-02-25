@@ -12,10 +12,10 @@ typedef PLATFORM_ALLOC_MEMORY(PlatformAllocMemoryFunc);
 #define PLATFORM_DEALLOC_MEMORY(name) void name(uint8* memory, uint64 size, bool* outSuccess)
 typedef PLATFORM_DEALLOC_MEMORY(PlatformDeallocMemoryFunc);
 
-#define PLATFORM_READ_FILE(name) FileData name(char* path, int32 pathLength, bool* outSuccess)
+#define PLATFORM_READ_FILE(name) FileData name(const char* path, int32 pathLength, bool* outSuccess)
 typedef PLATFORM_READ_FILE(ReadFileFunc);
 
-#define PLATFORM_WRITE_FILE(name) void name(char* path, int32 pathLength, void* file, int32 fileLength, bool* outSuccess)
+#define PLATFORM_WRITE_FILE(name) void name(const char* path, int32 pathLength, const void* file, int32 fileLength, bool* outSuccess)
 typedef PLATFORM_WRITE_FILE(WriteFileFunc);
 
 

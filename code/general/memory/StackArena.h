@@ -87,7 +87,7 @@ namespace Memory
 		{
 			Swap(other);
 		}
-		StackArena& StackArena::operator=(StackArena&& arg)
+		StackArena& operator=(StackArena&& arg)
 		{
 			Swap(arg);
 			return *this;
@@ -99,7 +99,7 @@ namespace Memory
 		/// Creates a StackArena at the start of the given block of memory, and tells it to manage the remaining memory in the block.
 		static StackArena *CreateContainedBlock(uint8 *blockStart, uint64 blockSize)
 		{
-			//TODO(Ian): make this optionally enforce a good alignment
+			//TODO: make this optionally enforce a good alignment
 			Assert(blockSize >= sizeof(StackArena) + sizeof(uint64));
 			StackArena *resultArena = new (blockStart) StackArena(blockStart + sizeof(StackArena), blockSize - sizeof(StackArena));
 			return resultArena;
@@ -198,7 +198,7 @@ namespace Memory
 		/// Pops the last stack item.
 		bool DeallocateLast()
 		{
-			//CONSIDER(Ian): Should this fail if a partial is open, or cancel the partial?
+			//CONSIDER: Should this fail if a partial is open, or cancel the partial?
 			Assert(partialInProgress == false);
 			if (bufferNext == buffer)
 			{
@@ -208,7 +208,7 @@ namespace Memory
 			Assert(bufferNext - rollbackDist >= buffer);
 
 			bufferNext -= rollbackDist + sizeof(uint64);
-			//CONSIDER(Ian):  Debug functionality that fills deallocated areas with junk data/null to encourage issues on access
+			//CONSIDER:  Debug functionality that fills deallocated areas with junk data/null to encourage issues on access
 
 			return true;
 		}

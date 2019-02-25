@@ -114,7 +114,7 @@ public:
 		if (nextEmpty > 0)
 		{
 			nextEmpty--;
-			//TODO(Ian): Add hysterisis of some sort, probably just allowing for an empty node
+			//TODO: Add hysterisis of some sort, probably just allowing for an empty node
 			if (nextEmpty < (lastSection - 1) * StretchyArrayNode<T>::Capacity)
 			{
 				lastSection--;
@@ -131,7 +131,7 @@ public:
 	{
 		if (nextEmpty > count - 1)
 		{
-			//TODO(Ian): Fix bug - this function will not destroy objects at the expected time
+			//TODO: Fix bug - this function will not destroy objects at the expected time
 			nextEmpty -= count;
 			int32 sectionDeletes = lastSection - (nextEmpty - count) / StretchyArrayNode<T>::Capacity;
 			for (; sectionDeletes > 0; sectionDeletes--)
@@ -148,7 +148,7 @@ public:
 	/// Returns a normal contiguous array containing all items in the StretchyArray.
 	T *ToArray()
 	{
-		//CONSIDER(Ian): Can't use memcpy() due to move semantics, maybe make an alternate class/template specializatiosn for that?
+		//CONSIDER: Can't use memcpy() due to move semantics, maybe make an alternate class/template specializatiosn for that?
 		T *result = new T[nextEmpty];
 
 		int32 sectionSize = StretchyArrayNode<T>::Capacity;
@@ -170,7 +170,7 @@ public:
 		return result;
 	}
 
-	StretchyArray& StretchyArray::operator=(StretchyArray arg)
+	StretchyArray& operator=(StretchyArray arg)
 	{
 		Swap(arg);
 		return *this;

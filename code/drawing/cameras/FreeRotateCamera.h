@@ -5,7 +5,7 @@
 #include "..\..\general\Assert.h"
 #include "..\..\math\Matrix4.h"
 #include "..\..\math\Quaternion.h"
-#include "..\..\math\Vector3.cpp"
+#include "..\..\math\Vector3.h"
 #include "..\..\input\InputManager.h"
 #include "..\..\input\PhysicalInputs.h"
 #include "Camera.h"
@@ -35,7 +35,7 @@ namespace Drawing
 		}
 		virtual void SetCameraPosition(const Vector3 &newPosition)
 		{
-			//TODO(Ian): Make this properly handle camera roll
+			//TODO: Make this properly handle camera roll
 			Vector3 relative = newPosition - lookAtPosition;
 			zoomLevel = relative.Magnitude();
 			relative /= zoomLevel;
@@ -47,8 +47,8 @@ namespace Drawing
 			}
 			else
 			{
-				//TODO(Ian): How do we determine the camera roll when it's unreliably close to the upward direction?
-				//           Maybe based on the previous camera orientation?
+				//TODO: How do we determine the camera roll when it's unreliably close to the upward direction?
+				//      Maybe based on the previous camera orientation?
 				Assert(false); //Not implemented error
 			}
 		}

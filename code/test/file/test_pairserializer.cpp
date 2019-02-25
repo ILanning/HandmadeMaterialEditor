@@ -46,7 +46,7 @@ TEST_CASE("Testing PairTokenizer")
 		\#gdddddg       //First: fdgfr  Second: #gdddddg
 	*/
 
-	char* testData = "a = b a=d\r\ncdef = \"abcd = ds\"\r\nref\\=\\\\\\\" = 123\r\ndef dsd = oytoyt\r\n\"def dsd\" = oytoyt\r\n#This is a comment\r\n#also comment\r\n'fdgfr' = #comment\r\n   \\#gdddddg";
+	const char* testData = "a = b a=d\r\ncdef = \"abcd = ds\"\r\nref\\=\\\\\\\" = 123\r\ndef dsd = oytoyt\r\n\"def dsd\" = oytoyt\r\n#This is a comment\r\n#also comment\r\n'fdgfr' = #comment\r\n   \\#gdddddg";
 
 	HMString testString = HMString(testData, 154);
 	
@@ -108,7 +108,6 @@ TEST_CASE("Testing PairTokenizer")
 
 	SUBCASE("ParseText")
 	{
-		int32 offset = 0;
 		auto result = ParseText({ "a = b" }, arena);
 		CheckDictSet({ "a" }, { "b" }, result);
 

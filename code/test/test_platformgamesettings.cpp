@@ -2,15 +2,12 @@
 #define HANDMADE_TEST_PLATFORMGAMESETTINGS
 
 #include "../handmade_funcdefs.h"
-#include "../PlatformGameSettings.cpp"
+#include "../PlatformGameSettings.h"
 #include "../general/HashMap.h"
 #include "../general/HMString.h"
 #include "../file/FileData.h"
+#include "../general/StringHelpers.h"
 #include "../general/memory/NewDeleteArena.h"
-
-#ifndef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "../../libraries/doctest.h"
-#endif
 
 namespace TestPlatformGameSettingsHelpers
 {
@@ -26,7 +23,7 @@ namespace TestPlatformGameSettingsHelpers
 		{
 			*outSuccess = ReadSuccess;
 		}
-		ReadStash.Path = path;
+		ReadStash.Path = CString::CopySubstring(path, CString::GetLength(path));
 		ReadStash.PathSize = pathLength;
 		return ReadStash;
 	}

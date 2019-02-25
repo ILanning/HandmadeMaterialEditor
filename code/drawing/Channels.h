@@ -25,7 +25,7 @@ namespace Drawing
 		RGBA = 30,
 	};
 
-	Channels operator|(Channels a, Channels b)
+	inline Channels operator|(Channels a, Channels b)
 	{
 		return (Channels)((int32)(a) | (int32)(b));
 	}

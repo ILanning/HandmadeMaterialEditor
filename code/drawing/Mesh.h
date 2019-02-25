@@ -3,13 +3,13 @@
 
 #include "../handmade_typedefs.h"
 #include "../content/AssetPtr.h"
-#include "../math/Vector3.cpp"
+#include "../math/Vector3.h"
 #include "../math/Matrix4.h"
 #include "Texture2D.h"
 #include "VertexArray.h"
 #include "Material.h"
 #include "../libraries/glew.h"
-#include "../general/DebugHelpers.cpp"
+#include "../general/DebugHelpers.h"
 
 namespace Drawing
 {

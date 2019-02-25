@@ -34,6 +34,13 @@ typedef double real64;
 #define MinInt32 0x80000000
 #define MaxInt64 0x7fffffffffffffff
 #define MinInt64 0x8000000000000000
-//TODO(Ian): Max/Min Real32/64
+
+#define MaxUInt16 0xffff
+#define MinUInt16 0x0000
+#define MaxUInt32 0xffffffff
+#define MinUInt32 0x00000000
+#define MaxUInt64 0xffffffffffffffff
+#define MinUInt64 0x0000000000000000
+//TODO: Max/Min Real32/64
 
 #endif //HANDMADE_TYPEDEFS_H

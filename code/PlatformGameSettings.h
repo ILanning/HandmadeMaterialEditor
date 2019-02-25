@@ -46,22 +46,22 @@ public:
 
 	void Swap(PlatformGameSettings &other);
 
-	PlatformGameSettings() {};
+	inline PlatformGameSettings() {};
 
 	PlatformGameSettings(const PlatformGameSettings &other);
 
-	PlatformGameSettings(HMString filePath, ReadFileFunc& readFile, Memory::NewDeleteArena& scratchArena) : PlatformGameSettings()
+	inline PlatformGameSettings(HMString filePath, ReadFileFunc& readFile, Memory::NewDeleteArena& scratchArena) : PlatformGameSettings()
 	{
 		Import(filePath, readFile, scratchArena);
 	}
 
-	PlatformGameSettings& operator=(PlatformGameSettings arg)
+	inline PlatformGameSettings& operator=(PlatformGameSettings arg)
 	{
 		Swap(arg);
 		return *this;
 	}
 
-	bool operator==(const PlatformGameSettings& other) const
+	inline bool operator==(const PlatformGameSettings& other) const
 	{
 		if (titleChanged == other.titleChanged &&
 			Fullscreen == other.Fullscreen &&
@@ -77,14 +77,14 @@ public:
 		return false;
 	}
 
-	bool operator!=(const PlatformGameSettings& other) const
+	inline bool operator!=(const PlatformGameSettings& other) const
 	{
 		return !(*this == other);
 	}
 
 	/** Returns the string that it displayed in the title bar of the window.
 	*/
-	char *GetWindowTitle() const
+	inline char *GetWindowTitle() const
 	{
 		return windowTitle;
 	}
@@ -103,7 +103,7 @@ public:
 
 	/** Creates a basic default settings string.
 	*/
-	static HMString GenDefault()
+	inline static HMString GenDefault()
 	{
 		return {
 "WindowedXPosition = 40\r\n\
@@ -115,7 +115,7 @@ Fullscreen = false"
 		};
 	}
 
-	~PlatformGameSettings()
+	inline ~PlatformGameSettings()
 	{
 		delete[] windowTitle;
 	}

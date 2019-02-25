@@ -30,7 +30,7 @@ void InputProcessor::RegisterRawInput()
 
 void InputProcessor::HandleRawInputMessages(MSG message)
 {
-	//TODO(Ian): Handle VK_Packet properly
+	//TODO: Handle VK_Packet properly
 	UINT dwSize;
 
 	GetRawInputData((HRAWINPUT)message.lParam, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
@@ -53,7 +53,7 @@ void InputProcessor::HandleRawInputMessages(MSG message)
 	{
 		RAWMOUSE& mouse = raw->data.mouse;
 
-		if ((mouse.usFlags & MOUSE_MOVE_ABSOLUTE) == true) //TODO(Ian): Appears to never be true?  Test with tablet input
+		if ((mouse.usFlags & MOUSE_MOVE_ABSOLUTE) == true) //TODO: Appears to never be true?  Test with tablet input
 		{
 			nextFrame.MousePos = { (real32)mouse.lLastX, (real32)mouse.lLastY };
 		}

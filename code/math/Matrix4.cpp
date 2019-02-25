@@ -79,10 +79,10 @@ Matrix4 Matrix4::Transpose()
 Vector3 Matrix4::Transform(const Vector3 &a)
 {
 	Vector3 result = {};
-	real32 base [4] = { a.x, a.y, a.z, 1 };
+	real32 base [Matrix4::RowCount] = { a.x, a.y, a.z, 1 };
 
 	int32 size = Matrix4::RowCount;
-	for (int32 yPos = 0; yPos < size; yPos++)
+	for (int32 yPos = 0; yPos < Vector3::ElementCount; yPos++)
 	{
 		real32 cellResult = 0;
 		for (int32 i = 0; i < size; i++)
@@ -142,7 +142,6 @@ Matrix4 operator-(const Matrix4 &a, real32 b)
 	return result;
 }
 
-//TODO(Ian): Check to see whether or not this is any slower than a more hardcoded implementation
 Matrix4 operator*(const Matrix4 &a, const Matrix4 &b)
 {
 	Matrix4 result = {};

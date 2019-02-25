@@ -1,5 +1,5 @@
-#ifndef HANDMADE_TEST_THIRDPERSONCAMERA
-#define HANDMADE_TEST_THIRDPERSONCAMERA
+#ifndef HANDMADE_TEST_THIRDPERSONCAMERA_CPP
+#define HANDMADE_TEST_THIRDPERSONCAMERA_CPP
 
 #include "../../handmade_typedefs.h"
 #include "../../math/Quaternion.h"
@@ -7,10 +7,6 @@
 #include "../../math/Matrix4.h"
 #include "../../drawing/ThirdPersonCamera.h"
 #include <iostream>
-
-#ifndef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "../../libraries/doctest.h"
-#endif
 
 TEST_CASE("Testing the third person camera class")
 {
@@ -25,4 +21,4 @@ TEST_CASE("Testing the third person camera class")
 	}
 }
 
-#endif
+#endif //HANDMADE_TEST_THIRDPERSONCAMERA_CPP

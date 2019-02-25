@@ -5,6 +5,7 @@
 #include "ShaderPart.h"
 #include "../handmade_typedefs.h"
 #include "../handmade_funcdefs.h"
+#include "../handmade_debugfuncs.h"
 #include "../general/HMPair.h"
 #include "../general/HMString.h"
 

@@ -1,14 +1,16 @@
-#ifndef HANDMADE_MATHHELPERS_CPP
-#define HANDMADE_MATHHELPERS_CPP
+#ifndef HANDMADE_MATHHELPERS_H
+#define HANDMADE_MATHHELPERS_H
 
-#include <math.h>
 #include "MathTypedefs.h"
+#include "../handmade_typedefs.h"
+#include "../general/Assert.h"
+#include <math.h>
 
 namespace Math
 {
 	/** Linearly interpolate between two angles
 	*/
-	Radian Slerp(Radian start, Radian end, real32 fraction)
+	inline Radian Slerp(Radian start, Radian end, real32 fraction)
 	{
 		//If the difference between the two is greater than Pi, the shortest path crosses the 2Pi/0 boundary
 		Radian diff = end - start;
@@ -27,7 +29,7 @@ namespace Math
 	}
 
 	///Measures the distance between two angles
-	Radian AngleDist(Radian a, Radian b)
+	inline Radian AngleDist(Radian a, Radian b)
 	{
 		Radian diff = fabsf(b - a);
 		if (diff > Pi32)
@@ -43,7 +45,7 @@ namespace Math
 		return diff;
 	}
 
-	Radian ClampAngle(Radian orig, Radian max, Radian min)
+	inline Radian ClampAngle(Radian orig, Radian max, Radian min)
 	{
 		if (max >= min || max == NAN || min == NAN)
 		{
@@ -79,6 +81,14 @@ namespace Math
 
 		return orig;
 	}
+
+	inline uint32 SafeTruncateUInt64(uint64 Value)
+	{
+		Assert(Value <= MaxUInt32);
+		uint32 Result = (uint32)Value;
+		return(Result);
+	}
 }
 
-#endif //HANDMADE_MATHHELPERS_CPP
+
+#endif //HANDMADE_MATHHELPERS_H

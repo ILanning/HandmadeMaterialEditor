@@ -8,7 +8,7 @@
 namespace Memory
 {
 
-	// TODO (Ian): Store free space info with a bitflag array?
+	// TODO: Store free space info with a bitflag array?
 
 	template <class Allocator = void>
 	///An allocator with a fixed allocation size, set at creation.
@@ -99,7 +99,7 @@ namespace Memory
 		{
 			Swap(other);
 		}
-		FixedSizeArena& FixedSizeArena::operator=(FixedSizeArena&& arg)
+		FixedSizeArena& operator=(FixedSizeArena&& arg)
 		{
 			Swap(arg);
 			return *this;
@@ -111,7 +111,7 @@ namespace Memory
 		/// Creates a FixedSizeArena at the start of the given block of memory, and tells it to manage the remaining memory in the block.
 		static FixedSizeArena *CreateContainedBlock(uint8 *blockStart, uint64 blockSize, uint64 itemSize)
 		{
-			//TODO(Ian): make this optionally enforce a good alignment
+			//TODO: make this optionally enforce a good alignment
 			Assert(blockSize >= sizeof(FixedSizeArena) + sizeof(uint64));
 			FixedSizeArena *resultArena = new (blockStart) FixedSizeArena(blockStart + sizeof(FixedSizeArena), blockSize - sizeof(FixedSizeArena), itemSize);
 			return resultArena;
@@ -159,7 +159,7 @@ namespace Memory
 			if (((uint8 *)item < buffer || item >= bufferEnd)
 				|| ((uint8 *)item - buffer) % binSize != 0)
 			{
-				//TODO(Ian):  Log bad deallocations
+				//TODO:  Log bad deallocations
 				return false;
 			}
 

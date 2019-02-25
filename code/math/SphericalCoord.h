@@ -36,9 +36,9 @@ namespace Math
 		///Returns true if the other coordinate is close to this one, within the given margin.
 		bool CloseTo(const SphericalCoord &other, real32 margin) const;
 		///Reduces the size of the angle values as much as possible without changing their direction.
-		SphericalCoord SphericalCoord::Simplify() const;
+		SphericalCoord Simplify() const;
 		///Returns the coordinate to within certain bounds.
-		SphericalCoord SphericalCoord::Clamp(const SphericalCoord &upperBounds, const SphericalCoord &lowerBounds) const;
+		SphericalCoord Clamp(const SphericalCoord &upperBounds, const SphericalCoord &lowerBounds) const;
 
 		static SphericalCoord Slerp(const SphericalCoord &start, const SphericalCoord &end, real32 fraction);
 		static SphericalCoord CosInterpolate(const SphericalCoord &start, const SphericalCoord &end, real32 fraction);

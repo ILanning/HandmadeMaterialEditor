@@ -34,22 +34,18 @@
 #include <malloc.h>
 #include <xinput.h>
 #include <dsound.h>
-#ifndef GLEW_IMPORTED
 
+#ifndef GLEW_IMPORTED
 #include "..\libraries\glew.h"
 #include "..\libraries\wglew.h"
 #define GLEW_IMPORTED 1
-
 #endif
 
 #include "win32_handmade.h"
-#include "win32_utility.cpp"
-#include "win32_audio.cpp"
-#include "win32_input.cpp"
-#include "win32_graphics.cpp"
-#include "win32_debug.cpp"
-#include "InputProcessor.cpp"
-#include "../PlatformGameSettings.cpp"
+#include "win32_utility.h"
+#include "win32_input.h"
+#include "win32_debug.h"
+#include "InputProcessor.h"
 #include "../GameState.h"
 #include "../general/memory/NewDeleteArena.h"
 
@@ -106,6 +102,166 @@ internal void Win32UnloadGameCode(win32_game_code *GameCode)
 	GameCode->ProcessInput = nullptr;
     GameCode->UpdateAndRender = nullptr;
     GameCode->GetSoundSamples = nullptr;
+}
+
+/**
+ * \brief Creates an OpenGL context.
+*/
+HGLRC InitializeOpenGL()
+{
+	PIXELFORMATDESCRIPTOR pfd =
+	{
+		sizeof(PIXELFORMATDESCRIPTOR),
+		1,
+		PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
+		PFD_TYPE_RGBA,            //The kind of framebuffer. RGBA or palette.
+		32,                        //Colordepth of the framebuffer.
+		0, 0, 0, 0, 0, 0,
+		0,
+		0,
+		0,
+		0, 0, 0, 0,
+		24,                        //Number of bits for the depthbuffer
+		8,                        //Number of bits for the stencilbuffer
+		0,                        //Number of Aux buffers in the framebuffer.
+		PFD_MAIN_PLANE,
+		0,
+		0, 0, 0
+	};
+	int32 pixelFormatNumber = ChoosePixelFormat(GlobalDeviceContext, &pfd);
+	if (!pixelFormatNumber)
+	{
+		//TODO: Diagnostic
+		exit(1);
+	}
+	SetPixelFormat(GlobalDeviceContext, pixelFormatNumber, &pfd);
+	HGLRC dummyContext = wglCreateContext(GlobalDeviceContext);
+	wglMakeCurrent(GlobalDeviceContext, dummyContext);
+
+	if (GLEW_OK != glewInit())
+	{
+		//TODO: Diagnostic
+		exit(1);
+	}
+
+	int glContextAttribs[] =
+	{
+		WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+		WGL_CONTEXT_MINOR_VERSION_ARB, 0,
+		WGL_CONTEXT_FLAGS_ARB, 0,
+		0
+	};
+
+	HGLRC glContext = wglCreateContextAttribsARB(GlobalDeviceContext, dummyContext, glContextAttribs);
+	wglDeleteContext(dummyContext);
+
+	return glContext;
+}
+internal void Win32ProcessPendingMessages(game_controller_input *KeyboardController, InputProcessor *inputProcessor, PlatformGameSettings *changesFromWindows)
+{
+	MSG message;
+	while (PeekMessage(&message, 0, 0, 0, PM_REMOVE))
+	{
+		switch (message.message)
+		{
+		case WM_QUIT:
+		{
+			GlobalRunning = false;
+		} break;
+
+		//TODO:  Handle WM_MOVE, WM_RESIZE, WM_DEVICECHANGE, WM_ACTIVATEAPP, etc.
+
+		case WM_MOVE:
+		{
+			changesFromWindows->WindowPosition.x = LOWORD(message.lParam);
+			changesFromWindows->WindowPosition.y = HIWORD(message.lParam);
+		} break;
+
+		case WM_INPUT:
+		{
+			inputProcessor->HandleRawInputMessages(message);
+		} break;
+
+		case WM_SYSKEYDOWN:
+		case WM_SYSKEYUP:
+		case WM_KEYDOWN:
+		case WM_KEYUP:
+		{
+		} break;
+
+		default:
+		{
+			TranslateMessage(&message);
+			DispatchMessageA(&message);
+		} break;
+		}
+	}
+}
+
+/** Makes the window borderless and screen sized, and returns the new dimensions of the window.
+*/
+Win32BoundsRect MakeFullscreen(HWND window)
+{
+	HMONITOR monitor = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
+	MONITORINFO monitorInfo = { sizeof(MONITORINFO) };
+	GetMonitorInfo(monitor, &monitorInfo);
+
+	Win32BoundsRect result = { monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top,
+		monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top };
+
+	SetWindowLongPtr(window, GWL_STYLE,
+		WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE);
+	MoveWindow(window, result.x, result.y, result.width, result.height, TRUE);
+
+	return result;
+}
+
+/** Returns the window to a normal windowed state with the given dimensions.
+*/
+void MakeWindowed(HWND window, Win32BoundsRect& newDimensions)
+{
+	RECT rect = { newDimensions.x, newDimensions.y, newDimensions.x + newDimensions.width, newDimensions.y + newDimensions.height };
+	SetWindowLongPtr(window, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
+	AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+	MoveWindow(window, newDimensions.x, newDimensions.y, newDimensions.width, newDimensions.height, TRUE);
+}
+
+/** Takes the settings changes that have been made by Windows events and by the game itself, enacts them if necessary, and commits them to futureSettings.
+*/
+void ReconcileSettingsChanges(PlatformGameSettings &futureSettings, PlatformGameSettings &win32Settings, PlatformGameSettings &gameSettings, HWND window)
+{
+
+	if (futureSettings.Fullscreen != gameSettings.Fullscreen)
+	{
+		if (gameSettings.Fullscreen)
+		{
+			Win32BoundsRect result = MakeFullscreen(window);
+
+			futureSettings.WindowPosition = { (real32)result.x, (real32)result.y };
+			futureSettings.WindowSize = { (real32)result.width, (real32)result.height };
+		}
+		else
+		{
+			Win32BoundsRect rect = { (int32)gameSettings.CachedWindowedPosition.x, (int32)gameSettings.CachedWindowedPosition.y,
+				(int32)gameSettings.CachedWindowedSize.x, (int32)gameSettings.CachedWindowedSize.y };
+
+			futureSettings.WindowPosition = gameSettings.CachedWindowedPosition;
+			futureSettings.WindowSize = gameSettings.CachedWindowedSize;
+
+			MakeWindowed(window, rect);
+		}
+		futureSettings.Fullscreen = gameSettings.Fullscreen;
+	}
+	if (futureSettings.CachedWindowedPosition != futureSettings.WindowPosition && !futureSettings.Fullscreen)
+	{
+		futureSettings.CachedWindowedPosition = futureSettings.WindowPosition;
+	}
+	if (futureSettings.CachedWindowedSize != futureSettings.WindowSize && !futureSettings.Fullscreen)
+	{
+		futureSettings.CachedWindowedSize = futureSettings.WindowSize;
+	}
+
+	win32Settings = futureSettings;
 }
 
 internal LRESULT CALLBACK Win32MainWindowCallback(HWND Window,
@@ -174,206 +330,6 @@ internal LRESULT CALLBACK Win32MainWindowCallback(HWND Window,
     return(Result);
 }
 
-internal void Win32ProcessPendingMessages(win32_state *State, game_controller_input *KeyboardController, InputProcessor *inputProcessor, PlatformGameSettings *changesFromWindows)
-{
-    MSG message;
-    while(PeekMessage(&message, 0, 0, 0, PM_REMOVE))
-    {
-        switch(message.message)
-        {
-            case WM_QUIT:
-            {
-                GlobalRunning = false;
-            } break;
-
-			//TODO(Ian):  Handle WM_MOVE, WM_RESIZE, WM_DEVICECHANGE, WM_ACTIVATEAPP, etc.
-
-			case WM_MOVE:
-			{
-				changesFromWindows->WindowPosition.x = LOWORD(message.lParam);
-				changesFromWindows->WindowPosition.y = HIWORD(message.lParam);
-			} break;
-
-			case WM_INPUT:
-			{
-				inputProcessor->HandleRawInputMessages(message);
-			} break;
-
-            case WM_SYSKEYDOWN:
-            case WM_SYSKEYUP:
-            case WM_KEYDOWN:
-            case WM_KEYUP:
-            {
-                /*
-#if HANDMADE_INTERNAL
-                    else if(VKCode == 'P')
-                    {
-                        if(IsDown)
-                        {
-                            GlobalPause = !GlobalPause;
-                        }
-                    }
-                    else if(VKCode == 'L')
-                    {
-                        if(IsDown)
-                        {
-                            if(State->InputPlayingIndex == 0)
-                            {
-                                if(State->InputRecordingIndex == 0)
-                                {
-                                    Win32BeginRecordingInput(State, 1);
-                                }
-                                else
-                                {
-                                    Win32EndRecordingInput(State);
-                                    Win32BeginInputPlayBack(State, 1);
-                                }
-                            }
-                            else
-                            {
-                                Win32EndInputPlayBack(State);
-                            }
-                        }
-                    }
-#endif
-                }
-
-                bool32 AltKeyWasDown = (message.lParam & (1 << 29));
-                if((VKCode == VK_F4) && AltKeyWasDown)
-                {
-                    GlobalRunning = false;
-                }*/
-            } break;
-
-            default:
-            {
-                TranslateMessage(&message);
-                DispatchMessageA(&message);
-            } break;
-        }
-    }
-}
-
-/**
- * \brief Creates an OpenGL context.
-*/
-HGLRC InitializeOpenGL()
-{
-	//NOTE(Ian): OpenGL Context Creation
-	PIXELFORMATDESCRIPTOR pfd =
-	{
-		sizeof(PIXELFORMATDESCRIPTOR),
-		1,
-		PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
-		PFD_TYPE_RGBA,            //The kind of framebuffer. RGBA or palette.
-		32,                        //Colordepth of the framebuffer.
-		0, 0, 0, 0, 0, 0,
-		0,
-		0,
-		0,
-		0, 0, 0, 0,
-		24,                        //Number of bits for the depthbuffer
-		8,                        //Number of bits for the stencilbuffer
-		0,                        //Number of Aux buffers in the framebuffer.
-		PFD_MAIN_PLANE,
-		0,
-		0, 0, 0
-	};
-	int32 pixelFormatNumber = ChoosePixelFormat(GlobalDeviceContext, &pfd);
-	if (!pixelFormatNumber)
-	{
-		//TODO(Ian): Diagnostic
-		exit(1);
-	}
-	SetPixelFormat(GlobalDeviceContext, pixelFormatNumber, &pfd);
-	HGLRC dummyContext = wglCreateContext(GlobalDeviceContext);
-	wglMakeCurrent(GlobalDeviceContext, dummyContext);
-
-	if (GLEW_OK != glewInit())
-	{
-		//TODO(Ian): Diagnostic
-		exit(1);
-	}
-
-	int glContextAttribs[] =
-	{
-		WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
-		WGL_CONTEXT_MINOR_VERSION_ARB, 0,
-		WGL_CONTEXT_FLAGS_ARB, 0,
-		0
-	};
-
-	HGLRC glContext = wglCreateContextAttribsARB(GlobalDeviceContext, dummyContext, glContextAttribs);
-	wglDeleteContext(dummyContext);
-
-	return glContext;
-}
-
-/** Makes the window borderless and screen sized, and returns the new dimensions of the window.
-*/
-Win32BoundsRect MakeFullscreen(HWND window)
-{
-	HMONITOR monitor = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
-	MONITORINFO monitorInfo = { sizeof(MONITORINFO) };
-	GetMonitorInfo(monitor, &monitorInfo);
-
-	Win32BoundsRect result = { monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.top,
-		monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left, monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top };
-
-	SetWindowLongPtr(window, GWL_STYLE,
-		WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE);
-	MoveWindow(window, result.x, result.y, result.width, result.height, TRUE);
-
-	return result;
-}
-
-/** Returns the window to a normal windowed state with the given dimensions.
-*/
-void MakeWindowed(HWND window, Win32BoundsRect& newDimensions)
-{
-	RECT rect = {newDimensions.x, newDimensions.y, newDimensions.x + newDimensions.width, newDimensions.y + newDimensions.height};
-	SetWindowLongPtr(window, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
-	AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
-	MoveWindow(window, newDimensions.x, newDimensions.y, newDimensions.width, newDimensions.height, TRUE);
-}
-
-/** Takes the settings changes that have been made by Windows events and by the game itself, enacts them if necessary, and commits them to futureSettings.
-*/
-void ReconcileSettingsChanges(PlatformGameSettings &futureSettings, PlatformGameSettings &win32Settings, PlatformGameSettings &gameSettings, HWND window)
-{
-
-	if (futureSettings.Fullscreen != gameSettings.Fullscreen)
-	{
-		if (gameSettings.Fullscreen)
-		{
-			Win32BoundsRect result = MakeFullscreen(window);
-
-			futureSettings.WindowPosition = { (real32)result.x, (real32)result.y };
-			futureSettings.WindowSize = { (real32)result.width, (real32)result.height };
-		}
-		else
-		{
-			Win32BoundsRect rect = { (int32)gameSettings.CachedWindowedPosition.x, (int32)gameSettings.CachedWindowedPosition.y,
-				(int32)gameSettings.CachedWindowedSize.x, (int32)gameSettings.CachedWindowedSize.y };
-
-			futureSettings.WindowPosition = gameSettings.CachedWindowedPosition;
-			futureSettings.WindowSize = gameSettings.CachedWindowedSize;
-
-			MakeWindowed(window, rect);
-		}
-		futureSettings.Fullscreen = gameSettings.Fullscreen;
-	}
-	if (futureSettings.CachedWindowedPosition != futureSettings.WindowPosition && !futureSettings.Fullscreen)
-	{
-		futureSettings.CachedWindowedPosition = futureSettings.WindowPosition;
-	}
-	if (futureSettings.CachedWindowedSize != futureSettings.WindowSize && !futureSettings.Fullscreen)
-	{
-		futureSettings.CachedWindowedSize = futureSettings.WindowSize;
-	}
-
-	win32Settings = futureSettings;
-}
 
 /** Checks to make sure the window is at least partially on a monitor and returns true if it is.  
     If it isn't, returns false and sets targetBounds to the bounds the window needs to be match to to be fully contained within the nearest monitor.
@@ -464,7 +420,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
 	WindowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
 	WindowClass.lpfnWndProc = Win32MainWindowCallback;
 	WindowClass.hInstance = Instance;
-	//    WindowClass.hIcon;  //TODO(Ian): Add a window icon
+	//    WindowClass.hIcon;  //TODO: Add a window icon
 	WindowClass.lpszClassName = "HandmadeHeroWindowClass";
 
 	if (RegisterClassA(&WindowClass))
@@ -657,9 +613,9 @@ int CALLBACK WinMain(HINSTANCE Instance,
 				int DebugTimeMarkerIndex = 0;
 				win32_debug_time_marker DebugTimeMarkers[30] = { 0 };
 
-				DWORD AudioLatencyBytes = 0;
-				real32 AudioLatencySeconds = 0;
-				bool32 SoundIsValid = false;
+				//DWORD AudioLatencyBytes = 0;
+				//real32 AudioLatencySeconds = 0;
+				//bool32 SoundIsValid = false;
 
 				win32_game_code Game = Win32LoadGameCode(SourceGameCodeDLLFullPath,
 					TempGameCodeDLLFullPath);
@@ -667,11 +623,11 @@ int CALLBACK WinMain(HINSTANCE Instance,
 
 				if (Game.Initialize)
 				{
-					thread_context dummyThreadContext = { 1 };
+					ThreadContext dummyThreadContext = { 1 };
 					Game.Initialize(&dummyThreadContext, &GameMemory);
 				}
 
-				uint64 LastCycleCount = __rdtsc();
+				//uint64 LastCycleCount = __rdtsc();
 
 				//BEGIN MAIN GAME LOOP
 
@@ -700,7 +656,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
 							OldKeyboardController->Buttons[ButtonIndex].EndedDown;
 					}
 
-					Win32ProcessPendingMessages(&Win32State, NewKeyboardController, &inputProcessor, &upcomingSettings);
+					Win32ProcessPendingMessages(NewKeyboardController, &inputProcessor, &upcomingSettings);
 
 					//END KEYBOARD
 					//START MOUSE
@@ -833,7 +789,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
 
 					//END CONTROLLER
 
-					thread_context Thread = {};
+					ThreadContext Thread = {};
 
 					if (Win32State.InputRecordingIndex)
 					{
@@ -1023,7 +979,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
 					}
 
 					LARGE_INTEGER EndCounter = Win32GetWallClock();
-					real32 MSPerFrame = 1000.0f*Win32GetSecondsElapsed(LastCounter, EndCounter);
+					//real32 MSPerFrame = 1000.0f*Win32GetSecondsElapsed(LastCounter, EndCounter);
 					LastCounter = EndCounter;
 
 					//win32_window_dimension Dimension = Win32GetWindowDimension(Window);

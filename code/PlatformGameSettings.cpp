@@ -2,9 +2,10 @@
 #define HANDMADE_PLATFORMGAMESETTINGS_CPP
 
 #include "PlatformGameSettings.h"
-#include "general\HashMap.h"
 #include "file\PairSerializer.h"
-#include "general\StringHelpers.cpp"
+#include "general\HashMap.h"
+#include "general\StringHelpers.h"
+#include "math\Vector2.h"
 #include <cstdlib>
 
 void PlatformGameSettings::Swap(PlatformGameSettings &other)
@@ -132,7 +133,7 @@ bool PlatformGameSettings::Export(HMString filePath, WriteFileFunc* writeFile) c
 	text = { "Fullscreen" };
 	writeHead = text.CopyTo(buffer, bufferSize, writeHead);
 	writeHead = spacer.CopyTo(buffer, bufferSize, writeHead);
-	writeHead += CString::WriteBool(buffer + writeHead, bufferSize, Fullscreen, MaxInt32);
+	writeHead += CString::WriteBool(buffer + writeHead, bufferSize, Fullscreen);
 	buffer[writeHead++] = '\0';
 
 	bool success = false;

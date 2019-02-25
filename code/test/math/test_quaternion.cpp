@@ -7,10 +7,6 @@
 #include "../../math/Matrix4.h"
 #include <iostream>
 
-#ifndef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "../../libraries/doctest.h"
-#endif
-
 TEST_CASE("Testing Quaternions")
 {
 	//CHECK();

@@ -3,11 +3,8 @@
 
 #include "../../general/memory/StackArena.h"
 #include "../../general/memory/NewDeleteArena.h"
-#include "../test_helpers.cpp"
+#include "../test_helpers.h"
 
-#ifndef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "../libraries/doctest.h"
-#endif
 namespace TestStackArenaHelpers
 {
 	template <class T>
@@ -29,7 +26,6 @@ namespace TestStackArenaHelpers
 	static void RemovingItems(Memory::StackArena<T> *arena)
 	{
 		uint32 *ints = arena->Allocate<uint32>(4);
-		uint16 *shorts = (uint16 *)arena->Allocate(sizeof(uint16) * 9);
 		uint8 *bytes = (uint8 *)arena->Allocate(sizeof(uint8) * 1163);
 		CHECK(arena->DeallocateLast());
 		CHECK(arena->bufferNext == bytes);
@@ -78,6 +74,7 @@ namespace TestStackArenaHelpers
 
 
 		char *spacerAlloc = (char *)arena->Allocate(2048);
+		spacerAlloc[0] = '\0'; //Disables warning about spacerAlloc not being used
 		char *checkCancel = (char *)arena->PartialAlloc(256);
 
 		REQUIRE(checkCancel != nullptr);

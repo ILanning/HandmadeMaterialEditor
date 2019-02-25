@@ -3,9 +3,9 @@
 
 #include "../content/AssetPtr.h"
 #include "../handmade_typedefs.h"
-#include "../math/Vector3.cpp"
+#include "../math/Vector3.h"
 #include "../general/HMString.h"
-#include "../general/StringHelpers.cpp"
+#include "../general/StringHelpers.h"
 #include "Texture2D.h"
 
 namespace Drawing

@@ -4,10 +4,6 @@
 #include "../../general/memory/FixedSizeArena.h"
 #include "../../general/memory/NewDeleteArena.h"
 
-#ifndef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "../libraries/doctest.h"
-#endif
-
 namespace TestFixedSizeArenaHelpers
 {
 	struct TestStruct

@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include "..\handmade_typedefs.h"
+#include "Vector2.h"
 #include "Vector3.h"
 
 ///A three dimensional matrix.
@@ -44,23 +45,24 @@ struct Matrix4
 	void SetTranslation(const Vector3 &a);
 	Vector3 Transform(const Vector3 &a);
 
-	friend Matrix4 operator+(const Matrix4 &a, const Matrix4 &b);
-	friend Matrix4 operator+(const Matrix4 &a, real32 b);
-	friend Matrix4 operator-(const Matrix4 &a, const Matrix4 &b);
-	friend Matrix4 operator-(const Matrix4 &a, real32 b);
-	friend Matrix4 operator*(const Matrix4 &a, const Matrix4 &b);
-	friend Matrix4 operator*(const Matrix4 &a, real32 b);
-	friend Matrix4 operator/(const Matrix4 &a, real32 b);
+	friend Matrix4 operator+(const Matrix4& a, const Matrix4& b);
+	friend Matrix4 operator+(const Matrix4& a, real32 b);
+	friend Matrix4 operator-(const Matrix4& a, const Matrix4& b);
+	friend Matrix4 operator-(const Matrix4& a, real32 b);
+	friend Matrix4 operator*(const Matrix4& a, const Matrix4& b);
+	friend Matrix4 operator*(const Matrix4& a, real32 b);
+	friend Matrix4 operator/(const Matrix4& a, real32 b);
 
-	friend Matrix4 &operator+=(const Matrix4 &a, const Matrix4 &b);
-	friend Matrix4 &operator+=(const Matrix4 &a, real32 b);
-	friend Matrix4 &operator-=(const Matrix4 &a, const Matrix4 &b);
-	friend Matrix4 &operator-=(const Matrix4 &a, real32 b);
-	friend Matrix4 &operator*=(const Matrix4 &a, real32 b);
-	friend Matrix4 &operator/=(const Matrix4 &a, real32 b);
+	friend Matrix4 &operator+=(Matrix4& a, const Matrix4& b);
+	friend Matrix4 &operator+=(Matrix4& a, real32 b);
+	friend Matrix4 &operator-=(Matrix4& a, const Matrix4& b);
+	friend Matrix4 &operator-=(Matrix4& a, real32 b);
+	friend Matrix4 &operator*=(Matrix4& a, const Matrix4& b);
+	friend Matrix4 &operator*=(Matrix4& a, real32 b);
+	friend Matrix4 &operator/=(Matrix4& a, real32 b);
 
-	friend bool operator==(const Matrix4 &a, const Matrix4 &b);
-	friend bool operator!=(const Matrix4 &a, const Matrix4 &b);
+	friend bool operator==(const Matrix4& a, const Matrix4& b);
+	friend bool operator!=(const Matrix4& a, const Matrix4& b);
 
 	static Matrix4 Identity()
 	{
@@ -146,7 +148,7 @@ struct Matrix4
 		return result;
 	}
 
-	static void RescalePerspective(void *rawMatrixPointer, Vector2 oldSize, Vector2 newSize, real32 zoomFactor)
+	static void RescalePerspective(void *rawMatrixPointer, Vector2 newSize)
 	{
 		Matrix4 &matrix = *(Matrix4 *)rawMatrixPointer;
 		real32 newAspect = newSize.x / newSize.y;

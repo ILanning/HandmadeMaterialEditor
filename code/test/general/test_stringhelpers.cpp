@@ -2,25 +2,20 @@
 #define HANDMADE_TEST_STRINGHELPERS
 
 #include "../../handmade_typedefs.h"
-#include "../../general/StringHelpers.cpp"
-
-#ifndef DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "../../libraries/doctest.h"
-#endif
+#include "../../general/StringHelpers.h"
 
 TEST_CASE("Testing various C-string helper functions")
 {
 	SUBCASE("Testing IsEqual")
 	{
-		char *stringA = "Testing 1";
-		char *stringB = "Testing 1";
-		char *stringC = "Testing 2";
-		char *emptyStringA = "";
-		char *emptyStringB = "";
-		char *nullString = nullptr;
-		char *nonNullTermA = "Test part2\0 test";
-		char *nonNullTermB = "Test part2\0 test";
-		char *nonNullTermC = "Test part2\0 tes3";
+		const char *stringA = "Testing 1";
+		const char *stringB = "Testing 1";
+		const char *stringC = "Testing 2";
+		const char *emptyStringA = "";
+		const char *emptyStringB = "";
+		const char *nullString = nullptr;
+		const char *nonNullTermA = "Test part2\0 test";
+		const char *nonNullTermB = "Test part2\0 test";
 		
 		CHECK(CString::IsEqual(stringA, stringB));
 		CHECK(!CString::IsEqual(stringA, stringC));
@@ -34,7 +29,7 @@ TEST_CASE("Testing various C-string helper functions")
 		CHECK(!CString::IsEqual(nullString, stringA, 3, 3));
 		CHECK(CString::IsEqual(emptyStringA, emptyStringB, 1, 1));
 		CHECK(CString::IsEqual(nonNullTermA, nonNullTermB, 17, 17));
-		CHECK(CString::IsEqual(nonNullTermA, nonNullTermA, 4, 16, 3, 15));
+		CHECK(CString::IsEqual(nonNullTermA + 3, nonNullTermA + 15, 1, 1));
 	}
 	SUBCASE("Testing IsDigit")
 	{
@@ -83,16 +78,16 @@ TEST_CASE("Testing various C-string helper functions")
 	}
 	SUBCASE("Testing GetLength")
 	{
-		char *testString = "Testing testing mkg213";
-		char *emptyString = "";
+		const char *testString = "Testing testing mkg213";
+		const char *emptyString = "";
 
 		CHECK(CString::GetLength(testString) == 23);
 		CHECK(CString::GetLength(emptyString) == 1);
 	}
 	SUBCASE("Testing FindCharacter single character")
 	{
-		char *testString = "Testing testing mkg213";
-		char *emptyString = "";
+		const char *testString = "Testing testing mkg213";
+		const char *emptyString = "";
 
 		CHECK(CString::FindCharacter(testString, 'T', 23) == 0);
 		CHECK(CString::FindCharacter(testString, 'i', 23) == 4);
@@ -106,8 +101,8 @@ TEST_CASE("Testing various C-string helper functions")
 	}
 	SUBCASE("Testing FindCharacter multiple characters")
 	{
-		char *testString = "Testing testing mkg213";
-		char *emptyString = "";
+		const char *testString = "Testing testing mkg213";
+		const char *emptyString = "";
 
 		CHECK(CString::FindCharacter(testString, "m2", 2, 23) == 16);
 		CHECK(CString::FindCharacter(testString, "vbr", 3, 23) == -1);
@@ -120,8 +115,8 @@ TEST_CASE("Testing various C-string helper functions")
 	}
 	SUBCASE("Testing FindLastCharacter single character")
 	{
-		char *testString = "Testing testing mkg213";
-		char *emptyString = "";
+		const char *testString = "Testing testing mkg213";
+		const char *emptyString = "";
 
 		CHECK(CString::FindLastCharacter(testString, 'T', 23) == 0);
 		CHECK(CString::FindLastCharacter(testString, 'i', 23) == 12);
@@ -135,8 +130,8 @@ TEST_CASE("Testing various C-string helper functions")
 	}
 	SUBCASE("Testing FindLastCharacter multiple characters")
 	{
-		char *testString = "Testing testing mkg213";
-		char *emptyString = "";
+		const char *testString = "Testing testing mkg213";
+		const char *emptyString = "";
 
 		CHECK(CString::FindLastCharacter(testString, "m2", 2, 23) == 19);
 		CHECK(CString::FindLastCharacter(testString, "vbr", 3, 23) == -1);
@@ -149,9 +144,9 @@ TEST_CASE("Testing various C-string helper functions")
 	}
 	SUBCASE("Testing FindNonWhitespace")
 	{
-		char *testStringA = "Testing mkg213 ";
-		char *testStringB = " \t\r\n\f\v";
-		char *emptyString = "";
+		const char *testStringA = "Testing mkg213 ";
+		const char *testStringB = " \t\r\n\f\v";
+		const char *emptyString = "";
 
 		CHECK(CString::FindNonWhitespace(testStringA) == 0);
 		CHECK(CString::FindNonWhitespace(testStringB) == -1);
@@ -162,9 +157,9 @@ TEST_CASE("Testing various C-string helper functions")
 	}
 	SUBCASE("Testing FindLineEnd")
 	{
-		char *testStringA = "Testi\r\ng mkg213 \n";
-		char *testStringB = " fgdgfd gff";
-		char *emptyString = "";
+		const char *testStringA = "Testi\r\ng mkg213 \n";
+		const char *testStringB = " fgdgfd gff";
+		const char *emptyString = "";
 
 		CHECK(CString::FindLineEnd(testStringA) == 5);
 		CHECK(CString::FindLineEnd(testStringB) == -1);
@@ -175,8 +170,8 @@ TEST_CASE("Testing various C-string helper functions")
 	}
 	SUBCASE("Testing FindSubstring")
 	{
-		char *searchA = "tes";
-		char *withinA = "test\n\t te Searchtes";
+		const char *searchA = "tes";
+		const char *withinA = "test\n\t te Searchtes";
 
 		CHECK(CString::FindSubstring(searchA, 3, withinA, 20) == 0);
 		CHECK(CString::FindSubstring(searchA, 3, withinA, 20, 2) == 16);
@@ -203,11 +198,11 @@ TEST_CASE("Testing various C-string helper functions")
 	}
 	SUBCASE("Testing EditToUpper")
 	{
-		char *testString = "TestString 123\n";
-		char *testResult = "TESTSTRING 123\n";
+		const char *testString = "TestString 123\n";
+		const char *testResult = "TESTSTRING 123\n";
 
 		char *modified = CString::CopySubstring(testString, 15);
-		CString::EditToUpper(modified, 16, 0, 16);
+		CString::EditToUpper(modified, 16);
 
 		CHECK(CString::IsEqual(modified, testResult));
 
@@ -215,11 +210,11 @@ TEST_CASE("Testing various C-string helper functions")
 	}
 	SUBCASE("Testing EditToLower")
 	{
-		char *testString = "TestString 123\n";
-		char *testResult = "teststring 123\n";
+		const char *testString = "TestString 123\n";
+		const char *testResult = "teststring 123\n";
 
 		char *modified = CString::CopySubstring(testString, 15);
-		CString::EditToLower(modified, 16, 0, 16);
+		CString::EditToLower(modified, 16);
 
 		CHECK(CString::IsEqual(modified, testResult));
 

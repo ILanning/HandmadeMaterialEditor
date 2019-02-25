@@ -2,11 +2,12 @@
 #define HANDMADE_OBJLOADER_CPP
 
 #include "OBJLoader.h"
-#include "../general/PathHelpers.cpp"
-#include "../general/StringHelpers.cpp"
+#include "../general/PathHelpers.h"
+#include "../general/StringHelpers.h"
 #include "../general/StaticArray.h"
+#include "../drawing/VertexNormalTextureArray.h"
 #include "../drawing/defaults/DefaultMaterials.h"
-#include "MTLLoader.cpp"
+#include "MTLLoader.h"
 #include <cstdlib>
 
 namespace Content
@@ -16,7 +17,8 @@ namespace Content
 		using namespace Drawing;
 
 		//TODO:  This function is not very resilient against malformed definitions, find a way to improve that
-		bool ObjParser::ObjVertexNode::TryParse(const char *string, int32 length, ObjVertexNode &outResult, int32 offset = 0, int32 *readFinishIndex = nullptr)
+		///Attempts to parse a single vertex line from an OBJ file definition.
+		bool ObjParser::ObjVertexNode::TryParse(const char *string, int32 length, ObjVertexNode &outResult, int32 offset, int32 *readFinishIndex = nullptr)
 		{
 			//Consists of at least two slashes, with some at most three vertex components before, between, and after them
 			//Not all spaces need have a value
@@ -30,11 +32,6 @@ namespace Content
 				return false;
 			}
 
-			int test = 0;
-			if (string[offset + 3] == '3' && string[offset + 4] == '6')
-			{
-				test++;
-			}
 			bool readSuccess = CString::TryParseInt32(string, length, result.Position, readHead, &readHead);
 			if (!readSuccess && !(string[readHead] == '/' || string[readHead] == '\\'))
 			{
@@ -101,7 +98,7 @@ namespace Content
 			int32 fileLength = toLoad.FileSize;
 
 			bool endOfFile = false;
-			int32 nextLineStart = CString::FindNonWhitespace(file, fileLength, 0);
+			int32 nextLineStart = CString::FindNonWhitespace(file, fileLength);
 			int32 nextLineEnd = CString::FindLineEnd(file, fileLength, nextLineStart);
 
 			while (!endOfFile)
@@ -227,10 +224,10 @@ namespace Content
 					int32 offset = nextLineStart + 7;
 
 					int32 pathLength = 0;
-					char *path = CString::CopySubstring(file, nextLineEnd - offset, &pathLength, fileLength, offset);
+					char *path = CString::CopySubstring(file + offset, nextLineEnd - offset, &pathLength, fileLength - offset);
 					if (Path::IsRelative(path))
 					{
-						char *pathStart = Path::GetParentDirectory(toLoad.Path);
+						char *pathStart = Path::CloneParentDirectory(toLoad.Path);
 						char *pathEnd = path;
 
 						path = Path::Combine(pathStart, pathEnd, 0, 0, &pathLength);
@@ -250,7 +247,7 @@ namespace Content
 					int32 materialNameStart = CString::FindNonWhitespace(file, fileLength, nextLineStart + 6);
 
 					int32 useNameLength = 0;
-					char* useNameChars = CString::CopySubstring(file, nextLineEnd - materialNameStart, &useNameLength, nextLineEnd, materialNameStart);
+					char* useNameChars = CString::CopySubstring(file + materialNameStart, nextLineEnd - materialNameStart, &useNameLength, nextLineEnd);
 					HMString useName = { useNameChars, (uint32)useNameLength };
 					
 					if (materials.CheckExists(useName))

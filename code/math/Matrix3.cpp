@@ -1,6 +1,10 @@
 #ifndef HANDMADE_MATRIX3_CPP
 #define HANDMADE_MATRIX3_CPP
 
+#include <math.h>
+#include "..\handmade_typedefs.h"
+#include "Vector2.h"
+#include "Vector3.h"
 #include "Matrix3.h"
 
 Matrix3 Matrix3::Inverse()
@@ -55,7 +59,7 @@ Vector2 Matrix3::Transform(const Vector2 &a)
 	Vector3 base = { a.x, a.y, 1 };
 
 	int32 size = Matrix3::RowCount;
-	for (int32 yPos = 0; yPos < size; yPos++)
+	for (int32 yPos = 0; yPos < Vector2::ElementCount; yPos++)
 	{
 		real32 cellResult = 0;
 		for (int32 i = 0; i < size; i++)
@@ -121,7 +125,7 @@ Matrix3 operator-(const Matrix3 &a, const real32 &b)
 	return result;
 }
 
-//TODO(Ian): Check to see whether or not this is any slower than a more hardcoded implementation
+//TODO: Check to see whether or not this is any slower than a more hardcoded implementation
 Matrix3 operator*(const Matrix3 &a, const Matrix3 &b)
 {
 	Matrix3 result = {};
@@ -154,7 +158,7 @@ Matrix3 operator*(const Matrix3 &a, const real32 &b)
 	return result;
 }
 
-//TODO(Ian): Should this throw when b == 0?
+//TODO: Should this throw when b == 0?
 Matrix3 operator/(const Matrix3 &a, const real32 &b)
 {
 	Matrix3 result = {};

@@ -1,5 +1,5 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "doctest.h"
+#include "../libraries/doctest.h"
 
 TEST_SUITE_BEGIN("math");
 

@@ -10,6 +10,20 @@
 
 namespace Collections
 {
+	inline uint64 GetHash(HMString* data)
+	{
+		return XXH64(data->RawCString(), data->Length(), 0);
+	}
+
+	inline uint64 GetHash(HMString data)
+	{
+		return XXH64(data.RawCString(), data.Length(), 0);
+	}
+
+	inline uint64 GetHash(int32 data)
+	{
+		return XXH64(&data, 4, 0);
+	}
 	// TODO: Set up KeyType as something that must be Hashable
 
 	//A dictionary/unordered map data structure.
@@ -203,7 +217,7 @@ namespace Collections
 			{
 				buckets[item].HashCode = -1;
 				occupied--;
-				// TODO (Ian): What happens to allocated keys?
+				// TODO: What happens to allocated keys?
 				buckets[item].Value = ValueType();
 			}
 		}
@@ -364,21 +378,6 @@ namespace Collections
 			return -1;
 		}
 	};
-
-	uint64 GetHash(HMString* data)
-	{
-		return XXH64(data->RawCString(), data->Length(), 0);
-	}
-
-	uint64 GetHash(HMString data)
-	{
-		return XXH64(data.RawCString(), data.Length(), 0);
-	}
-
-	uint64 GetHash(int32 data)
-	{
-		return XXH64(&data, 4, 0);
-	}
 }
 
 #endif //HANDMADE_HASHMAP_H

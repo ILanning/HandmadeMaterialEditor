@@ -15,17 +15,16 @@ namespace Content
 		HMString Path;
 		HMString Source;
 
-		ShaderPart(HMString& sourcePath, ReadFileFunc *readFile, GLuint shaderType)
+		ShaderPart(const HMString& sourcePath, ReadFileFunc *readFile, const GLuint shaderType)
 		{
 			FileData result = readFile(sourcePath.RawCString(), sourcePath.Length(), nullptr);
 			ID = glCreateShader(shaderType);
-			glShaderSource(ID, 1, &(GLchar *)result.File, NULL);
+			GLchar* code = (GLchar *)result.File;
+			glShaderSource(ID, 1, &code, NULL);
 			glCompileShader(ID);
 			Path = sourcePath;
 			Source = {(char*)result.File, result.FileSize};
 		}
-
-
 	};
 }
 

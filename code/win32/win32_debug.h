@@ -2,12 +2,15 @@
 #define HANDMADE_WIN32_DEBUG
 
 #include "../handmade_typedefs.h"
-
+#include "../handmade_funcdefs.h"
+#include "../handmade_debugfuncs.h"
+#include "../general/StringHelpers.h"
+#include "../math/MathHelpers.h"
 #include <windows.h>
 #include <stdio.h>
 #include <malloc.h>
 
-DEBUG_PLATFORM_FREE_FILE_MEMORY(DEBUGPlatformFreeFileMemory)
+inline DEBUG_PLATFORM_FREE_FILE_MEMORY(DEBUGPlatformFreeFileMemory)
 {
 	if (Memory)
 	{
@@ -15,7 +18,7 @@ DEBUG_PLATFORM_FREE_FILE_MEMORY(DEBUGPlatformFreeFileMemory)
 	}
 }
 
-DEBUG_PLATFORM_READ_ENTIRE_FILE(DEBUGPlatformReadEntireFile)
+inline DEBUG_PLATFORM_READ_ENTIRE_FILE(DEBUGPlatformReadEntireFile)
 {
 	debug_read_file_result Result = {};
 	bool success = false;
@@ -26,7 +29,7 @@ DEBUG_PLATFORM_READ_ENTIRE_FILE(DEBUGPlatformReadEntireFile)
 		LARGE_INTEGER FileSize;
 		if (GetFileSizeEx(FileHandle, &FileSize))
 		{
-			uint32 FileSize32 = SafeTruncateUInt64(FileSize.QuadPart);
+			uint32 FileSize32 = Math::SafeTruncateUInt64(FileSize.QuadPart);
 			Result.Contents = VirtualAlloc(0, FileSize32, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 			if (Result.Contents)
 			{
@@ -70,12 +73,12 @@ DEBUG_PLATFORM_READ_ENTIRE_FILE(DEBUGPlatformReadEntireFile)
 	return(Result);
 }
 
-DEBUG_PLATFORM_MESSAGE_ERROR_FUNC(VSOutputDebugString)
+inline DEBUG_PLATFORM_MESSAGE_ERROR_FUNC(VSOutputDebugString)
 {
 	OutputDebugStringA(errorString);
 }
 
-DEBUG_PLATFORM_WRITE_ENTIRE_FILE(DEBUGPlatformWriteEntireFile)
+inline DEBUG_PLATFORM_WRITE_ENTIRE_FILE(DEBUGPlatformWriteEntireFile)
 {
 	bool32 Result = false;
 
@@ -103,10 +106,10 @@ DEBUG_PLATFORM_WRITE_ENTIRE_FILE(DEBUGPlatformWriteEntireFile)
 	return(Result);
 }
 
-PLATFORM_READ_FILE(DebugReadWrapper)
+inline PLATFORM_READ_FILE(DebugReadWrapper)
 {
 	FileData result = {};
-	result.Path = path;
+	result.Path = CString::CopySubstring(path, CString::GetLength(path));
 	result.PathSize = pathLength;
 
 	bool success = false;
@@ -130,7 +133,7 @@ PLATFORM_READ_FILE(DebugReadWrapper)
 	return result;
 }
 
-PLATFORM_WRITE_FILE(DebugWriteWrapper)
+inline PLATFORM_WRITE_FILE(DebugWriteWrapper)
 {
 	bool success = DEBUGPlatformWriteEntireFile({}, path, fileLength, file);
 

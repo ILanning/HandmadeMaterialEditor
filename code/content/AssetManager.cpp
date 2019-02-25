@@ -2,25 +2,17 @@
 #define HANDMADE_ASSETMANAGER_CPP
 
 #include "AssetManager.h"
+#include "AssetPtr.h"
 #include "MTLLoader.h"
-#include "OBJLoader.cpp"
+#include "OBJLoader.h"
+#include "../handmade_debugfuncs.h"
+#include "../drawing/Texture2D.h"
+#include "../general/HMString.h"
 #include "../general/StaticArray.h"
-#include "../general/StringHelpers.cpp"
+#include "../general/StringHelpers.h"
+#include "../general/memory/NewDeleteArena.h"
 
-template<typename T>
-AssetPtr<T> AssetManager::Load(HMString path, bool& validAsset)
-{
-	if (items.CheckExists(path))
-	{
-		validAsset = true;
-		return AssetPtr<T>((T*)items[path].Data, &items[path].AssetTracker);
-	}
-	validAsset = false;
-	return AssetPtr<T>(&invalidAssetData, nullptr);
-}
-
-template<>
-AssetPtr<Drawing::Texture2D> AssetManager::Load(HMString path, bool& validAsset)
+AssetPtr<Drawing::Texture2D> AssetManager::internalLoadTexture2D(const HMString path, bool& validAsset)
 {
 	if (!items.CheckExists(path))
 	{
@@ -39,27 +31,7 @@ AssetPtr<Drawing::Texture2D> AssetManager::Load(HMString path, bool& validAsset)
 	}
 }
 
-AssetPtr<Drawing::Texture2D> AssetManager::Load(Content::OBJ::MTLTextureOptions& options, Content::TextureMapType mapType, bool& validAsset)
-{
-	if (!items.CheckExists(options.Path))
-	{
-		Drawing::Texture2D* tex = memory.Allocate<Drawing::Texture2D>();
-		new (tex) Drawing::Texture2D(options, mapType);
-
-		items[options.Path] = { true, tex };
-		items[options.Path].AssetTracker = new (memory.Allocate<Content::AssetPtrSharedData>()) Content::AssetPtrSharedData();
-		validAsset = true;
-		return AssetPtr<Drawing::Texture2D>((Drawing::Texture2D*)items[options.Path].Data, items[options.Path].AssetTracker);
-	}
-	else
-	{
-		validAsset = true;
-		return AssetPtr<Drawing::Texture2D>((Drawing::Texture2D*)items[options.Path].Data, items[options.Path].AssetTracker);
-	}
-}
-
-template<>
-AssetPtr<Content::MTLDict> AssetManager::Load(HMString path, bool& validAsset)
+AssetPtr<Content::MTLDict> AssetManager::internalLoadMTLDict(const HMString path, bool& validAsset)
 {
 	if (!items.CheckExists(path))
 	{
@@ -78,8 +50,7 @@ AssetPtr<Content::MTLDict> AssetManager::Load(HMString path, bool& validAsset)
 	}
 }
 
-template<>
-AssetPtr<Content::MeshCollection> AssetManager::Load(HMString path, bool& validAsset)
+AssetPtr<Content::MeshCollection> AssetManager::internalLoadMeshCollection(const HMString path, bool& validAsset)
 {
 	if (!items.CheckExists(path))
 	{
@@ -100,12 +71,31 @@ AssetPtr<Content::MeshCollection> AssetManager::Load(HMString path, bool& validA
 	}
 }
 
-GLuint AssetManager::CreateShader(HMString name, HMString vertSourcePath, HMString fragSourcePath, DebugMessageErrorFunc *messageError)
+AssetPtr<Drawing::Texture2D> AssetManager::Load(const Content::OBJ::MTLTextureOptions& options, const Content::TextureMapType mapType, bool& validAsset)
+{
+	if (!items.CheckExists(options.Path))
+	{
+		Drawing::Texture2D* tex = memory.Allocate<Drawing::Texture2D>();
+		new (tex) Drawing::Texture2D(options, mapType);
+
+		items[options.Path] = { true, tex };
+		items[options.Path].AssetTracker = new (memory.Allocate<Content::AssetPtrSharedData>()) Content::AssetPtrSharedData();
+		validAsset = true;
+		return AssetPtr<Drawing::Texture2D>((Drawing::Texture2D*)items[options.Path].Data, items[options.Path].AssetTracker);
+	}
+	else
+	{
+		validAsset = true;
+		return AssetPtr<Drawing::Texture2D>((Drawing::Texture2D*)items[options.Path].Data, items[options.Path].AssetTracker);
+	}
+}
+
+GLuint AssetManager::CreateShader(const HMString name, const HMString vertSourcePath, const HMString fragSourcePath, DebugMessageErrorFunc *messageError)
 {
 	return Shaders.CreateNamedShader(name, vertSourcePath, fragSourcePath, reader, messageError);
 }
 
-GLuint AssetManager::GetShader(HMString name, bool& success)
+GLuint AssetManager::GetShader(const HMString name, bool& success)
 {
 	if (Shaders.NamedShaderPrograms.CheckExists(name))
 	{
@@ -119,38 +109,7 @@ GLuint AssetManager::GetShader(HMString name, bool& success)
 	}
 }
 
-template<typename T>
-AssetPtr<T> AssetManager::AddManaged(T &object, HMString name, bool& success)
-{
-	if (items.CheckExists(name))
-	{
-		success = false;
-		return AssetPtr<T>(nullptr, &invalidAssetData);
-	}
-	T* item = memory.Allocate<T>();
-	memset(item, 0, sizeof(T));
-	*item = object;
-	items[name] = { true, item };
-	items[name].AssetTracker = new (memory.Allocate<Content::AssetPtrSharedData>()) Content::AssetPtrSharedData();
-	success = true;
-	return AssetPtr<T>(item, items[name].AssetTracker);
-}
-
-template<typename T>
-AssetPtr<T> AssetManager::AddUnmanaged(T* object, HMString name, bool& success)
-{
-	if (items.CheckExists(name))
-	{
-		success = false;
-		return AssetPtr<T>(&invalidAssetData, nullptr);
-	}
-	items[name] = { false, object };
-	items[name].AssetTracker = new (memory.Allocate<Content::AssetPtrSharedData>()) Content::AssetPtrSharedData();
-	succcess = true;
-	return AssetPtr<T>(object, items[name].AssetTracker);
-}
-
-void AssetManager::Remove(HMString name)
+void AssetManager::Remove(const HMString name)
 {
 	Asset *item = items.GetAt(name);
 	if (item)

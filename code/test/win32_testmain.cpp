@@ -3,7 +3,7 @@
 
 #include "../libraries/doctest.h"
 #include <iostream>
-#include "test_helpers.cpp"
+#include "test_helpers.h"
 
 TEST_SUITE_BEGIN("math");
 
@@ -44,6 +44,31 @@ TEST_SUITE_BEGIN("unsorted");
 
 TEST_SUITE_END();
 
+#ifdef HANDMADE_UNITY
+
+#include "../content/AssetManager.cpp"
+#include "../content/MTLLoader.cpp"
+#include "../content/OBJLoader.cpp"
+#include "../content/ShaderManager.cpp"
+
+#include "../drawing/defaults/DefaultMaterials.cpp"
+#include "../drawing/Texture2D.cpp"
+#include "../drawing/VertexColorTextureArray.cpp"
+#include "../drawing/VertexNormalTextureArray.cpp"
+
+#include "../general/HashMap.cpp"
+#include "../general/PathHelpers.cpp"
+
+#include "../math/Matrix3.cpp"
+#include "../math/Matrix4.cpp"
+#include "../math/Quaternion.cpp"
+#include "../math/Vector2.cpp"
+#include "../math/Vector3.cpp"
+
+#include "../PlatformGameSettings.cpp"
+#include "../library_implementations.cpp"
+
+#endif
 //-lts list test suites
 //-tc=*x*
 //-sf --source-file=

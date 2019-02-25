@@ -1,37 +1,10 @@
-internal void
-CatStrings(size_t SourceACount, char *SourceA,
-	size_t SourceBCount, char *SourceB,
-	size_t DestCount, char *Dest)
-{
-	// TODO(casey): Dest bounds checking!
+#ifndef WIN32_UTILITY_CPP
+#define WIN32_UTILITY_CPP
 
-	for (int Index = 0;
-		Index < SourceACount;
-		++Index)
-	{
-		*Dest++ = *SourceA++;
-	}
-
-	for (int Index = 0;
-		Index < SourceBCount;
-		++Index)
-	{
-		*Dest++ = *SourceB++;
-	}
-
-	*Dest++ = 0;
-}
-
-internal int
-StringLength(char *String)
-{
-	int Count = 0;
-	while (*String++)
-	{
-		++Count;
-	}
-	return(Count);
-}
+#include "../handmade_typedefs.h"
+#include "win32_handmade.h"
+#include "../general/StringHelpers.h"
+#include <windows.h>
 
 inline FILETIME
 Win32GetLastWriteTime(char *Filename)
@@ -47,12 +20,12 @@ Win32GetLastWriteTime(char *Filename)
 	return(LastWriteTime);
 }
 
-internal void
+inline internal void
 Win32GetEXEFileName(win32_state *State)
 {
 	// NOTE(casey): Never use MAX_PATH in code that is user-facing, because it
 	// can be dangerous and lead to bad results.
-	DWORD SizeOfFilename = GetModuleFileNameA(0, State->EXEFileName, sizeof(State->EXEFileName));
+	State->EXEFileNameSize = GetModuleFileNameA(0, State->EXEFileName, sizeof(State->EXEFileName));
 	State->OnePastLastEXEFileNameSlash = State->EXEFileName;
 	for (char *Scan = State->EXEFileName;
 		*Scan;
@@ -65,16 +38,16 @@ Win32GetEXEFileName(win32_state *State)
 	}
 }
 
-internal void
-Win32BuildEXEPathFileName(win32_state *State, char *FileName,
-	int DestCount, char *Dest)
+inline internal void
+Win32BuildEXEPathFileName(win32_state *State, const char *FileName,
+	int32 DestCount, char *Dest)
 {
-	CatStrings(State->OnePastLastEXEFileNameSlash - State->EXEFileName, State->EXEFileName,
-		StringLength(FileName), FileName,
-		DestCount, Dest);
+	CString::CombineStringsToDest(State->EXEFileName, (int32)(State->OnePastLastEXEFileNameSlash - State->EXEFileName), 
+								  FileName, CString::GetLength(FileName), 
+								  Dest, DestCount);
 }
 
-internal win32_window_dimension
+inline internal win32_window_dimension
 Win32GetWindowDimension(HWND Window)
 {
 	win32_window_dimension Result;
@@ -102,3 +75,5 @@ Win32GetSecondsElapsed(LARGE_INTEGER Start, LARGE_INTEGER End)
 		(real32)GlobalPerfCountFrequency);
 	return(Result);
 }
+
+#endif //WIN32_UTILITY_CPP

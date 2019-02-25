@@ -1,14 +1,15 @@
 #ifndef HANDMADE_PATHHELPERS_CPP
 #define HANDMADE_PATHHELPERS_CPP
 
-#include "../handmade.h"
-#include "StringHelpers.cpp"
+#include "../handmade_typedefs.h"
+#include "StringHelpers.h"
+#include "PathHelpers.h"
 
 namespace Path
 {
-	bool IsAbsolute(char *string)
+	bool IsAbsolute(const char *string)
 	{
-		if (!string) //CONSIDER(Ian): Do we want this to just crash if it's given a null pointer?
+		if (!string) //CONSIDER: Do we want this to just crash if it's given a null pointer?
 		{
 			return false;
 		}
@@ -21,7 +22,7 @@ namespace Path
 		return CString::IsLetter(string[start]) && string[start + 1] == ':';
 	}
 
-	bool IsRelative(char *string)
+	bool IsRelative(const char *string)
 	{
 		if (!string)
 		{
@@ -36,13 +37,7 @@ namespace Path
 		return !(CString::IsLetter(string[start]) && string[start + 1] == ':');
 	}
 
-	bool IsPathSeperator(char character)
-	{
-		//TODO(Ian): Also handle "\\" and "//"
-		return character == '\\' || character == '/';
-	}
-
-	char *Combine(char *a, char* b, int32 aOffset = 0, int32 bOffset = 0, int32 *outLength = nullptr)
+	char *Combine(const char *a, const  char* b, int32 aOffset, int32 bOffset, int32 *outLength)
 	{
 		Assert(IsRelative(b));
 		Assert(a != nullptr);
@@ -50,8 +45,8 @@ namespace Path
 
 		int32 aLength = CString::GetLength(a);
 		int32 bLength = CString::GetLength(b);
-		
-		//Null terminator from a becomes a path seperator
+
+		//Null terminator from 'a' becomes a path seperator
 		int32 finalLength = aLength - aOffset + bLength - bOffset;
 
 		bool aSep = IsPathSeperator(a[aLength - 2]);
@@ -96,39 +91,119 @@ namespace Path
 		return result;
 	}
 
-	/**
-	\brief Removes the last element from the path, unless you're already up to the drive
-	*/
-	char *GetParentDirectory(char *path, int32 *outFinalLength = nullptr)
+	char *CloneParentDirectory(const char *path, int32 *outFinalLength)
 	{
-		int32 nameStart = CString::FindLastCharacter(path, "\\/", 2) + 1;
-		int32 contentLength = CString::GetLength(path, nameStart) - 1;
-
-		if (contentLength == nameStart)
+		int32 lastSeperators[2] = { -1, -1 };
+		int32 i = 0;
+		bool stillInSeperator = false;
+		while (path[i] != '\0')
 		{
-			contentLength--;
-			nameStart = CString::FindLastCharacter(path, "\\/", 2, contentLength) + 1;
+			if (IsPathSeperator(path[i]))
+			{
+				if (!stillInSeperator)
+				{
+					lastSeperators[0] = lastSeperators[1];
+					lastSeperators[1] = i;
+				}
+				stillInSeperator = true;
+			}
+			else
+			{
+				stillInSeperator = false;
+			}
+			i++;
 		}
-		char *result = CString::CopySubstring(path, nameStart, outFinalLength, nameStart, 0);
 
+		int32 parentLength;
+		if (lastSeperators[1] == -1) //ex: "directory"
+		{
+			parentLength = 0;
+		}
+		else if (stillInSeperator)
+		{
+			if (lastSeperators[0] == -1) //ex: "directory/", "directory//", etc.
+			{
+				parentLength = 0;
+			}
+			else
+			{
+				parentLength = lastSeperators[0] + 1;
+			}
+		}
+		else
+		{
+			parentLength = lastSeperators[1] + 1;
+		}
+
+		char* result = CString::CopySubstring(path, parentLength, outFinalLength);
 		return result;
 	}
 
-	/**
-	\brief Gets the name of the directory or file at the end of the path chain (including extension)
-	*/
-	char *GetEndName(char *path, int32 *outFinalLength = nullptr)
+	char *CloneEndName(const char *path, int32 *outFinalLength)
 	{
-		int32 nameStart = CString::FindLastCharacter(path, "\\/", 2) + 1;
-		int32 contentLength = CString::GetLength(path, nameStart) - 1;
+		/*int32 nameStart = CString::FindLastCharacter(path, "\\/", 2) + 1;
+		int32 contentLength = CString::GetLength(path + nameStart) - 1;
 
 		if (contentLength == nameStart)
 		{
 			contentLength--;
 			nameStart = CString::FindLastCharacter(path, "\\/", 2, contentLength) + 1;
 		}
-		char *result = CString::CopySubstring(path, contentLength - nameStart, outFinalLength, contentLength, nameStart);
+		char *result = CString::CopySubstring(path + nameStart, contentLength, outFinalLength);
 
+		return result;*/
+
+		int32 lastSeperators[2] = { -1, -1 };
+		int32 i = 0;
+		bool stillInSeperator = false;
+		while (path[i] != '\0')
+		{
+			if (IsPathSeperator(path[i]))
+			{
+				if (!stillInSeperator)
+				{
+					lastSeperators[0] = lastSeperators[1];
+					lastSeperators[1] = i;
+				}
+				stillInSeperator = true;
+			}
+			else
+			{
+				stillInSeperator = false;
+			}
+			i++;
+		}
+
+		int32 startingPoint = 0;
+		int32 nameLength;
+		if (lastSeperators[1] == -1) //ex: "directory"
+		{
+			nameLength = i;
+		}
+		else if (stillInSeperator) //ex: "directory///"
+		{
+			nameLength = lastSeperators[1];
+			if (lastSeperators[0] != -1) //ex: "/directory/", "parent///directory//", etc.
+			{
+				while (IsPathSeperator(path[lastSeperators[0]]))
+				{
+					lastSeperators[0]++;
+				}
+				startingPoint = lastSeperators[0];
+				nameLength -= startingPoint;
+			}
+		}
+		else
+		{
+			while (IsPathSeperator(path[lastSeperators[1]]))
+			{
+				lastSeperators[1]++;
+			}
+			nameLength = i - lastSeperators[1];
+			startingPoint = lastSeperators[1];
+		}
+
+		char* result = CString::CopySubstring(path + startingPoint, nameLength, outFinalLength);
 		return result;
 	}
 }

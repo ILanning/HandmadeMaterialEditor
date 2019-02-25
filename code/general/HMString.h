@@ -2,7 +2,7 @@
 #define HANDMADE_HMSTRING_H
 
 #include "../handmade_typedefs.h"
-#include "StringHelpers.cpp"
+#include "StringHelpers.h"
 
 // Contains a character array and a size.  Must end in a null, but may also contain them in the middle of the text/
 class HMString
@@ -23,10 +23,22 @@ public:
 	}
 	HMString(char* text, uint32 size) : size(size), text(text) {}
 
+	HMString(const char* text)
+	{
+		int32 i = 0;
+		while (text[i] != '\0')
+		{
+			i++;
+		}
+		size = i + 1;
+		this->text = CString::CopySubstring(text, size - 1);
+	}
+	HMString(const char* text, uint32 size) : size(size), text(CString::CopySubstring(text, size)) {}
+
 	HMString(const HMString &other)
 	{
-		text = CString::CopySubstring(other.RawCString(), other.Length() - 1);
-		size = other.Length();
+		text = CString::CopySubstring(other.text, other.size - 1);
+		size = other.size;
 	}
 
 	uint32 Length() const { return size; }

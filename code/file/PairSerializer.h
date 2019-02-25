@@ -9,7 +9,7 @@
 #include "..\general\HMPair.h"
 #include "..\general\HMString.h"
 #include "..\general\StaticArray.h"
-#include "..\general\StringHelpers.cpp"
+#include "..\general\StringHelpers.h"
 
 namespace File
 {
@@ -253,11 +253,11 @@ namespace File
 
 			char* fileText = scratchAlloc.Allocate<void>(totalLength);
 
-			itn32 fileTextIter = 0;
+			int32 fileTextIter = 0;
 			for (uint32 arrayIter = 0; arrayIter < data.Length; arrayIter++)
 			{
-				firstLength = data[arrayIter].First.Length() - 1;
-				secondLength = data[arrayIter].Second.Length() - 1;
+				int32 firstLength = data[arrayIter].First.Length() - 1;
+				int32 secondLength = data[arrayIter].Second.Length() - 1;
 
 				for (uint32 firstIter = 0; firstIter < firstLength; firstIter++)
 				{

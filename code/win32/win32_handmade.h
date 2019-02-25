@@ -11,6 +11,7 @@
 #include "InputProcessor.h"
 #include "../PlatformGameSettings.h"
 #include "../general/HMString.h"
+#include "../handmade.h"
 
 struct win32_offscreen_buffer
 {
@@ -97,6 +98,7 @@ struct win32_state
     int InputPlayingIndex = 0;
     
 	char EXEFileName[WIN32_STATE_FILE_NAME_COUNT] = {};
+	uint32 EXEFileNameSize = 0;
     char *OnePastLastEXEFileNameSlash = nullptr;
 
 	PlatformGameSettings Settings;

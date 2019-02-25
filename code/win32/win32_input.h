@@ -1,27 +1,40 @@
+#ifndef WIN32_INPUT_CPP
+#define WIN32_INPUT_CPP
+
+#include "../handmade_typedefs.h"
 #include "..\handmade.h"
+#include "win32_handmade.h"
+#include "win32_utility.h"
+#include <windows.h>
+#include <xinput.h>
 
 // NOTE(casey): XInputGetState
 #define X_INPUT_GET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_STATE *pState)
 typedef X_INPUT_GET_STATE(x_input_get_state);
-X_INPUT_GET_STATE(XInputGetStateStub)
+#pragma warning(push)
+#pragma warning(disable : 4100)
+inline X_INPUT_GET_STATE(XInputGetStateStub)
 {
 	return(ERROR_DEVICE_NOT_CONNECTED);
 }
+#pragma warning(pop)
 global_variable x_input_get_state *XInputGetState_ = XInputGetStateStub;
 #define XInputGetState XInputGetState_
 
 // NOTE(casey): XInputSetState
 #define X_INPUT_SET_STATE(name) DWORD WINAPI name(DWORD dwUserIndex, XINPUT_VIBRATION *pVibration)
 typedef X_INPUT_SET_STATE(x_input_set_state);
-X_INPUT_SET_STATE(XInputSetStateStub)
+#pragma warning(push)
+#pragma warning(disable : 4100)
+inline X_INPUT_SET_STATE(XInputSetStateStub)
 {
 	return(ERROR_DEVICE_NOT_CONNECTED);
 }
+#pragma warning(pop)
 global_variable x_input_set_state *XInputSetState_ = XInputSetStateStub;
 #define XInputSetState XInputSetState_
 
-internal void
-Win32LoadXInput(void)
+inline internal void Win32LoadXInput(void)
 {
 	// TODO(casey): Test this on Windows 8
 	HMODULE XInputLibrary = LoadLibraryA("xinput1_4.dll");
@@ -54,8 +67,7 @@ Win32LoadXInput(void)
 	}
 }
 
-internal void
-Win32ProcessKeyboardMessage(game_button_state *NewState, bool32 IsDown)
+inline internal void Win32ProcessKeyboardMessage(game_button_state *NewState, bool32 IsDown)
 {
 	if (NewState->EndedDown != IsDown)
 	{
@@ -64,8 +76,7 @@ Win32ProcessKeyboardMessage(game_button_state *NewState, bool32 IsDown)
 	}
 }
 
-internal void
-Win32ProcessXInputDigitalButton(DWORD XInputButtonState,
+inline internal void Win32ProcessXInputDigitalButton(DWORD XInputButtonState,
 	game_button_state *OldState, DWORD ButtonBit,
 	game_button_state *NewState)
 {
@@ -73,8 +84,7 @@ Win32ProcessXInputDigitalButton(DWORD XInputButtonState,
 	NewState->HalfTransitionCount = (OldState->EndedDown != NewState->EndedDown) ? 1 : 0;
 }
 
-internal real32
-Win32ProcessXInputStickValue(SHORT Value, SHORT DeadZoneThreshold)
+inline internal real32 Win32ProcessXInputStickValue(SHORT Value, SHORT DeadZoneThreshold)
 {
 	real32 Result = 0;
 
@@ -90,8 +100,7 @@ Win32ProcessXInputStickValue(SHORT Value, SHORT DeadZoneThreshold)
 	return(Result);
 }
 
-internal void
-Win32GetInputFileLocation(win32_state *State, bool32 InputStream,
+inline internal void Win32GetInputFileLocation(win32_state *State, bool32 InputStream,
 	int SlotIndex, int DestCount, char *Dest)
 {
 	char Temp[64];
@@ -99,16 +108,14 @@ Win32GetInputFileLocation(win32_state *State, bool32 InputStream,
 	Win32BuildEXEPathFileName(State, Temp, DestCount, Dest);
 }
 
-internal win32_replay_buffer *
-Win32GetReplayBuffer(win32_state *State, int unsigned Index)
+inline internal win32_replay_buffer* Win32GetReplayBuffer(win32_state *State, int unsigned Index)
 {
 	Assert(Index < ArrayCount(State->ReplayBuffers));
 	win32_replay_buffer *Result = &State->ReplayBuffers[Index];
 	return(Result);
 }
 
-internal void
-Win32BeginRecordingInput(win32_state *State, int InputRecordingIndex)
+inline internal void Win32BeginRecordingInput(win32_state *State, int InputRecordingIndex)
 {
 	win32_replay_buffer *ReplayBuffer = Win32GetReplayBuffer(State, InputRecordingIndex);
 	if (ReplayBuffer->MemoryBlock)
@@ -129,15 +136,13 @@ Win32BeginRecordingInput(win32_state *State, int InputRecordingIndex)
 	}
 }
 
-internal void
-Win32EndRecordingInput(win32_state *State)
+inline internal void Win32EndRecordingInput(win32_state *State)
 {
 	CloseHandle(State->RecordingHandle);
 	State->InputRecordingIndex = 0;
 }
 
-internal void
-Win32BeginInputPlayBack(win32_state *State, int InputPlayingIndex)
+inline internal void Win32BeginInputPlayBack(win32_state *State, int InputPlayingIndex)
 {
 	win32_replay_buffer *ReplayBuffer = Win32GetReplayBuffer(State, InputPlayingIndex);
 	if (ReplayBuffer->MemoryBlock)
@@ -158,22 +163,19 @@ Win32BeginInputPlayBack(win32_state *State, int InputPlayingIndex)
 	}
 }
 
-internal void
-Win32EndInputPlayBack(win32_state *State)
+inline internal void Win32EndInputPlayBack(win32_state *State)
 {
 	CloseHandle(State->PlaybackHandle);
 	State->InputPlayingIndex = 0;
 }
 
-internal void
-Win32RecordInput(win32_state *State, GameInput *NewInput)
+inline internal void Win32RecordInput(win32_state *State, GameInput *NewInput)
 {
 	DWORD BytesWritten;
 	WriteFile(State->RecordingHandle, NewInput, sizeof(*NewInput), &BytesWritten, 0);
 }
 
-internal void
-Win32PlayBackInput(win32_state *State, GameInput *NewInput)
+inline internal void Win32PlayBackInput(win32_state *State, GameInput *NewInput)
 {
 	DWORD BytesRead = 0;
 	if (ReadFile(State->PlaybackHandle, NewInput, sizeof(*NewInput), &BytesRead, 0))
@@ -188,3 +190,5 @@ Win32PlayBackInput(win32_state *State, GameInput *NewInput)
 		}
 	}
 }
+
+#endif //WIN32_INPUT_CPP

@@ -9,14 +9,14 @@
 namespace CString
 {
 	///Gets the starting index of the specified substring, if it is present.  Returns -1 if it is not.
-	int32 FindSubstring(const char *find, int32 findLength, const char *within, int32 withinLength, int32 startIndex = 0)
+	inline int32 FindSubstring(const char *find, const int32 findLength, const char *within, const int32 withinLength)
 	{
-		if (findLength == 0 || findLength + startIndex > withinLength)
+		if (findLength == 0 || findLength > withinLength)
 		{
 			return -1;
 		}
 
-		for (int32 i = startIndex; i < withinLength - findLength + 1; i++)
+		for (int32 i = 0; i < withinLength - findLength + 1; i++)
 		{
 			if (within[i] == find[0])
 			{
@@ -38,17 +38,41 @@ namespace CString
 		return -1;
 	}
 
+	inline int32 FindSubstring(const char *find, const int32 findLength, const char *within, const int32 withinLength, int32 offset)
+	{
+		int32 result = FindSubstring(find, findLength, within + offset, withinLength - offset);
+		if(result == -1)
+		{
+			return -1;
+		}
+		else
+		{
+			return result + offset;
+		}
+	}
+
 	///Gets the number of times the specified substring occurs in the main string.
-	int32 CountSubstrings(const char *find, int32 findLength, const char *within, int32 withinLength, int32 *last = nullptr, int32 startIndex = 0, bool overlappingMatches = false)
+	inline int32 CountSubstrings(const char *find, const int32 findLength, const char *within, const int32 withinLength, int32 *last = nullptr, bool overlappingMatches = false)
 	{
 		int32 prevLast = 0;
-		int32 lastResult = FindSubstring(find, findLength, within, withinLength, startIndex);
+		int32 lastResult = FindSubstring(find, findLength, within, withinLength);
 		int32 count = 0;
 		while (lastResult != -1)
 		{
 			count++;
 			prevLast = lastResult;
-			lastResult = FindSubstring(find, findLength, within, withinLength, (overlappingMatches ? lastResult + 1 : lastResult + findLength - 1));
+
+			int32 nextSearchStart = 0;
+			if (overlappingMatches)
+			{
+				nextSearchStart = lastResult + 1;
+			}
+			else
+			{
+				nextSearchStart = lastResult + findLength - 1;
+			}
+
+			lastResult = FindSubstring(find + nextSearchStart, findLength, within, withinLength);
 		}
 		if (last)
 		{
@@ -57,8 +81,7 @@ namespace CString
 		return count;
 	}
 
-
-	char *CopySubstring(const char *source, int32 copyLength, int32 *outFinalLength = nullptr, int32 sourceLength = MaxInt32, int32 offset = 0)
+	inline char *CopySubstring(const char *source, const int32 copyLength, int32 *outFinalLength = nullptr, const int32 sourceLength = MaxInt32)
 	{
 		if (!source)
 		{
@@ -68,20 +91,23 @@ namespace CString
 			}
 			return nullptr;
 		}
-
-		int32 overflow = sourceLength - (copyLength + offset);
-		int32 finalLength = (overflow >= 0) ? copyLength : copyLength + overflow;
+		int32 finalLength = copyLength;
+		if (sourceLength != MaxInt32)
+		{
+			const int32 overflow = sourceLength - (copyLength);
+			finalLength = (overflow >= 0) ? copyLength : copyLength + overflow;
+		}
 		finalLength++;
 
-		//CONSIDER(Ian):  Maybe move back the start point when given negative lengths, like
-		//				  some other languages do with these sorts of functions
+		//CONSIDER:  Maybe move back the start point when given negative lengths, like
+		//			 some other languages do with these sorts of functions
 		Assert(finalLength >= 0);
 
 		char *result = new char[finalLength];
 
 		for (int32 i = 0; i < finalLength - 1; i++)
 		{
-			result[i] = source[i + offset];
+			result[i] = source[i];
 		}
 		result[finalLength - 1] = '\0';
 
@@ -93,45 +119,66 @@ namespace CString
 		return result;
 	}
 
-	bool IsWhitespace(char character)
+	///Writes the given strings to the destination string sequentially.  Does not add a null terminator.
+	inline int32 CombineStringsToDest(const char* stringA, const int32 aLength, const char* stringB, const int32 bLength, char* resultString, const int32 resultLength)
+	{
+		const int32 finalLength = aLength + bLength < resultLength ? aLength + bLength : resultLength;
+		const int32 firstCopyLength = aLength < finalLength ? aLength : finalLength;
+
+		int32 i = 0;
+		for (; i < firstCopyLength; i++)
+		{
+			resultString[i] = stringA[i];
+		}
+		for (; i < finalLength; i++)
+		{
+			resultString[i] = stringB[i - firstCopyLength];
+		}
+
+		return finalLength;
+	}
+
+	inline bool IsWhitespace(const char character)
 	{
 		//                          Covers \f, \t, \r, \n, and \v
 		return character == ' ' || (character >= '\t' && character <= '\r');
 	}
 
-	bool IsQuotation(char character)
+	inline bool IsQuotation(const char character)
 	{
 		return character == '\"' || character == '\'';
 	}
 
-	bool IsBrace(char character)
+	inline bool IsBrace(const char character)
 	{
 		return character == '{' || character == '}' || character == '[' || character == ']' || character == '(' || character == ')';
 	}
 
-	bool IsDigit(char character)
+	inline bool IsDigit(const char character)
 	{
 		return character >= '0' && character <= '9';
 	}
 
-	bool IsLetter(char character)
+	inline bool IsLetter(const char character)
 	{
 		return (character >= 'a' && character <= 'z') || (character >= 'A' && character <= 'Z');
 	}
 
-	bool IsAlphanumeric(char character)
+	inline bool IsAlphanumeric(const char character)
 	{
 		return IsDigit(character) || IsLetter(character);
 	}
 
-	/*
-		\brief Gets the lengths of the passed in string, including the null terminator.
+	/** Gets the length of the passed in string, including the null terminator.
 	*/
-	int32 GetLength(const char *string, int32 offset = 0)
+	inline int32 GetLength(const char *string)
 	{
-		Assert(string != nullptr);
+		if(!string)
+		{ 
+			return 0;
+		}
 
-		int32 i = offset;
+		int32 i = 0;
 		while (string[i] != '\0')
 		{
 			i++;
@@ -141,7 +188,7 @@ namespace CString
 		return i;
 	}
 
-	int32 FindCharacter(const char *string, const char *characters, int32 characterCount, int32 length = MaxInt32, int32 offset = 0)
+	inline int32 FindCharacter(const char *string, const char *characters, const int32 characterCount, const int32 length = MaxInt32, const int32 offset = 0)
 	{
 		Assert(string != nullptr);
 
@@ -160,39 +207,57 @@ namespace CString
 		return -1;
 	}
 
-	int32 FindCharacter(const char *string, char character, int32 length = MaxInt32, int32 offset = 0)
+	inline int32 FindCharacter(const char *string, const char character, const int32 length = MaxInt32, const int32 offset = 0)
 	{
-		//TODO(Ian): Test performance here, would it be better to have two versions?
 		return FindCharacter(string, &character, 1, length, offset);
 	}
 
-	int32 FindLastCharacter(const char *string, const char *characters, int32 characterCount, int32 length = MaxInt32, int32 offset = 0)
+	inline int32 FindLastCharacter(const char *string, const char *characters, const int32 characterCount, const int32 length = MaxInt32, const int32 offset = 0)
 	{
-		//TODO(Ian): Make this start from the back of strings of known length
 		Assert(string != nullptr);
 
-		int32 i = offset;
 		int32 result = -1;
-		while (length != MaxInt32 ? i < length : string[i] != '\0')
+
+		if (length == MaxInt32)
 		{
-			for (int32 j = 0; j < characterCount; j++)
+			int32 i = offset;
+			while (string[i] != '\0')
 			{
-				if (string[i] == characters[j])
+				for (int32 j = 0; j < characterCount; j++)
 				{
-					result = i;
+					if (string[i] == characters[j])
+					{
+						result = i;
+					}
+				}
+				i++;
+			}
+		}
+		else
+		{
+			for (int32 i = length - 1; i >= offset; i--)
+			{
+				for (int32 j = 0; j < characterCount; j++)
+				{
+					if (string[i] == characters[j])
+					{
+						result = i;
+						i = offset - 1; //Bail out of the parent loop too
+						break;
+					}
 				}
 			}
-			i++;
 		}
+
 		return result;
 	}
 
-	int32 FindLastCharacter(const char *string, char character, int32 length = MaxInt32, int32 offset = 0)
+	inline int32 FindLastCharacter(const char *string, const char character, const int32 length = MaxInt32, const int32 offset = 0)
 	{
 		return FindLastCharacter(string, &character, 1, length, offset);
 	}
 
-	int32 FindNonWhitespace(const char *string, int32 length = MaxInt32, int32 offset = 0)
+	inline int32 FindNonWhitespace(const char *string, const int32 length = MaxInt32, const int32 offset = 0)
 	{
 		for (int32 i = offset; i < length; i++)
 		{
@@ -209,7 +274,7 @@ namespace CString
 	}
 
 	///Gets the index of the next end of line.  Returns -1 if no line break is found.
-	int32 FindLineEnd(const char *string, int32 length = MaxInt32, int32 offset = 0)
+	inline int32 FindLineEnd(const char *string, const int32 length = MaxInt32, const int32 offset = 0)
 	{
 		int32 result = FindCharacter(string, '\n', length, offset);
 		if (result > 0 && string[result - 1] == '\r')
@@ -220,7 +285,7 @@ namespace CString
 	}
 
 	///Gets the index of the first character after the next end of line.  Returns -1 if no line break is found.
-	int32 FindNextLineStart(const char *string, int32 length = MaxInt32, int32 offset = 0)
+	inline int32 FindNextLineStart(const char *string, const int32 length = MaxInt32, const int32 offset = 0)
 	{
 		int32 result = FindCharacter(string, '\n', length, offset);
 		if (result != -1)
@@ -230,7 +295,7 @@ namespace CString
 		return result;
 	}
 
-	char LowerChar(char character)
+	inline char LowerChar(const char character)
 	{
 		if (character >= 'A' && character <= 'Z')
 		{
@@ -240,23 +305,15 @@ namespace CString
 		return character;
 	}
 
-	void EditToLower(char* string, int32 editCount = MaxInt32)
+	inline void EditToLower(char *string, const int32 length = MaxInt32)
 	{
-		for (int32 i = 0; string[i] != '\0' && i < editCount; i++)
+		for (int32 i = 0; length == MaxInt32 ? string[i] != '/0' : i < length; i++)
 		{
 			string[i] = LowerChar(string[i]);
 		}
 	}
 
-	void EditToLower(char *string, int32 stringLength, int32 offset, int32 editCount = MaxInt32)
-	{
-		for (int32 i = 0; i + offset < stringLength && i < editCount; i++)
-		{
-			string[i + offset] = LowerChar(string[i + offset]);
-		}
-	}
-
-	char UpperChar(char character)
+	inline char UpperChar(const char character)
 	{
 		if (character >= 'a' && character <= 'z')
 		{
@@ -266,23 +323,15 @@ namespace CString
 		return character;
 	}
 
-	void EditToUpper(char* string, int32 editCount = MaxInt32)
+	inline void EditToUpper(char *string, const int32 length = MaxInt32)
 	{
-		for (int32 i = 0; string[i] != '\0' && i < editCount; i++)
+		for (int32 i = 0; length == MaxInt32 ? string[i] != '/0' : i < length; i++)
 		{
 			string[i] = UpperChar(string[i]);
 		}
 	}
 
-	void EditToUpper(char *string, int32 stringLength, int32 offset, int32 editCount = MaxInt32)
-	{
-		for (int32 i = 0; i + offset < stringLength && i < editCount; i++)
-		{
-			string[i + offset] = UpperChar(string[i + offset]);
-		}
-	}
-
-	bool TryParseInt32(const char *string, int32 stringLength, int32 &outResult, int32 offset = 0, int32 *readFinishIndex = nullptr)
+	inline bool TryParseInt32(const char *string, const int32 stringLength, int32 &outResult, int32 offset = 0, int32 *readFinishIndex = nullptr)
 	{
 		int32 result = 0;
 		int32 negate = 1;
@@ -312,14 +361,14 @@ namespace CString
 		{
 			if (IsDigit(string[i]))
 			{
-				//TODO(Ian):  What do we do about overflows?
+				//TODO:  What do we do about overflows?
 				int8 digit = string[i] - '0';
 				result = result * 10 + digit;
 			}
 			else if (string[i] == ',')
 			{
-				//TODO(Ian): Decide what to do about the fact that some places reverse periods and commas in numbers
-				//           Simply ignoring periods too feels likely to result in unexpected results
+				//TODO: Decide what to do about the fact that some places reverse periods and commas in numbers
+				//      Simply ignoring periods too feels likely to result in unexpected results
 				continue;
 			}
 			else
@@ -340,7 +389,7 @@ namespace CString
 		return true;
 	}
 
-	bool TryParseBool(const char *string, int32 stringLength, bool &outResult, int32 offset = 0, int32 *readFinishIndex = nullptr)
+	inline bool TryParseBool(const char *string, const int32 stringLength, bool &outResult, int32 offset = 0, int32 *readFinishIndex = nullptr)
 	{
 		/*
 		Valid true:    	 Valid false:
@@ -353,12 +402,11 @@ namespace CString
 
 		bool result = false;
 		bool success = true;
-		int32 negate = 1;
 		int32 stringPos = FindNonWhitespace(string, stringLength, offset);
 
 		const int32 shortestValidLength = 5;
-		int32 bufferSize = shortestValidLength < stringLength - stringPos ? shortestValidLength : stringLength - stringPos;
-		char buffer[shortestValidLength];  //No need to use dynamic memory here, some of the buffer may just go unused
+		const int32 bufferSize = shortestValidLength < stringLength - stringPos ? shortestValidLength : stringLength - stringPos;
+		char buffer[shortestValidLength];
 
 		if (bufferSize <= 0)
 		{
@@ -373,7 +421,7 @@ namespace CString
 		int32 bufferPos = 0;
 		if (buffer[bufferPos] == 't')
 		{
-			if (bufferSize >= 4 && FindSubstring(buffer, 3, "rue", 3, 1))
+			if (bufferSize >= 4 && FindSubstring(buffer + 1, 3, "rue", 3))
 			{
 				stringPos += 4;
 			}
@@ -385,7 +433,7 @@ namespace CString
 		}
 		else if (buffer[bufferPos] == 'y')
 		{
-			if (bufferSize >= 3 && FindSubstring(buffer, 2, "es", 2, 1))
+			if (bufferSize >= 3 && FindSubstring(buffer + 1, 2, "es", 2))
 			{
 				stringPos += 3;
 			}
@@ -397,7 +445,7 @@ namespace CString
 		}
 		else if (buffer[bufferPos] == 'f')
 		{
-			if (bufferSize >= 5 && FindSubstring(buffer, 4, "alse", 4, 1))
+			if (bufferSize >= 5 && FindSubstring(buffer + 1, 4, "alse", 4))
 			{
 				stringPos += 5;
 			}
@@ -424,7 +472,7 @@ namespace CString
 				stringPos += 2;
 				result = true;
 			}
-			else if (bufferSize >= 3 && FindSubstring(buffer, 2, "ff", 2, 1))
+			else if (bufferSize >= 3 && FindSubstring(buffer + 1, 2, "ff", 2))
 			{
 				stringPos += 3;
 			}
@@ -449,7 +497,7 @@ namespace CString
 
 	/** Writes an int value to the given string, using as little space as possible.  Returns the number of characters used.
 	*/
-	int32 WriteInt(char* string, int32 stringLength, int32 value, int32 maxCharsUsed)
+	inline int32 WriteInt(char* string, const int32 stringLength, const int32 value, const int32 maxCharsUsed)
 	{
 		char buffer[12];
 
@@ -470,7 +518,8 @@ namespace CString
 		return charsNeeded;
 	}
 
-	int32 WriteChars(char* target, int32 targetLength, char* source, int32 sourceLength)
+	///Writes one string into another, clipping the string to the shortest length.
+	inline int32 WriteChars(char* target, const int32 targetLength, const char* source, const int32 sourceLength)
 	{
 		int32 writeAmount = targetLength <= sourceLength ? targetLength : sourceLength;
 		memcpy(target, source, writeAmount);
@@ -479,7 +528,7 @@ namespace CString
 
 	/** Writes either "true" or "false" to the given string depending on the input.  Returns the number of characters used.
 	*/
-	int32 WriteBool(char* string, int32 stringLength, bool value, int32 maxCharsUsed)
+	inline int32 WriteBool(char* string, const int32 stringLength, const bool value)
 	{
 		if (value && 4 < stringLength)
 		{
@@ -495,7 +544,7 @@ namespace CString
 		return 0;
 	}
 
-	bool IsEqual(const char *a, const char *b)
+	inline bool IsEqual(const char* a, const char* b)
 	{
 		if (a == b)
 		{
@@ -519,13 +568,13 @@ namespace CString
 		return true;
 	}
 
-	bool IsEqual(const char *a, const char *b, int32 aLength, int32 bLength, int32 aOffset = 0, int32 bOffset = 0)
+	inline bool IsEqual(const char* a, const char* b, const int32 aLength, const int32 bLength)
 	{
-		if (aLength - aOffset != bLength - bOffset)
+		if (aLength != bLength)
 		{
 			return false;
 		}
-		if (a == b && aOffset == bOffset)
+		if (a == b)
 		{
 			return true;
 		}
@@ -533,12 +582,9 @@ namespace CString
 		{
 			return false;
 		}
-
-		int32 aIter = aOffset;
-		int32 bIter = bOffset;
-		for (; aIter < aLength; aIter++, bIter++)
+		for (int32 i = 0; i < aLength; i++)
 		{
-			if (a[aIter] != b[bIter])
+			if (a[i] != b[i])
 			{
 				return false;
 			}

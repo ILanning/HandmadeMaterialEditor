@@ -22,63 +22,16 @@
 
 #include "handmade_typedefs.h"
 #include "handmade_funcdefs.h"
+#include "handmade_debugfuncs.h"
+#include "ThreadContext.h"
 #include "input\InputFrame.h"
 #include "general\Assert.h"
 #include "PlatformGameSettings.h"
-
-#include <math.h>
-#include "libraries\glew.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include "libraries\stb_image.h"
-#define STB_TRUETYPE_IMPLEMENTATION
-#include "libraries\stb_truetype.h"
 
 #define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
 // TODO(casey): swap, min, max ... macros???
 
 //TODO: Split the things in this file off as they become more certain
-
-
-inline uint32
-SafeTruncateUInt64(uint64 Value)
-{
-    // TODO(casey): Defines for maximum values
-    Assert(Value <= 0xFFFFFFFF);
-    uint32 Result = (uint32)Value;
-    return(Result);
-}
-
-struct thread_context
-{
-    int Placeholder;
-};
-
-//NOTE(casey): Services that the platform layer provides to the game
-#if HANDMADE_INTERNAL
-/* IMPORTANT(casey):
-
-   These are NOT for doing anything in the shipping game - they are
-   blocking and the write doesn't protect against lost data!
-*/
-struct debug_read_file_result
-{
-    uint32 ContentsSize;
-    void *Contents;
-};
-
-#define DEBUG_PLATFORM_FREE_FILE_MEMORY(name) void name(thread_context *Thread, void *Memory)
-typedef DEBUG_PLATFORM_FREE_FILE_MEMORY(debug_platform_free_file_memory);
-
-#define DEBUG_PLATFORM_READ_ENTIRE_FILE(name) debug_read_file_result name(thread_context *Thread, char *Filename, bool *outSuccess)
-typedef DEBUG_PLATFORM_READ_ENTIRE_FILE(debug_platform_read_entire_file);
-
-#define DEBUG_PLATFORM_WRITE_ENTIRE_FILE(name) bool32 name(thread_context *Thread, char *Filename, uint32 MemorySize, void *Memory)
-typedef DEBUG_PLATFORM_WRITE_ENTIRE_FILE(debug_platform_write_entire_file);
-
-#define DEBUG_PLATFORM_MESSAGE_ERROR_FUNC(name) void name(char *errorString)
-typedef DEBUG_PLATFORM_MESSAGE_ERROR_FUNC(DebugMessageErrorFunc);
-
-#endif
 
 /*
   NOTE(casey): Services that the game provides to the platform layer.
@@ -173,20 +126,20 @@ struct game_memory
 	DebugMessageErrorFunc *DEBUGMessageError;
 };
 
-#define GAME_INITIALIZE(name) void name(thread_context *thread, game_memory *memory)
+#define GAME_INITIALIZE(name) void name(ThreadContext *thread, game_memory *memory)
 typedef GAME_INITIALIZE(game_initialize);
 
-#define GAME_PROCESS_INPUT(name) void name(thread_context *thread, GameInput *newInputs, game_memory *memory, PlatformGameSettings *updatedSettings)
+#define GAME_PROCESS_INPUT(name) void name(ThreadContext *thread, GameInput *newInputs, game_memory *memory, PlatformGameSettings *updatedSettings)
 typedef GAME_PROCESS_INPUT(game_process_input);
 
-#define GAME_UPDATE_AND_RENDER(name) void name(thread_context *Thread, game_memory *Memory)
+#define GAME_UPDATE_AND_RENDER(name) void name(ThreadContext *Thread, game_memory *Memory)
 typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 
 // NOTE(casey): At the moment, this has to be a very fast function, it cannot be
 // more than a millisecond or so.
 // TODO(casey): Reduce the pressure on this function's performance by measuring it
 // or asking about it, etc.
-#define GAME_GET_SOUND_SAMPLES(name) void name(thread_context *Thread, game_memory *Memory, game_sound_output_buffer *SoundBuffer)
+#define GAME_GET_SOUND_SAMPLES(name) void name(ThreadContext *Thread, game_memory *Memory, game_sound_output_buffer *SoundBuffer)
 typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
 
 #endif //HANDMADE_H
